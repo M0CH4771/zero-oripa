@@ -104,26 +104,19 @@
           const p = pos(i);
           n = spotNodes[i] = st.add({ x: p.x, y: p.y, z: 2, v: 0 });
           n.badge=st.add({x:p.x,y:p.y,z:7,v:0,clip:true});
-          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell;if(!ZG.multiplierEmblem(ctx,'fruit',nd.v,0,s*.18,s*.65))ZG.multiplierLabel(ctx,nd.v,0,s*.29,s*.90,s*.36);};
+          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell;ctx.font='900 '+Math.max(9,s*.25)+'px system-ui';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.lineJoin='round';ctx.lineWidth=Math.max(2,s*.055);ctx.strokeStyle='#482039';ctx.strokeText('×'+nd.v,s*.44,s*.45,s*.72);ctx.fillStyle='#fff';ctx.fillText('×'+nd.v,s*.44,s*.45,s*.72);};
           n.draw = (ctx, nd) => {
             if (!nd.v) return;
             const s = L.cell - 3;
-            if(ZG.art.images?.fruit?.['tile'+nd.v]){
-              const sprite=ZG.art.sprite('fruit','tile'+nd.v,s),size=s+sprite.pad*2;
-              ctx.drawImage(sprite,-size/2,-size/2,size,size);return;
-            }
             ZG.rr(ctx, -s / 2, -s / 2, s, s, s * 0.18);
-            if (nd.v === 1) { ctx.fillStyle = 'rgba(255,215,90,.48)'; ctx.fill(); ctx.strokeStyle = '#ffe28d'; ctx.lineWidth = 2; ctx.stroke(); return; }
-            const g = ctx.createLinearGradient(0, -s / 2, 0, s / 2); g.addColorStop(0, '#fff6b0'); g.addColorStop(0.5, '#ffc21a'); g.addColorStop(1, '#ff7a00');
-            ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#8a3a00'; ctx.lineWidth = 2.5; ctx.stroke();
-            ctx.font = `${L.cell * 0.34}px ${ZG.FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(120,40,0,.8)'; ctx.strokeText('×' + nd.v, 0, L.cell * 0.27);
-            ctx.fillStyle = '#fff'; ctx.fillText('×' + nd.v, 0, L.cell * 0.27);
+            const tier=nd.v>=32?3:nd.v>=8?2:nd.v>=2?1:0;
+            ctx.fillStyle=['#f5dba5','#ffe198','#dcbaf0','#ffd0c9'][tier];ctx.fill();
+            ctx.strokeStyle=['#e5bd68','#c38d38','#9b68b9','#ce756a'][tier];ctx.lineWidth=Math.max(1,s*.035);ctx.stroke();
           };
         }
         if (n.v !== v) {
           n.v = v;n.badge.v=v;
-          if (animate && v >= 2) { n.sx = n.sy = 1.2; st.tween(n, { sx: 1, sy: 1 }, 380, E().outCubic); st.sparkle(n.x, n.y, L.cell / 3, 3);st.emblemLand('fruit',v,n.x,n.y,L.cell); }
+          if (animate && v >= 2) st.landing(n.x,n.y,L.cell*.18,'#ffe9c0');
         }
       });
     }
