@@ -29,10 +29,10 @@ for(const game of ['rush','fruit','mine','plinko','gods','dogs','train','dwarf']
  const times=[];
  for(const speed of [1.2,.45,.2]){
   viewport=speed===.45?{w:320,h:600}:{w:390,h:740};
-  let total=0,remaining=null;const hooks={fmt:v=>String(v),onScore:v=>total=v,onSpin(n,t){remaining=t-n;assert.ok(remaining>=0);},onRemaining(v){remaining=v;assert.ok(v>=0);},onRoundWin:async()=>{},onSpinWin(){},onMode(mode){if(mode==='COMPLETE')remaining=0;}};
+  let total=0,remaining=null,ballCount=0,ballTotal=0;const metrics=[];const hooks={fmt:v=>String(v),onScore:v=>total=v,onSpin(n,t){remaining=t-n;assert.ok(remaining>=0);},onRemaining(v){remaining=v;assert.ok(v>=0);},onRoundWin:async()=>{},onSpinWin(){},onBallLand(v){assert.ok(Number.isFinite(v));ballCount++;ballTotal+=v;},onFeatureMetric(label,value){assert.ok(label&&value);metrics.push([label,value]);},onMode(mode){if(mode==='COMPLETE')remaining=0;}};
   const g=ZG.createGame(canvas(),{game,region:()=>({x:0,y:145,w:viewport.w,h:viewport.h-295}),getRate:()=>1000,plinko:game==='plinko'?plinkoConfig(12,'medium'):null},hooks);await g.warm();g.idle();g.setSpeed(speed);lastStage.draw();
   if(game==='dogs')await pump(g.prepareDogs(r.entry));
-  await pump(g.play({...r,script:r.spins}));assert.equal(total,r.score,game+' final score');assert.equal(remaining,0);assert.ok(lastStage.parts.length<=280);times.push(lastStage.t);
+  await pump(g.play({...r,script:r.spins}));assert.equal(total,r.score,game+' final score');assert.equal(remaining,0);assert.ok(lastStage.parts.length<=280);if(game==='plinko'){assert.equal(ballCount,r.spins.length);assert.equal(ballTotal,r.score);}if(['mine','gods','dogs','train'].includes(game))assert.ok(metrics.length,game+' metric updates');if(game==='dwarf'&&r.spins.some(s=>s.battle))assert.ok(metrics.some(([label])=>label==='バトル結果'));times.push(lastStage.t);
   await pump(g.bigWin(2,12500));assert.ok(!lastStage.overlays.some(o=>o.kind==='big'),'win overlay released');g.destroy();
  }
  assert.ok(times[0]>times[1]&&times[1]>times[2],game+' speed order');console.log(game,'normal / quick / turbo, score & remaining passed',times.map(v=>Math.round(v/100)/10+'s').join(' / '));

@@ -96,7 +96,7 @@
       };
       return n;
     }
-    function relayout() { nodes.forEach((n, i) => { if (n) { const p = pos(i); n.x = p.x; n.y = p.y; } }); spotNodes.forEach((n, i) => { if (n) { const p = pos(i); n.x = p.x; n.y = p.y; } }); }
+    function relayout() { nodes.forEach((n, i) => { if (n) { const p = pos(i); n.x = p.x; n.y = p.y; } }); spotNodes.forEach((n, i) => { if (n) { const p = pos(i); n.x = p.x; n.y = p.y;if(n.badge){n.badge.x=p.x;n.badge.y=p.y;} } }); }
     function setSpots(spots, animate) {
       if (!cfg.spots) return;
       spots.forEach((v, i) => {
@@ -104,6 +104,8 @@
         if (!n) {
           const p = pos(i);
           n = spotNodes[i] = st.add({ x: p.x, y: p.y, z: 2, v: 0 });
+          n.badge=st.add({x:p.x,y:p.y,z:7,v:0,clip:true});
+          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell,h=Math.max(11,s*.28),y=s*.32;ZG.rr(ctx,-s*.43,y-h*.5,s*.86,h,3);ctx.fillStyle='#421b12e8';ctx.fill();ctx.strokeStyle='#ffdf80';ctx.lineWidth=1;ctx.stroke();ctx.font='900 '+Math.max(10,s*.25)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff4c3';ctx.fillText('×'+nd.v,0,y,s*.78);};
           n.draw = (ctx, nd) => {
             if (!nd.v) return;
             const s = L.cell - 3;
@@ -121,7 +123,7 @@
           };
         }
         if (n.v !== v) {
-          n.v = v;
+          n.v = v;n.badge.v=v;
           if (animate && v >= 2) { n.sx = n.sy = 1.2; st.tween(n, { sx: 1, sy: 1 }, 380, E().outCubic); st.sparkle(n.x, n.y, L.cell / 3, 3); }
         }
       });
@@ -621,7 +623,7 @@
             S('free');
             for(const n of stars){st.sparkle(n.x,n.y,L.rc*.5,8);await st.popText(n.x,n.y,'+1 SPIN',{size:Math.max(12,L.rc*.32),color:'#ffe9a0',stroke:'#6a1000',hold:200});await st.tween(n,{sx:1.35,sy:1.35},180);await st.tween(n,{sx:1,sy:1},160);}
           }
-          state.base = sp.base; const roundWin=Math.max(0,sp.base-previousBase);setSpinWin(roundWin);await hooks.onRoundWin?.(roundWin);hooks.onScore(Math.min(r.score,Math.floor(sp.base*sp.mult)));
+          state.base = sp.base; const roundWin=Math.max(0,sp.base-previousBase);setSpinWin(roundWin);hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(sp.mult));await hooks.onRoundWin?.(roundWin);hooks.onScore(Math.min(r.score,Math.floor(sp.base*sp.mult)));
           hooks.onSpin(k + 1, sp.total);
           await Promise.all([st.roundPause(),...reel.map((n) => st.tween(n, { alpha: 0 }, 160))]);
         }
@@ -633,7 +635,7 @@
           await st.banner(['最低保証', `${hooks.fmt(f.score)} コイン`], {});
         }
         await hooks.onRoundWin?.(Math.max(0,r.score-state.base));
-        hooks.onScore(r.score); setSpinWin(r.score);
+        hooks.onScore(r.score); setSpinWin(r.score);hooks.onFeatureMetric?.('最終倍率','×'+hooks.fmt(f.mult));
         hooks.onMode?.('COMPLETE');
       },
     };
@@ -651,7 +653,7 @@
     const st=new ZG.Stage(canvas,{fit:'container',bg:(ctx,w,h)=>{
       const g=geometry(w,h),d=g.gap;
       const bg=ctx.createRadialGradient(w/2,h*.38,20,w/2,h*.5,Math.max(w,h)*.65);bg.addColorStop(0,'#192c57');bg.addColorStop(1,'#080e20');ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
-      ZG.rr(ctx,g.x-d*(rows/2+.85),g.y-g.rise*.5,d*(rows+1.7),g.rise*(rows+1.5)+g.labelH+3,12);ctx.fillStyle='#101b34';ctx.fill();ctx.strokeStyle=({low:'#6296be',medium:'#be8450',high:'#da5751'})[risk]||'#34486e';ctx.lineWidth=2.5;ctx.stroke();
+      ZG.rr(ctx,g.x-d*(rows/2+.85),g.y-g.rise*.5,d*(rows+1.7),g.rise*(rows+1.5)+g.labelH+3,12);const cabinet=ctx.createLinearGradient(0,g.y,0,g.y+g.rise*(rows+1)+g.labelH);cabinet.addColorStop(0,'#192a4b');cabinet.addColorStop(.55,'#101a32');cabinet.addColorStop(1,'#263d60');ctx.fillStyle=cabinet;ctx.fill();ctx.strokeStyle=({low:'#8abbdc',medium:'#d4ac70',high:'#da7771'})[risk]||'#34486e';ctx.lineWidth=2.5;ctx.stroke();
       ctx.save();ctx.beginPath();ctx.moveTo(g.x,g.y);ctx.lineTo(g.x-d*(rows/2+.5),g.y+g.rise*(rows+.5));ctx.lineTo(g.x+d*(rows/2+.5),g.y+g.rise*(rows+.5));ctx.closePath();ctx.fillStyle='#1e335b';ctx.fill();ctx.restore();
       const gate=ctx.createLinearGradient(g.x-d*.52,0,g.x+d*.52,0);
       gate.addColorStop(0,'#403e4c');gate.addColorStop(.25,'#dfba79');gate.addColorStop(.5,'#282a38');gate.addColorStop(.8,'#e6c994');gate.addColorStop(1,'#48404a');
