@@ -54,11 +54,11 @@
     });
     const layout = (w, h) => {
       const R = opt.region ? opt.region(w, h) : { x: 0, y: 0, w, h };
-      const pad = Math.max(12, Math.min(R.w, R.h) * 0.04);
-      L.cell = Math.max(8,Math.floor(Math.min((R.w - pad * 2) / cols, (R.h - pad * 2 - 28) / rows)));
+      const pad = theme==='fruit'?Math.max(13,Math.min(R.w,R.h)*.035):Math.max(12, Math.min(R.w, R.h) * 0.04);
+      L.cell = Math.max(8,Math.floor(Math.min((R.w - pad * 2) / cols, (R.h - pad * 2 - (theme==='fruit'?0:28)) / rows)));
       L.ox = Math.round(R.x + (R.w - L.cell * cols) / 2); L.oy = Math.round(R.y + (R.h - L.cell * rows) / 2);
       // キャラを盤面の上に置くときは、盤面を下に寄せて上にスペースを作る
-      L.oy = Math.round(R.y + R.h - pad * 1.1 - L.cell * rows);
+      if(theme!=='fruit')L.oy = Math.round(R.y + R.h - pad * 1.1 - L.cell * rows);
       // 盤面の外（枠の上）に絵柄がはみ出して見えないように切り抜く
       if (st) st.clipRect = { x: L.ox - 4, y: L.oy - 4, w: L.cell * cols + 8, h: L.cell * rows + 8 };
     };
