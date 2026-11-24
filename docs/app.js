@@ -526,7 +526,7 @@ async function viewGame(id, demo, daily=false) {
       <div class="gm-tier" id="rTier"></div>
       <div class="gm-mode" id="gmMode">${p.game==='mine'?'採掘チャレンジ':p.game==='plinko'?'1球あたりの獲得コイン':'BONUS GAME'}</div>
       <div class="gm-demo">${daily?'DAILY BONUS · 消費0 C':demo ? 'DEMO · 記録なし' : 'FREE PLAY · テストコイン専用'}</div>
-      <div class="gm-round-win" id="gmRoundWin" aria-live="polite" ${p.game==='mine'?'style="display:none"':''}>${p.game==='plinko'?'<div class="plinko-result-mult"><span>直近1球</span><strong id="plinkoLastCoin">—</strong></div><div class="plinko-result-pay"><span>配当</span><b id="gmRoundAmount">0 C</b></div>':'<span>ROUND WIN</span><b id="gmRoundAmount">0 C</b>'}</div>
+      <div class="gm-round-win" id="gmRoundWin" aria-live="polite" ${p.game==='mine'?'style="display:none"':''}>${p.game==='plinko'?'<div class="plinko-result-mult"><span>直近1球</span><strong id="plinkoLastCoin">—</strong></div><div class="plinko-result-pay"><span>配当</span><b id="gmRoundAmount">0 C</b></div>':'<span>ROUND WIN</span><b id="gmRoundAmount">0 C</b>'+(p.game==='rush'?'<strong id="gmRoundMultiplier" hidden></strong>':'')}</div>
       ${['fruit','gods'].includes(p.game)?'<div class="fruit-detail" id="fruitDetail" aria-label="タンブル配当明細"><span>配当明細</span><div id="fruitDetailItems"></div></div>':''}
       <div class="gm-hud">
         <div class="gm-status" id="gmStatus">READY TO PLAY</div>
@@ -610,10 +610,10 @@ async function viewGame(id, demo, daily=false) {
     onScore: (v, speed) => { rushCountTo(v, speed); setRushTier(p, v); },
     onRoundWin: async (v, speed = rushSpeed) => {const el=$('#gmRoundWin');if(!el)return;const total=$('#rScore')?.closest('.gm-box');$('#gmRoundAmount').textContent=num(Math.round(v*100)/100)+' C';el.classList.add('settled');await sleep(650*speed);el.classList.remove('settled');total?.classList.add('settled');setTimeout(()=>total?.classList.remove('settled'),350);},
     onBallLand:(v)=>{const el=$('#gmRoundAmount');if(el)el.textContent=num(v)+' C';const latest=$('#plinkoLastCoin');if(latest&&Number.isFinite(v))latest.textContent=num(v)+' C';},
-    onMultiplier:(base,mult)=>{if(p.game==='rush')$('#gmRoundAmount').textContent=num(base)+' × '+mult;},
-    onSpinWin: (v) => { const el = $('#gmRoundAmount');if(el)el.textContent=num(v)+' C'; },
+    onMultiplier:(base,mult)=>{if(p.game==='rush'){$('#gmRoundAmount').textContent=num(base)+' C';const el=$('#gmRoundMultiplier');el.textContent='×'+num(mult);el.hidden=false;}},
+    onSpinWin: (v) => { const el = $('#gmRoundAmount');if(el)el.textContent=num(v)+' C';const mult=$('#gmRoundMultiplier');if(mult)mult.hidden=true; },
     onTumble:(groups)=>{const el=$('#fruitDetailItems');if(!el)return;for(const g of groups){const row=document.createElement('span');row.textContent=g.cells.length+'個 · '+num(g.base)+(g.mult>1?' ×'+g.mult:'')+' = '+num(g.pay)+' C';if(p.game==='gods'){const i=Number(g.sym.slice(1)),icon=document.createElement('i');icon.style.cssText='width:24px;height:24px;background-image:url(./assets/anime/gods/atlas-v2.webp);background-size:400% 300%;background-position:'+(i%4*100/3)+'% '+(Math.floor(i/4)*50)+'%';row.prepend(icon);}else{const icon=document.createElement('img');icon.src=ZG.art.sprite('fruit',g.sym,24).toDataURL();row.prepend(icon);}el.append(row);}el.scrollLeft=el.scrollWidth;},
-    onSpin: (n, total) => { if(gameCtx.spinIndex!==n){if($('#gmRoundAmount'))$('#gmRoundAmount').textContent='0 C';if($('#fruitDetailItems'))$('#fruitDetailItems').replaceChildren();} gameCtx.spinIndex=n; $('#rSpin').textContent = String(Math.max(0,total-n)); const el=$('#gmStatus'); if(el) el.textContent=p.game==='plinko'?`BALL ${n} / ${total}`:p.game==='train'?`RESPIN ${n}`:`SPIN ${n} / ${total}`; },
+    onSpin: (n, total) => { if(gameCtx.spinIndex!==n){if($('#gmRoundAmount'))$('#gmRoundAmount').textContent='0 C';if($('#gmRoundMultiplier'))$('#gmRoundMultiplier').hidden=true;if($('#fruitDetailItems'))$('#fruitDetailItems').replaceChildren();} gameCtx.spinIndex=n; $('#rSpin').textContent = String(Math.max(0,total-n)); const el=$('#gmStatus'); if(el) el.textContent=p.game==='plinko'?`BALL ${n} / ${total}`:p.game==='train'?`RESPIN ${n}`:`SPIN ${n} / ${total}`; },
     onRemaining: remaining => {$('#rSpin').textContent=String(Math.max(0,remaining));},
     onMode: (mode) => {const el=$('#gmMode'); if(el)el.textContent=mode==='ENTRY'?'BONUS TRIGGER':mode==='COMPLETE'?'ROUND COMPLETE':'FREE SPINS'; if(mode==='COMPLETE')$('#rSpin').textContent='0'; $('#gm')?.classList.toggle('bonus-mode',mode==='BONUS');},
   });

@@ -71,7 +71,7 @@
    ZG.rr(ctx,x-9,y-9,bw+18,bh+18,13);ctx.fillStyle='#060815e8';ctx.fill();ctx.strokeStyle=cfg.accent;ctx.lineWidth=3;ctx.stroke();
    if(mode!=='gods')text(ctx,note,w/2,y-25,Math.min(19,w/22),cfg.accent,w-24);
    if(mode==='train'){if(trainOrder)text(ctx,trainOrder,w/2,y+bh+14,12,'#ffe19a',bw);text(ctx,'SPINS '+trainRemaining+' / '+trainReset,w*.25,y-50,Math.min(17,w/23),cfg.accent,w*.43);text(ctx,'TOTAL ×'+hooks.fmt(trainTotal),w*.75,y-50,Math.min(17,w/23),cfg.accent,w*.43);}
-   if(mode==='gods'){text(ctx,'TOTAL MULTIPLIER ×'+godsMult,w/2,y-50,Math.min(19,w/21),cfg.accent,w-20);text(ctx,'TUMBLE WIN '+godsTumble,w/2,y-25,Math.min(19,w/21),cfg.accent,w-20);}
+   if(mode==='gods'){text(ctx,'TOTAL ×'+hooks.fmt(godsMult),w/2,y-49,Math.min(32,w/10.5),'#ffe5a0',w-20);text(ctx,'WIN '+godsTumble,w/2,y-20,Math.min(27,w/12),'#fff5cf',w-20);}
    for(let j=0;j<cols*rows;j++){
     if(expansion&&j%cols===cols-1&&expansion.progress<.98)continue;
     const xx=x+j%cols*cell,yy=y+Math.floor(j/cols)*cell;
