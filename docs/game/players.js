@@ -83,10 +83,7 @@
           const illustrated=!!ZG.art.images?.gems?.[nd.id];
           const sp = ZG.art.sprite('gems', illustrated?nd.id:'bomb', symSize());
           const full = symSize() + sp.pad * 2; ctx.drawImage(sp, -full / 2, -full / 2, full, full);
-          if(illustrated)return;
-          ctx.font = `${L.cell * 0.36}px ${ZG.FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
-          ctx.lineWidth = L.cell * 0.1; ctx.strokeStyle = '#3a0010'; ctx.strokeText('×' + nd.id.slice(1), 0, L.cell * 0.1);
-          ctx.fillStyle = '#ffe14a'; ctx.fillText('×' + nd.id.slice(1), 0, L.cell * 0.1);
+          ZG.multiplierLabel(ctx,Number(nd.id.slice(1)),0,L.cell*.12,L.cell*.88,L.cell*.48);
           return;
         }
         const sp = ZG.art.sprite(theme, nd.id, symSize());
@@ -105,7 +102,7 @@
           const p = pos(i);
           n = spotNodes[i] = st.add({ x: p.x, y: p.y, z: 2, v: 0 });
           n.badge=st.add({x:p.x,y:p.y,z:7,v:0,clip:true});
-          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell,h=Math.max(11,s*.28),y=s*.32;ZG.rr(ctx,-s*.43,y-h*.5,s*.86,h,3);ctx.fillStyle='#421b12e8';ctx.fill();ctx.strokeStyle='#ffdf80';ctx.lineWidth=1;ctx.stroke();ctx.font='900 '+Math.max(10,s*.25)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#fff4c3';ctx.fillText('×'+nd.v,0,y,s*.78);};
+          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell;ZG.multiplierLabel(ctx,nd.v,0,s*.29,s*.90,s*.36);};
           n.draw = (ctx, nd) => {
             if (!nd.v) return;
             const s = L.cell - 3;
@@ -412,6 +409,7 @@
         const sp=ZG.art.sprite('mine',(nd.open?'chest-open-':nd.half?'chest-half-':'chest-')+nd.m,chestSize);
         const full=chestSize+sp.pad*2;
         ctx.drawImage(sp,-full/2,-full/2-(nd.open?L.cell*.045:0),full,full);
+        ZG.multiplierLabel(ctx,nd.m,0,L.cell*.19,L.cell*.90,L.cell*.38);
         if (!nd.open && dug[nd.c] && dug[nd.c].filter(Boolean).length >= ROWS - 1) {
           const k = 0.5 + 0.5 * Math.sin((t || 0) / 140 + nd.t0);
           ctx.save(); ctx.globalAlpha = 0.4 + 0.5 * k; ctx.strokeStyle = '#fff36a'; ctx.lineWidth = 3; ZG.rr(ctx, -L.cell / 2 + 2, -L.cell / 2 + 2, L.cell - 4, L.cell - 4, 8); ctx.stroke(); ctx.restore();
@@ -554,7 +552,7 @@
       st.tween(n, { ray: 0 }, 550);
       const total=Math.min(cap,Math.floor(state.base*ev.total));
       await st.carry(n,st.anchor('#rScore',{x:st.w/2,y:st.h*.85}),'+'+hooks.fmt(Math.max(0,total-Math.min(cap,Math.floor(state.base*mult))))+' C',CHEST[ev.mult],24);
-      hooks.onScore(total);
+      hooks.onScore(total);hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(ev.total));
       mult = ev.total;
       await st.wait(100);
     }

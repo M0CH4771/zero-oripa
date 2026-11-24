@@ -4,6 +4,19 @@
 (function () {
   const ZG = (window.ZG = window.ZG || {});
 
+  // Draw exact multiplier values as text, independent of the artwork resolution.
+  ZG.multiplierLabel = (ctx,value,x,y,width,height=width*.42) => {
+    const n=Number(value);if(!Number.isFinite(n)||n<0||width<=0||height<=0)return;
+    const label='×'+n.toLocaleString('en-US'),high=n>=50,medium=n>=10;
+    ctx.save();ctx.shadowBlur=0;ctx.globalAlpha=1;
+    ZG.rr(ctx,x-width/2,y-height/2,width,height,Math.min(7,height*.2));
+    ctx.fillStyle=high?'#47250e':medium?'#352047':'#141d35';ctx.fill();
+    ctx.strokeStyle=high?'#ffe39a':medium?'#e3b9ff':'#b9d7f9';ctx.lineWidth=Math.max(1,Math.min(2,height*.07));ctx.stroke();
+    ctx.font='900 '+Math.max(8,height*.81)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.lineJoin='round';ctx.lineWidth=Math.max(1,height*.1);ctx.strokeStyle='#090812';ctx.strokeText(label,x,y,width*.91);
+    ctx.fillStyle=high?'#fff0ab':'#fff';ctx.fillText(label,x,y,width*.91);ctx.restore();
+  };
+
   const Ease = {
     linear: (t) => t,
     outCubic: (t) => 1 - Math.pow(1 - t, 3),
