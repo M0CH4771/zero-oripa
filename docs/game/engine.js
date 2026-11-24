@@ -14,8 +14,8 @@
   const emblemColors=['#8bd8ff','#d4a2ff','#ffdc88'];
   ZG.emblemTrail=(ctx,theme,value,x,y,size,progress)=>{
     if(motionReduced()||!Number.isFinite(progress)||progress<=0||size<=0)return;
-    const color=emblemColors[multiplierTier(theme,value)],length=size*.68*Math.min(1,progress);
-    ctx.save();ctx.globalAlpha=.32*Math.min(1,progress);const g=ctx.createLinearGradient(x,y-length,x,y+size*.08);g.addColorStop(0,'#ffffff00');g.addColorStop(.75,color);g.addColorStop(1,'#ffffff00');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(x-size*.23,y-length);ctx.lineTo(x+size*.23,y-length);ctx.lineTo(x+size*.09,y+size*.08);ctx.lineTo(x-size*.09,y+size*.08);ctx.closePath();ctx.fill();ctx.restore();
+    const tier=multiplierTier(theme,value),color=emblemColors[tier],length=size*[.68,.9,1.12][tier]*Math.min(1,progress);
+    ctx.save();ctx.globalAlpha=[.28,.36,.44][tier]*Math.min(1,progress);const g=ctx.createLinearGradient(x,y-length,x,y+size*.08);g.addColorStop(0,'#ffffff00');g.addColorStop(.75,color);g.addColorStop(1,'#ffffff00');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(x-size*.23,y-length);ctx.lineTo(x+size*.23,y-length);ctx.lineTo(x+size*.09,y+size*.08);ctx.lineTo(x-size*.09,y+size*.08);ctx.closePath();ctx.fill();ctx.restore();
   };
   ZG.multiplierEmblem=(ctx,theme,value,x,y,size)=>{
     const n=Number(value),row=multiplierRows[theme];if(!Number.isFinite(n)||n<0||row===undefined||size<=0)return false;
@@ -183,10 +183,11 @@
     }
     emblemLand(theme,value,x,y,size){
       if(this.skip||this.dead||motionReduced()||![x,y,size,Number(value)].every(Number.isFinite)||size<=0)return;
-      const tier=multiplierTier(theme,Number(value)),color=emblemColors[tier],r=Math.min(size*.48,36);
-      // A short, localized confirmation ring outside the number. No delays or result changes.
-      if(this.rings.length<65)this.rings.push({x,y,r,color,age:0,life:320,strength:.55});
-      const shape=theme==='train'?'circle':'star';this.burst(x,y,{n:6,colors:[color,'#fff7cf'],size:Math.max(1.4,r*.06),speed:1.8,life:350,gravity:theme==='train'?-.02:.04,shape});
+      const tier=multiplierTier(theme,Number(value)),color=emblemColors[tier],r=Math.min(size*.51,48);
+      // A bounded, localized confirmation effect. The center remains clear for the exact number.
+      if(this.rings.length<65)this.rings.push({x,y,r,color,age:0,life:[300,420,500][tier],emblem:true,tier,theme});
+      const shape=theme==='train'?'circle':'star';this.burst(x,y,{n:[5,8,12][tier],colors:[color,'#fff7cf'],size:Math.max(1.4,r*.053),speed:[1.4,1.8,2.2][tier],life:[280,360,420][tier],gravity:theme==='train'?-.02:.04,shape});
+      if(tier===2&&this.t>=(this._emblemShakeUntil||0)){this._emblemShakeUntil=this.t+300;this.shake(4,140);}
     }
     beam(x,y,tx,ty,color='#ffe3a0'){
       if(this.skip||this.dead||this.rings.length>=65||![x,y,tx,ty].every(Number.isFinite))return;
@@ -335,7 +336,7 @@
         ctx.restore();
       }
       for (const p of this.parts) this.drawPart(ctx, p);
-      for(const r of this.rings){const k=r.age/r.life;ctx.save();ctx.globalAlpha=(1-k)*.75;ctx.strokeStyle=r.color;ctx.shadowColor=r.color;ctx.shadowBlur=6;ctx.lineWidth=2.4*(1-k)+.5;ctx.beginPath();if(r.tx!==undefined){ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+(r.tx-r.x)*Math.min(1,k*3),r.y+(r.ty-r.y)*Math.min(1,k*3));}else ctx.arc(r.x,r.y,r.r*(.18+.92*Ease.outCubic(k)),0,Math.PI*2);ctx.stroke();ctx.restore();}
+      for(const r of this.rings){const k=r.age/r.life;ctx.save();ctx.globalAlpha=(1-k)*.75;ctx.strokeStyle=r.color;ctx.shadowColor=r.color;ctx.shadowBlur=6;ctx.lineWidth=2.4*(1-k)+.5;ctx.beginPath();if(r.emblem){const radius=r.r*(.87+.32*Ease.outCubic(k));ctx.arc(r.x,r.y,radius,0,Math.PI*2);ctx.stroke();if(r.tier>=1){ctx.beginPath();const count=r.theme==='train'?8:r.theme==='dogs'?4:6;for(let i=0;i<count;i++){const a=i*Math.PI*2/count+k*.35,b=a+Math.PI/count;ctx.moveTo(r.x+Math.cos(a)*radius,r.y+Math.sin(a)*radius);ctx.lineTo(r.x+Math.cos(b)*radius*1.13,r.y+Math.sin(b)*radius*1.13);}ctx.stroke();}if(r.tier===2){ctx.beginPath();ctx.arc(r.x,r.y,radius*(1.08+k*.33),0,Math.PI*2);ctx.stroke();}}else{if(r.tx!==undefined){ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+(r.tx-r.x)*Math.min(1,k*3),r.y+(r.ty-r.y)*Math.min(1,k*3));}else ctx.arc(r.x,r.y,r.r*(.18+.92*Ease.outCubic(k)),0,Math.PI*2);ctx.stroke();}ctx.restore();}
       ctx.restore();
       for (const o of this.overlays.slice().sort((a, b) => a.z - b.z)) this.drawOverlay(ctx, o);
       if(this.overlays.some(o=>o.kind==='big'))for(const p of this.parts)if(p.shape==='coin')this.drawPart(ctx,p);

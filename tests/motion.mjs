@@ -22,6 +22,10 @@ capturedLabels=[];for(const value of [1,2,3,10,50,100,128,500,1000,20000])ZG.mul
 assert.deepEqual(capturedLabels,['×1','×2','×3','×10','×50','×100','×128','×500','×1,000','×20,000']);capturedLabels=null;
 await Promise.resolve();capturedLabels=[];for(const theme of ['gems','fruit','mine','gods','dogs','train'])for(const value of [2,12,100])assert.equal(ZG.multiplierEmblem(ctx,theme,value,20,20,40),true);
 assert.deepEqual(capturedLabels,Array.from({length:6},()=>['×2','×12','×100']).flat());capturedLabels=null;
+for(const [theme,values] of Object.entries({gems:[2,10,50],fruit:[2,8,32],mine:[2,5,8],gods:[2,10,50],dogs:[1,2,3],train:[1,10,50]})){
+ const stage=new ZG.Stage(canvas(),{fit:'container'});for(const [tier,v] of values.entries()){stage.emblemLand(theme,v,40,40,32);assert.equal(stage.rings.at(-1).tier,tier);if(tier<2)assert.equal(stage.shakeAmp,0);}assert.ok(stage.shakeAmp>0);const count=stage.rings.length;
+ globalThis.matchMedia=()=>({matches:true});stage.emblemLand(theme,values[2],40,40,32);assert.equal(stage.rings.length,count);delete globalThis.matchMedia;stage.draw();stage.destroy();
+}
 ZG.scene={background:()=>({}),character(){},frame(){},text3d(){}};
 ZG.art={sprite:()=>({width:100,height:100,pad:0}),preload:async()=>{},IDS:{gems:['l1','l2','l3','l4','l5','h1','h2','h3','h4'],fruit:['f1','f2','f3','f4','f5','f6','f7']},COLORS:{gems:{},fruit:{},mine:new Proxy({},{get:()=> '#987654'})}};
 ZG.shade=x=>x;ZG.sfx={play(){}};
