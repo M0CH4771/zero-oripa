@@ -1,0 +1,1 @@
+{"name":"zero-oripa-test","private":true,"type":"module","scripts":{"test":"node tests/earn.mjs && node tests/private-demo-smoke.mjs && node tests/plinko98.mjs && node tests/motion.mjs"}}

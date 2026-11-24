@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ゼロ円オリパ</title>
+<meta name="description" content="お金を1円も使わずにオリパが回せる。ログインボーナスと広告でコインを貯めよう。">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Luckiest+Guy&display=swap">
+<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./game-polish.css?v=polish46">
+<link rel="stylesheet" href="./lobby.css?v=plinko51">
+<link rel="stylesheet" href="./brand.css?v=brand49">
+<link rel="stylesheet" href="./earn.css?v=earn52">
+<style>body.gamemode #testControls{display:none}</style>
+</head>
+<body>
+<header class="top">
+  <a href="#home" class="logo brand-logo" id="siteName" aria-label="ゼロ円オリパ"><img src="./assets/brand/logo.webp" alt="ZERO ORIPA"></a>
+  <div class="head-right">
+    <button class="wallet" id="wallet" hidden><span class="coin-ico">C</span><b id="coinNum">0</b><span class="plus">＋</span></button>
+    <div class="guest-btns" id="guestBtns" hidden>
+      <button class="hbtn ghost" id="loginBtn">ログイン</button>
+      <button class="hbtn" id="signupBtn">新規会員登録</button>
+    </div>
+  </div>
+</header>
+
+<main id="view"></main>
+<aside style="position:fixed;z-index:30;bottom:76px;right:8px;background:#182038;color:white;border-radius:12px;padding:7px;box-shadow:0 2px 12px #0004;font-size:11px;text-align:center" id="testControls"><b>テスト専用・景品なし</b><br><button style="margin:4px;padding:5px;color:#111" onclick="testRefill()">+10万C</button><button style="margin:4px;padding:5px;color:#111" onclick="testReset()">リセット</button></aside>
+
+<nav class="bottom">
+  <a href="#home" data-tab="home"><img src="./assets/brand/nav-home.webp" alt="">オリパ一覧</a>
+  <a href="#earn" data-tab="earn"><img src="./assets/brand/coin.webp" alt="">貯める</a>
+  <a href="#ranking" data-tab="ranking"><img src="./assets/brand/nav-ranking.webp" alt="">ランキング</a>
+  <a href="#cards" data-tab="cards"><img src="./assets/brand/nav-cards.webp" alt="">獲得商品</a>
+  <a href="#me" data-tab="me"><img src="./assets/brand/nav-me.webp" alt="">マイページ</a>
+</nav>
+
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="./game/engine.js?v=polish46"></script>
+<script src="./game/audio.js?v=polish46"></script>
+<script src="./game/scene.js"></script>
+<script src="./game/art.js"></script>
+<script src="./game/feature-player.js?v=polish46"></script>
+<script src="./game/players.js?v=plinko51"></script>
+<script type="module" src="./test-api.js?v=github1"></script>
+</body>
+</html>
