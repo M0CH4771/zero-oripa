@@ -84,6 +84,8 @@
     const k=id[0]==='s'?+id.slice(1):id[0]==='W'?6:id[0]==='B'?(mode==='gods'?10:8):mode==='dwarf'?11:mode==='gods'?9:7;
     const d=cell*.94,cy=yy+cell/2+(spinning?((st.t%75)/75-.5)*cell*.85:m.shift*cell)-(mode==='gods'?(fall.dist[j]||0)*cell*fall.v:0),cx=xx+cell/2;
     ctx.save();ctx.beginPath();if(mode==='gods'&&fall.v>0)ctx.rect(x,y,bw,bh);else ctx.rect(xx,yy,cell,cell);ctx.clip();
+    if(mode==='gods'&&id.startsWith('B'))ZG.emblemTrail(ctx,mode,Number(id.slice(1)),cx,cy,d,Math.max(fall.v&&fall.dist[j]?fall.v:0,Math.abs(m.shift)));
+    if(mode==='train'&&typeof item==='object'&&!offset.locked?.has(j))ZG.emblemTrail(ctx,mode,item.value,cx,cy,d,Math.abs(m.shift));
     const usePlate=mode==='gods'&&id.startsWith('B')?drawPlate(ctx,Number(id.slice(1)),cx,cy,d):mode==='train'&&['coin','golden'].includes(item.kind)?drawPlate(ctx,item.value,cx,cy,d):false;
     if(mode==='train'&&typeof item==='object'){ctx.fillStyle='#c5ac85';for(const dx of [.09,.91])for(const dy of [.09,.91]){ctx.beginPath();ctx.arc(xx+cell*dx,yy+cell*dy,Math.max(1,cell*.035),0,Math.PI*2);ctx.fill();}if(item.persistent){ctx.strokeStyle='rgba(255,202,99,'+(.5+.3*Math.sin(st.t/310))+')';ctx.strokeRect(xx+3,yy+3,cell-6,cell-6);}}
     if(usePlate){ctx.restore();continue;}
@@ -121,7 +123,7 @@
   }
   function cellPoint(j){if(!Number.isInteger(j))return null;if(mode==='dogs')return dogPositions[j];if(!board)return null;return {x:board.x+(j%cols+.5)*board.cell,y:board.y+(Math.floor(j/cols)+.5)*board.cell};}
   function highlight(h){for(const j of h||[]){const p=cellPoint(j);if(p)st.impact(p.x,p.y,Math.min(32,board?.cell*.37||23),cfg.accent,.38);}}
-  async function reelSpin(base,stagger){offset.v=1;offset.reels=Array.from({length:cols},()=>({v:0}));ZG.sfx?.play('spin');await Promise.all(offset.reels.map((r,c)=>st.tween(r,{v:1},base+c*stagger,ZG.Ease.linear).then(()=>{if(mode==='dogs')dogWays*=dogHeights[c];const p=cellPoint(c);if(p)st.landing(p.x,p.y,20,cfg.accent);ZG.sfx?.play('land',c);})));offset.v=0;}
+  async function reelSpin(base,stagger){offset.v=1;offset.reels=Array.from({length:cols},()=>({v:0}));ZG.sfx?.play('spin');await Promise.all(offset.reels.map((r,c)=>st.tween(r,{v:1},base+c*stagger,ZG.Ease.linear).then(()=>{if(mode==='dogs')dogWays*=dogHeights[c];const p=cellPoint(c);if(p)st.landing(p.x,p.y,20,cfg.accent);for(let j=c;j<grid.length;j+=cols){if(offset.locked?.has(j))continue;const item=grid[j],value=mode==='train'&&item&&typeof item==='object'?item.value:typeof item==='string'&&((mode==='gods'&&item.startsWith('B'))||(mode==='dogs'&&item.startsWith('W')))?Number(item.slice(1)):null;const q=cellPoint(j);if(q&&value!==null)st.emblemLand(mode,value,q.x,q.y,board?.cell||Math.min(st.w/6,45));}ZG.sfx?.play('land',c);})));offset.v=0;}
   async function showDogs(sp,routine=false){dogHeights=sp.heights;dogWays=1;dogPay=0;const locked=sp.mode==='sticky'?grid.flatMap((v,j)=>v?.startsWith('W')&&v===sp.grid[j]?[j]:[]):[];offset.locked=new Set(locked);grid=sp.grid;hits=[];await reelSpin(routine?routineTime(430):430,routine?routineTime(135):135);dogWays=sp.ways;const freshWilds=[];
    hooks.onFeatureMetric?.('WAYS数',hooks.fmt(dogWays));
    for(const [j,v] of grid.entries())if(v?.startsWith('W')&&!offset.locked.has(j)){
@@ -203,7 +205,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    const removed=new Set(hits),dist=Array(30).fill(0);
    for(const j of hits){const p=cellPoint(j);if(p)st.burst(p.x,p.y,{n:8,colors:['#d6baff','#ffe5a0','#fff'],speed:3,life:420,shape:'star',size:3});}grid=grid.map((v,j)=>removed.has(j)?null:v);await st.wait(routineTime(200));
    for(let c=0;c<6;c++){const keep=[];for(let row=0;row<5;row++)if(grid[row*6+c]!=null)keep.push(row);const fresh=5-keep.length;for(let j=0;j<fresh;j++)dist[j*6+c]=fresh;keep.forEach((row,i)=>{dist[(fresh+i)*6+c]=fresh+i-row;});}
-   grid=step.grid;hits=[];fall.dist=dist;fall.v=1;await st.tween(fall,{v:0},routineTime(520),ZG.Ease.landing);ZG.sfx?.play('land');await Promise.all(texts);
+   grid=step.grid;hits=[];fall.dist=dist;fall.v=1;await st.tween(fall,{v:0},routineTime(520),ZG.Ease.landing);for(let j=0;j<grid.length;j++){const v=grid[j],p=cellPoint(j);if(dist[j]>0&&p&&typeof v==='string'&&v.startsWith('B'))st.emblemLand('gods',Number(v.slice(1)),p.x,p.y,board.cell);}ZG.sfx?.play('land');await Promise.all(texts);
   }
   let currentUnit=1;
   async function godsOrbs(sp){

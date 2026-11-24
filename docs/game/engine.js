@@ -9,11 +9,18 @@
   multiplierArt.onload=()=>{multiplierArtReady=true;};
   multiplierArt.src='./assets/anime/multiplier-emblems.webp?v=57';
   const multiplierRows={gems:0,fruit:1,mine:2,gods:3,dogs:4,train:5};
+  const multiplierTier=(theme,n)=>{const [middle,high]=({mine:[5,8],dogs:[2,3],fruit:[8,32],train:[10,50]})[theme]||[10,50];return n>=high?2:n>=middle?1:0;};
+  const motionReduced=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const emblemColors=['#8bd8ff','#d4a2ff','#ffdc88'];
+  ZG.emblemTrail=(ctx,theme,value,x,y,size,progress)=>{
+    if(motionReduced()||!Number.isFinite(progress)||progress<=0||size<=0)return;
+    const color=emblemColors[multiplierTier(theme,value)],length=size*.68*Math.min(1,progress);
+    ctx.save();ctx.globalAlpha=.32*Math.min(1,progress);const g=ctx.createLinearGradient(x,y-length,x,y+size*.08);g.addColorStop(0,'#ffffff00');g.addColorStop(.75,color);g.addColorStop(1,'#ffffff00');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(x-size*.23,y-length);ctx.lineTo(x+size*.23,y-length);ctx.lineTo(x+size*.09,y+size*.08);ctx.lineTo(x-size*.09,y+size*.08);ctx.closePath();ctx.fill();ctx.restore();
+  };
   ZG.multiplierEmblem=(ctx,theme,value,x,y,size)=>{
     const n=Number(value),row=multiplierRows[theme];if(!Number.isFinite(n)||n<0||row===undefined||size<=0)return false;
     if(!multiplierArtReady)return false;
-    const [middle,high]=({mine:[5,8],dogs:[2,3],fruit:[8,32],train:[10,50]})[theme]||[10,50];
-    const tier=n>=high?2:n>=middle?1:0;
+    const tier=multiplierTier(theme,n);
     const [top,height,center]=[[0,265,155],[265,250,410],[515,238,663],[753,243,883],[996,240,1141],[1236,300,1367]][row];
     const sx=multiplierArt.width/1024,sy=multiplierArt.height/1536, left=[35,355,675][tier];
     ctx.save();ctx.drawImage(multiplierArt,left*sx,top*sy,300*sx,height*sy,x-size/2,y-size/2,size,size);
@@ -173,6 +180,13 @@
     landing(x,y,r=18,color='#fff0c7'){
       if(this.skip||this.dead)return;
       this.burst(x,y,{n:4,colors:[color,'#fff'],size:Math.max(1.3,r*.07),speed:1.4,life:250,gravity:.025,shape:'star'});
+    }
+    emblemLand(theme,value,x,y,size){
+      if(this.skip||this.dead||motionReduced()||![x,y,size,Number(value)].every(Number.isFinite)||size<=0)return;
+      const tier=multiplierTier(theme,Number(value)),color=emblemColors[tier],r=Math.min(size*.48,36);
+      // A short, localized confirmation ring outside the number. No delays or result changes.
+      if(this.rings.length<65)this.rings.push({x,y,r,color,age:0,life:320,strength:.55});
+      const shape=theme==='train'?'circle':'star';this.burst(x,y,{n:6,colors:[color,'#fff7cf'],size:Math.max(1.4,r*.06),speed:1.8,life:350,gravity:theme==='train'?-.02:.04,shape});
     }
     beam(x,y,tx,ty,color='#ffe3a0'){
       if(this.skip||this.dead||this.rings.length>=65||![x,y,tx,ty].every(Number.isFinite))return;

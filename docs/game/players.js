@@ -80,6 +80,7 @@
       n.draw = (ctx, nd) => {
         if (nd.id[0] === 'B') {
           if(nd.released){ZG.scene.text3d(ctx,nd.id.replace('B','×'),0,0,L.cell*.48,{});return;}
+          ZG.emblemTrail(ctx,'gems',Number(nd.id.slice(1)),0,0,L.cell,nd.motion||0);
           if(ZG.multiplierEmblem(ctx,'gems',Number(nd.id.slice(1)),0,0,L.cell*.99))return;
           const illustrated=!!ZG.art.images?.gems?.[nd.id];
           const sp = ZG.art.sprite('gems', illustrated?nd.id:'bomb', symSize());
@@ -122,7 +123,7 @@
         }
         if (n.v !== v) {
           n.v = v;n.badge.v=v;
-          if (animate && v >= 2) { n.sx = n.sy = 1.2; st.tween(n, { sx: 1, sy: 1 }, 380, E().outCubic); st.sparkle(n.x, n.y, L.cell / 3, 3); }
+          if (animate && v >= 2) { n.sx = n.sy = 1.2; st.tween(n, { sx: 1, sy: 1 }, 380, E().outCubic); st.sparkle(n.x, n.y, L.cell / 3, 3);st.emblemLand('fruit',v,n.x,n.y,L.cell); }
         }
       });
     }
@@ -139,7 +140,7 @@
         const p = pos(i), c = i % cols, r = Math.floor(i / cols);
         const rush=theme==='gems';
         const delay=timing(c*(rush?155:125));
-        return st.tween(n,{y:p.y,motion:0},timing(rush?940:780),E().landing,delay).then(()=>{if(!landed.has(c)){landed.add(c);S('land',c);const q=pos((rows-1)*cols+c);st.landing(q.x,q.y+L.cell*.34,L.cell*.28,theme==='fruit'?'#ffccf5':'#d8e4ff');}});
+        return st.tween(n,{y:p.y,motion:0},timing(rush?940:780),E().landing,delay).then(()=>{if(n.id.startsWith('B'))st.emblemLand('gems',Number(n.id.slice(1)),p.x,p.y,L.cell);if(!landed.has(c)){landed.add(c);S('land',c);const q=pos((rows-1)*cols+c);st.landing(q.x,q.y+L.cell*.34,L.cell*.28,theme==='fruit'?'#ffccf5':'#d8e4ff');}});
       }));
     }
     async function pulse(list, color, routine=false) {
@@ -165,7 +166,7 @@
         for (let r = 0; r < k; r++) { const to = r * cols + c; const n = makeNode(newGrid[to], to, -(k + 0.5) * L.cell - 30); next[to] = n; moves.push([n, to, true]); }
       }
       nodes = next;
-      await Promise.all(moves.map(([n, to, fresh]) => { const p = pos(to);n.motion=Math.min(1,Math.abs(p.y-n.y)/(3*L.cell));return st.tween(n, { y: p.y,motion:0 }, routineTime(fresh ? 400 : 300), E().landing, routineTime((to % cols) * 28)).then(()=>{if(fresh)st.landing(p.x,p.y+L.cell*.22,L.cell*.20,theme==='fruit'?'#ffb7f2':'#d8d6ff');}); }));
+      await Promise.all(moves.map(([n, to, fresh]) => { const p = pos(to);n.motion=Math.min(1,Math.abs(p.y-n.y)/(3*L.cell));return st.tween(n, { y: p.y,motion:0 }, routineTime(fresh ? 400 : 300), E().landing, routineTime((to % cols) * 28)).then(()=>{if(fresh){st.landing(p.x,p.y+L.cell*.22,L.cell*.20,theme==='fruit'?'#ffb7f2':'#d8d6ff');if(n.id.startsWith('B'))st.emblemLand('gems',Number(n.id.slice(1)),p.x,p.y,L.cell);}}); }));
       S('land', 2);
       nodes.forEach((n, i) => { if (n && n.id !== newGrid[i]) n.id = newGrid[i]; });
     }
@@ -546,6 +547,7 @@
       for(const dx of [-.045,.045,0])await st.tween(n,{x:x0+L.cell*dx},55,E().outCubic);
       await st.tween(n,{sx:.94,sy:.94},130,E().outCubic);n.half=true;n.ray=.3;await st.wait(165);await st.tween(n,{sx:1.04,sy:1.04},100,E().outCubic);
       n.x = x0; n.open = 1; n.sx = n.sy = .97;st.impact(n.x,n.y,L.cell*.82,CHEST[ev.mult]||'#fff4bd',1.5);
+      st.emblemLand('mine',ev.mult,n.x,n.y,L.cell);
       st.tween(n, { ray: 1 }, 300);
       st.sparkle(n.x, n.y, L.cell * 0.7, 14);
       st.burst(n.x, n.y, { n: 26, colors: [CHEST[ev.mult], '#fff', '#ffe14a'], speed: 5.5, size: 4, life: 900, up: 2 });
