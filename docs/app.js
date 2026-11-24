@@ -439,7 +439,7 @@ const RULES = {
   gods:['6×5の盤面で同じ絵柄8個以上がそろうと消えて連鎖。','4スキャッターで15回。4/5/6個は基準ベットの3/5/100倍。フリースピン中は3個以上で5回追加。','×2〜500の新規オーブが当たりスピンに出た場合だけ累積倍率を加算・適用。ハズレ時のオーブは不発。',featureBounds('gods')],
   dogs:['6リール・各2〜7段。左から3リール以上の連続一致。最大117,649 WAYS。','3〜6個の肉球でSTICKY（7/12/15/20回）かRAINING（15/18/25/30回）を選択。','ワイルドは2〜5リールのみ。×1〜3の倍率は組み合わせごとに乗算。再トリガーなし。',featureBounds('dogs')],
   train:['5×3、3リスピンから開始。空きマスに新しいコインが着地すると回数がリセット。','通常コイン×1〜10、GOLDEN×20〜200（基準ベット倍率）。','PAYER・COLLECTOR・COLLECTOR/PAYER・SNIPER・NECROMANCER・RESET PLUSが発動。P付きは毎回発動します。','最大7列へ拡張。全マス完成で合計×2。TOTAL×基準ベットが最終配当です。',featureBounds('train')],
-  dwarf:['最初のフリースピンは10回。宝箱からコインを獲得。','10回消化するたびにバトル。勝利でゴブリン＋10回、トロール＋20回、ドラゴン＋30回。','敗北は追加なし。残りスピンがあれば続行。',featureBounds('dwarf')],
+  dwarf:['最初のフリースピンは10回。宝箱からコインを獲得。','10回消化するたびにバトル。勝利でゴブリン＋10回、トロール＋20回、ドラゴン＋30回。','出現率：ゴブリン65%・トロール25%・ドラゴン10%。攻撃1／2は各27.64%、被ダメージ2択は各22.36%。','平均バトル勝率 約60%。敗北は追加なし。残りスピンがあれば続行。',featureBounds('dwarf')],
   plinko:['ボールが8・12・16段のピンを左右に通過します。','最下段に表示されたコイン数を1球ごとに獲得します。BETに応じて表示が変わります。','全9設定で理論還元率90%。0 Cの着地枠もあり、配当額に別途上限は設けません。'],
   rush: ['テストコインのレートを選び、BONUSで10回のフリースピンを開始します', '6×5の盤面のどこでも、同じ宝石が8個以上あれば配当。消えたあと上から落ちてきて連鎖します',
     '魔法のオーブ（×2〜×100）が出現し、勝った連鎖の合計に倍率を適用します', '魔法の杖が3個以上で5回追加。4／5／6個以上の杖には3／5／100倍の配当（テスト版の最大120回）','1回のボーナス全体の配当は0.1〜50倍。還元率目標97%。'],
@@ -514,7 +514,7 @@ async function viewGame(id, demo, daily=false) {
   const theme = ZG.THEME_OF[p.game] || 'gems';
   const normalSpeed = 1.2;
   rushSpeed = normalSpeed;
-  gameCtx = { p, demo,daily, count:1,risk:'medium',rows:12,credits: demo ? 100000 : ME.user.coins, busy: false, win: 0 };
+  gameCtx = { p, demo,daily, count:1,risk:'medium',rows:12,credits: demo ? (p.game==='plinko'?100000:10000000) : ME.user.coins, busy: false, win: 0 };
   $('#view').innerHTML = `
     <div class="gm theme-${theme}" id="gm">
       <canvas id="gcanvas" class="gm-canvas"></canvas>
@@ -539,7 +539,7 @@ async function viewGame(id, demo, daily=false) {
         <div class="gm-ctl">
           <button class="gm-icon sm" id="gmInfo" aria-label="${p.game==='plinko'?'配当一覧・遊び方':'遊び方'}"><b>ⓘ</b><small>${p.game==='plinko'?'配当表':'INFO'}</small></button>
           <div class="gm-bet"><button class="gm-pm" id="betMinus">−</button>
-            <div class="gm-betv"><span>${p.game==='plinko'?'1 BALL':'1 BONUS'}</span><b id="hBet">${num(rushRate)}</b>${['rush','fruit'].includes(p.game)?'<small id="hUnit" style="display:block;font-size:10px;color:#fff">基準 '+num(rushRate/100)+' C</small>':''}</div>
+            <button type="button" id="betSelect" class="gm-betv" aria-label="ベット額を選択"><span>${p.game==='plinko'?'1 BALL':'1 BONUS'}</span><b id="hBet">${num(rushRate)}</b>${['rush','fruit'].includes(p.game)?'<small id="hUnit" style="display:block;font-size:10px;color:#fff">基準 '+num(rushRate/100)+' C</small>':''}</button>
             <button class="gm-pm" id="betPlus">＋</button></div>
           <button class="gm-spin" id="rPlay" aria-label="${p.game==='plinko'?'落とす':'ボーナス開始'}">${p.game==='plinko'?'<b>落とす</b><small>DROP</small>':SPIN_SVG+'<small>BONUS</small>'}</button>
           <button class="gm-icon sm" id="gmTurbo" aria-label="速度切替"><b>⚡</b><small>NORMAL</small></button>
@@ -583,7 +583,8 @@ async function viewGame(id, demo, daily=false) {
   const stepBet = (d) => { if (gameCtx.busy||daily) return; const i = p.rates.indexOf(rushRate); rushRate = p.rates[Math.max(0, Math.min(p.rates.length - 1, i + d))]; hud(); ZG.sfx.play('click'); setRushTier(p, 0); };
   $('#betMinus').onclick = () => stepBet(-1);
   $('#betPlus').onclick = () => stepBet(1);
-  if(daily){$('#betMinus').disabled=true;$('#betPlus').disabled=true;}
+  $('#betSelect').onclick=()=>{if(gameCtx.busy||daily)return;const s=sheet(`<h3>ベット額を選択</h3><div class="bet-options">${p.rates.map(v=>`<button class="${v===rushRate?'active':''}" data-bet="${v}">${num(v)} C</button>`).join('')}</div><button class="btn ghost" id="betClose">閉じる</button>`);s.querySelectorAll('[data-bet]').forEach(b=>b.onclick=()=>{if(gameCtx.busy)return;rushRate=Number(b.dataset.bet);hud();setRushTier(p,0);ZG.sfx.play('click');closeSheet();});$('#betClose',s).onclick=closeSheet;};
+  if(daily){$('#betMinus').disabled=true;$('#betPlus').disabled=true;$('#betSelect').disabled=true;}
 
   // ---- 読み込み ----
   setLoad(0.02, 'フォント');
@@ -691,7 +692,7 @@ async function gameSpin() {
   const btn = $('#rPlay');
   btn.classList.add('busy');
   $('#gmStatus').textContent = 'SPINNING';
-  document.querySelectorAll('.gm-pm, #gmBack').forEach((b) => (b.disabled = true));
+  document.querySelectorAll('.gm-pm, #gmBack, #betSelect').forEach((b) => (b.disabled = true));
   document.querySelectorAll('.plinko-counts button,#plinkoCustom,#plinkoRisk,#plinkoRows').forEach(b=>b.disabled=true);
   try {
     if(daily&&!(await api('/api/daily')).available){location.hash='#bonus';return;}
@@ -725,7 +726,7 @@ async function gameSpin() {
     if ($('#gmStatus')) $('#gmStatus').textContent = 'ROUND COMPLETE';
     gameCtx && (gameCtx.busy = false);
     btn.classList.remove('busy');
-    document.querySelectorAll('.gm-pm, #gmBack').forEach((b) => (b.disabled = daily&&b.classList.contains('gm-pm')));
+    document.querySelectorAll('.gm-pm, #gmBack, #betSelect').forEach((b) => (b.disabled = daily&&(b.classList.contains('gm-pm')||b.id==='betSelect')));
     document.querySelectorAll('.plinko-counts button,#plinkoCustom').forEach(b=>b.disabled=daily);document.querySelectorAll('#plinkoRisk,#plinkoRows').forEach(b=>b.disabled=false);
     if (!demo) refreshMe().then(() => { if (gameCtx && !gameCtx.demo && ME.user) { gameCtx.credits = ME.user.coins; $('#hCoin') && ($('#hCoin').textContent = num(gameCtx.credits)); } });
   }

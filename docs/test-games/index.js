@@ -3,7 +3,7 @@ import * as rush from './rush.js?v=rtp97';
 import * as fruit from './fruit.js?v=rtp97';
 import * as mine from './mine.js?v=rtp97';
 import * as plinko from './plinko.js?v=rtp97';
-import {FEATURE_CONFIG,featureModule} from './features.js?v=roulette2';
+import {FEATURE_CONFIG,featureModule} from './features.js?v=dwarf60';
 
 import {hasFeature} from './bonus-round.js';
 import {secureRandom} from './common.js';
@@ -18,7 +18,9 @@ export const GAMES = {
 export function gameOf(name) { return GAMES[name] || GAMES.rush; }
 export function volatilityOf(game, vol) { const g = gameOf(game).mod; return g.VOLATILITY[vol] || g.VOLATILITY.normal; }
 export function playGame(game, opts) { const mod=gameOf(game).mod;
-  if(game==='plinko')return mod.play(opts);
+  // DWARF uses its actual weighted combat distribution. Do not select rounds
+  // by payout, which would bias the observed battle win rate.
+  if(game==='plinko'||game==='dwarf')return mod.play(opts);
   const target=opts.rate*.97,rand=opts.rand||secureRandom;
   let low,high;
   // Both candidates are complete native rounds. Their weighted mean is the

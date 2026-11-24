@@ -1,6 +1,6 @@
-import { playGame, tierFor } from './test-games/index.js?v=roulette2';
+import { playGame, tierFor } from './test-games/index.js?v=dwarf60';
 import { plinkoConfig } from './test-games/plinko.js?v=rtp97';
-import {FEATURE_CONFIG} from './test-games/features.js?v=roulette2';
+import {FEATURE_CONFIG} from './test-games/features.js?v=dwarf60';
 import {createEarnState,earnView,earnAction} from './earn.js?v=earn52';
 window.plinkoConfig=plinkoConfig;
 window.FEATURE_CONFIG=FEATURE_CONFIG;
@@ -16,6 +16,7 @@ s.monthly??={};
 const dailyDate=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Tokyo'});
 const monthKey=()=>dailyDate().slice(0,7),monthPoints=()=>s.monthly[monthKey()]||0;
 const DAILY_RATE=1000;
+const SLOT_RATES=[500,1000,2000,3000,4000,5000,10000,20000,30000,50000,100000,200000,300000,400000,500000,1000000];
 const dailyAvailable=()=>{try{return s.dailyPlayed!==dailyDate()&&localStorage.getItem(key+'-daily')!==dailyDate();}catch{return s.dailyPlayed!==dailyDate();}};
 function preparePacks(){
  s.packs=s.packs.filter(p=>!['daily','new'].includes(p.tag));
@@ -33,7 +34,7 @@ const tier = () => { const t = [...config.tiers].reverse().find(t=>s.spent>=t.mi
 const me = () => ({user:{id:1,nickname:s.nickname,nickname_set:true,coins:s.coins,ship_points_total:s.points,month_points:monthPoints(),streak:s.bonus?1:0,bonus_available:!s.bonus,daily_limit:s.limit,ad_today:s.ad,ad_max:config.ad_daily_max,ad_reward:config.ad_reward,total_spent:s.spent,tier:tier(),bonus_amount:Math.round(config.login_bonus*(1+tier().bonus))},invite:{code:'TESTONLY',invited:0,rewarded:0,used:false,can_enter:false},stats:{spent:s.spent,today_spent:s.spent,got:s.cards.reduce((a,c)=>a+c.value,0),draws:s.cards.length,held:s.cards.filter(c=>c.status==='held').length},claims:[]});
 const card = (p,c) => { const x={id:++s.seq,card_id:s.seq,pack_id:p.id,rank:c.rank,name:c.name,value:c.value,image:c.image||null,status:'held',created_at:Date.now()}; s.cards.push(x); return x; };
 const pay = n => { if(s.coins<n) throw new Error('コインが足りません。テスト補充をお試しください'); tx(-n,'draw'); s.spent+=n; };
-function packView(p){const badges={rush:'6×5・どこでも8個',fruit:'7×7・つながる5個',mine:'5列の採掘チャレンジ',plinko:'3段階の荒さ・RTP 90%',dogs:'6リール・最大117,649 WAYS'}; const rates=['rush','fruit'].includes(p.game)?[...new Set([...p.rates,10000])]:p.rates; return {...p,rates,max_mult:p.game==='plinko'?null:FEATURE_CONFIG[p.game]?.max??50,min_mult:p.game==='plinko'?0:FEATURE_CONFIG[p.game]?.min??.1,badge:badges[p.game]||p.badge,locked:null, today_left:p.per_user_daily?Math.max(0,p.per_user_daily-(p.playedToday||0)):null}; }
+function packView(p){const badges={rush:'6×5・どこでも8個',fruit:'7×7・つながる5個',mine:'5列の採掘チャレンジ',plinko:'3段階の荒さ・RTP 90%',dogs:'6リール・最大117,649 WAYS'}; const rates=p.kind==='rush'&&p.game!=='plinko'?SLOT_RATES:p.rates; return {...p,rates,max_mult:p.game==='plinko'?null:FEATURE_CONFIG[p.game]?.max??50,min_mult:p.game==='plinko'?0:FEATURE_CONFIG[p.game]?.min??.1,badge:badges[p.game]||p.badge,locked:null, today_left:p.per_user_daily?Math.max(0,p.per_user_daily-(p.playedToday||0)):null}; }
 async function api(path,b){
  const u=new URL(path,location.origin), pth=u.pathname; let m;
  if(pth==='/api/config') return config;
@@ -55,8 +56,8 @@ async function api(path,b){
    }
    const daily=m[2]==='daily', demo=m[2]==='rush-demo';
    if(daily&&(p.kind!=='rush'||!dailyAvailable()))throw Error('本日の無料プレイは利用済みです');
-   const rate=daily?DAILY_RATE:(+b.rate||p.rates[0]);
-   if(!p.rates.includes(rate)&&!daily&&rate!==10000)throw Error('レートを選び直してください');
+   const rates=packView(p).rates,rate=daily?DAILY_RATE:Number(b.rate??rates[0]);
+   if(!daily&&!rates.includes(rate))throw Error('レートを選び直してください');
    const count=p.game==='plinko'&&!daily?Number(b.count??1):1;
    if(!Number.isInteger(count)||count<1||count>1000)throw Error('球数は1〜1,000個');
    const risk=b.risk??'medium',rows=b.rows??12;
@@ -83,6 +84,6 @@ async function api(path,b){
 }
 const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
-window.testRefill=()=>{tx(100000,'admin');save();location.reload();};
+window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=github1');
+await import('./app.js?v=dwarf60');

@@ -4,7 +4,7 @@ export const FEATURE_CONFIG={
 gods:{id:12,title:'ZERO GODS',badge:'天空の累積倍率',min:.05,max:50,scale:.01,cols:6,rows:5,initial:15},
 dogs:{id:13,title:'ZERO DOGS',badge:'6リール・最大117,649 WAYS',min:.05,max:75,scale:.01,cols:6,rows:7,initial:7},
  train:{id:14,title:'ZERO TRAIN',badge:'貨車ホールド＆リスピン',min:.05,max:200,scale:.01,cols:5,rows:3,initial:3},
- dwarf:{id:15,title:'ZERO DWARF',badge:'バトル＆宝箱ラッシュ',min:.05,max:200,scale:.01,cols:3,rows:3,initial:10}
+ dwarf:{id:15,title:'ZERO DWARF',badge:'バトル＆宝箱ラッシュ',min:.05,max:200,scale:.0025832,cols:3,rows:3,initial:10}
 };
 const lottery=(r,a)=>a[Math.floor(r()*a.length)];
 const grid=(n,fn)=>Array.from({length:n},(_,i)=>fn(i));
@@ -124,24 +124,31 @@ function train(r){
 }
 const DWARF_MONSTERS={Goblin:{hp:3,win:10,icon:'s1'},Troll:{hp:4,win:20,icon:'s3'},Dragon:{hp:5,win:30,icon:'s2'}};
 export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1,-4]};
+// Exact basis-point weights in roulette display order. Weighted encounter
+// distribution keeps expected added spins below ten per battle.
+export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
+export const DWARF_WEIGHTS={Goblin:[2764,2764,2236,2236],Troll:[2764,2764,2236,2236],Dragon:[2764,2764,2236,2236]};
 function dwarf(r){
  const spins=[];
  const pick=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:1,s9:.9},r);
+ const pickMonster=picker(DWARF_ENCOUNTER_WEIGHTS,r);
  const pays={s0:20,s2:7,s3:5,s1:3,s4:.5,s5:.4,s6:.3,s7:.2};
  let remaining=10,freePlayed=0;
  function battle(){
-  const monster=lottery(r,Object.keys(DWARF_MONSTERS)),m=DWARF_MONSTERS[monster];
-  const choices=DWARF_ROULETTE[monster],actions=[];
+  const monster=pickMonster(),m=DWARF_MONSTERS[monster];
+  const choices=DWARF_ROULETTE[monster],weights=DWARF_WEIGHTS[monster],actions=[];
   let hp=4,enemy=m.hp;
   while(hp>0&&enemy>0){
-   const selected=Math.floor(r()*choices.length),roll=choices[selected];
+   let ticket=r()*10000,selected=choices.length-1;
+   for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}
+   const roll=choices[selected];
    if(roll>0)enemy=Math.max(0,enemy-roll);else hp=Math.max(0,hp+roll);
    actions.push({type:roll>0?'ATTACK':'DAMAGE',selected,roll,heroHP:hp,enemyHP:enemy});
   }
   const won=enemy===0;
   const awarded=won?m.win:0;remaining+=awarded;
   const battleGrid=['s0','s7',m.icon,'s4','s7','s5','s6','s7','s8'];
-  spins.push({grid:battleGrid,raw:0,cols:3,rows:3,note:won?'勝利':'追加なし',battle:true,monster,monsterHP:m.hp,reward:m.win,choices,actions,won,awarded,freePlayed,remaining,total:freePlayed+remaining});
+  spins.push({grid:battleGrid,raw:0,cols:3,rows:3,note:won?'勝利':'追加なし',battle:true,monster,monsterHP:m.hp,reward:m.win,choices,weights,actions,won,awarded,freePlayed,remaining,total:freePlayed+remaining});
  }
  while(remaining>0){remaining--;freePlayed++;const g=grid(9,pick);let raw=0,hits=[],chests=[];
   for(const line of [[0,1,2],[3,4,5],[6,7,8],[0,4,8],[2,4,6]])if(pays[g[line[0]]]&&line.every(j=>g[j]===g[line[0]])){raw+=pays[g[line[0]]];hits.push(...line);}
@@ -157,7 +164,8 @@ export function featurePlay(game,{rate,rand=secureRandom,withScript=true,strateg
  const c=FEATURE_CONFIG[game],spins=featureRaw(game,rand,{strategy,dogEntry,encounter}),cap=Math.floor(c.max*rate),floor=Math.ceil(c.min*rate);
  let running=game==='gods'?3*c.scale*rate:0,paid=Math.floor(running);
  const entryWin=paid;
- for(const s of spins){running+=s.raw*c.scale*rate;let next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;
+ for(const s of spins){const before=running;running+=s.raw*c.scale*rate;let next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;
+  if(game==='dwarf'&&s.chests?.length){let subtotal=before+(s.raw-s.chests.reduce((n,chest)=>n+chest.value,0))*c.scale*rate,credited=Math.min(cap,Math.floor(subtotal));for(const [i,chest] of s.chests.entries()){subtotal+=chest.value*c.scale*rate;const end=i===s.chests.length-1?next:Math.min(cap,Math.floor(subtotal));chest.win=Math.max(0,end-credited);credited=end;}}
   if(s.steps)for(const step of s.steps){step.win=Math.floor(step.value*c.scale*rate);if(game==='gods'){step.groups=step.groups.map(g=>({...g,pay:g.base*c.scale*rate,base:g.base*c.scale*rate,mult:1}));step.credited=Math.min(s.win,Math.floor(step.tumbleTotal*c.scale*rate));}}
  }
  const score=Math.max(floor,paid);
@@ -170,6 +178,6 @@ export function featurePlay(game,{rate,rand=secureRandom,withScript=true,strateg
   entry={grid:spins[0].entry.grid,scatters,initialSpins:c.initial,win:entryWin};
  }
  if(game==='train')entry={grid:spins[0].initialGrid,events:spins[0].initialEvents,initialSpins:3,win:0};
- return {score,played:spins.length,freePlayed:game==='dwarf'?spins.filter(s=>!s.battle).length:undefined,spins:withScript?spins:[],guarantee:score-paid,capped:game==='gods'?running>=cap:running>cap,unit:rate/100,entry};
+ return {score,played:spins.length,freePlayed:game==='dwarf'?spins.filter(s=>!s.battle).length:undefined,spins:withScript?spins:[],guarantee:score-paid,capped:game==='gods'?running>=cap:running>cap,unit:rate*c.scale,entry};
 }
 export const featureModule=game=>({VOLATILITY,play:opts=>featurePlay(game,opts)});
