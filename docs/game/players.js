@@ -66,6 +66,8 @@
     layout(st.w, st.h);
     st.clipRect = { x: L.ox - 4, y: L.oy - 4, w: L.cell * cols + 8, h: L.cell * rows + 8 };
     let nodes = new Array(cols * rows).fill(null);
+    // Shorten routine NORMAL motions only; preserve bonus/cutin presentation timing.
+    const routineTime = ms => st.speed >= 1 ? Math.round(ms * .74) : ms;
     let spotNodes = [];
     const swin = spinWinNode(st, () => ({ x: L.ox + (L.cell * cols) / 2, y: L.oy - Math.min(34, L.cell * 0.55) }), hooks.fmt);
     swin.label='TUMBLE WIN';
@@ -125,29 +127,31 @@
       });
     }
     function clearBoard() { nodes.forEach((n) => n && st.remove(n)); nodes = new Array(cols * rows).fill(null); }
-    async function dropIn(grid) {
+    async function dropIn(grid, routine=false) {
+      const timing=ms=>routine?routineTime(ms):ms;
       S('spin');
       const old = nodes.filter(Boolean);
-      old.forEach((n, k) => {n.motion=1;st.tween(n, { y: n.y + st.h, alpha: 0 }, 320, E().inCubic, (k % cols) * 12).then(() => st.remove(n));});
-      await st.wait(old.length ? 200 : 0);
+      old.forEach((n, k) => {n.motion=1;st.tween(n, { y: n.y + st.h, alpha: 0 }, timing(320), E().inCubic, timing((k % cols) * 12)).then(() => st.remove(n));});
+      await st.wait(old.length ? timing(200) : 0);
       nodes = grid.map((id, i) => {const n=makeNode(id, i, -st.h * .9);n.motion=1;return n;});
       const landed = new Set();
       await Promise.all(nodes.map((n, i) => {
         const p = pos(i), c = i % cols, r = Math.floor(i / cols);
         const rush=theme==='gems';
-        const delay=c*(rush?155:125);
-        return st.tween(n,{y:p.y,motion:0},rush?940:780,E().landing,delay).then(()=>{if(!landed.has(c)){landed.add(c);S('land',c);const q=pos((rows-1)*cols+c);st.landing(q.x,q.y+L.cell*.34,L.cell*.28,theme==='fruit'?'#ffccf5':'#d8e4ff');}});
+        const delay=timing(c*(rush?155:125));
+        return st.tween(n,{y:p.y,motion:0},timing(rush?940:780),E().landing,delay).then(()=>{if(!landed.has(c)){landed.add(c);S('land',c);const q=pos((rows-1)*cols+c);st.landing(q.x,q.y+L.cell*.34,L.cell*.28,theme==='fruit'?'#ffccf5':'#d8e4ff');}});
       }));
     }
-    async function pulse(list, color) {
+    async function pulse(list, color, routine=false) {
+      const timing=ms=>routine?routineTime(ms):ms;
       list.forEach((n) => { n.glow = L.cell * .25; n.glowColor = color; n.z = 8;st.impact(n.x,n.y,L.cell*.42,color,.35); });
-      await Promise.all(list.map((n) => st.tween(n, { sx: 1.075, sy: 1.075,glow:L.cell*.33 }, 180, E().outCubic)));
-      await Promise.all(list.map((n) => st.tween(n, { sx: 1, sy: 1,glow:L.cell*.12 }, 160, E().inCubic)));
+      await Promise.all(list.map((n) => st.tween(n, { sx: 1.075, sy: 1.075,glow:L.cell*.33 }, timing(180), E().outCubic)));
+      await Promise.all(list.map((n) => st.tween(n, { sx: 1, sy: 1,glow:L.cell*.12 }, timing(160), E().inCubic)));
     }
     async function explode(idx, color) {
       S('pop');
       idx.forEach((i) => { const n = nodes[i]; if (!n) return; st.burst(n.x, n.y, { n: 8, colors: [color, '#fff', ZG.shade(color, 0.45)], speed: 4, size: L.cell * 0.055, life: 460,shape:cfg.spots?(['f1','f2'].includes(n.id)?'peel':['f3','f4'].includes(n.id)?'circle':'square'):'star' }); });
-      await Promise.all(idx.map((i) => nodes[i] && st.tween(nodes[i], { sx: .82, sy: .82, alpha: 0 }, 180, E().inCubic)));
+      await Promise.all(idx.map((i) => nodes[i] && st.tween(nodes[i], { sx: .82, sy: .82, alpha: 0 }, routineTime(180), E().inCubic)));
       idx.forEach((i) => { if (nodes[i]) st.remove(nodes[i]); nodes[i] = null; });
     }
     async function gravity(newGrid, hitSet) {
@@ -161,7 +165,7 @@
         for (let r = 0; r < k; r++) { const to = r * cols + c; const n = makeNode(newGrid[to], to, -(k + 0.5) * L.cell - 30); next[to] = n; moves.push([n, to, true]); }
       }
       nodes = next;
-      await Promise.all(moves.map(([n, to, fresh]) => { const p = pos(to);n.motion=Math.min(1,Math.abs(p.y-n.y)/(3*L.cell));return st.tween(n, { y: p.y,motion:0 }, fresh ? 400 : 300, E().landing, (to % cols) * 28).then(()=>{if(fresh)st.landing(p.x,p.y+L.cell*.22,L.cell*.20,theme==='fruit'?'#ffb7f2':'#d8d6ff');}); }));
+      await Promise.all(moves.map(([n, to, fresh]) => { const p = pos(to);n.motion=Math.min(1,Math.abs(p.y-n.y)/(3*L.cell));return st.tween(n, { y: p.y,motion:0 }, routineTime(fresh ? 400 : 300), E().landing, routineTime((to % cols) * 28)).then(()=>{if(fresh)st.landing(p.x,p.y+L.cell*.22,L.cell*.20,theme==='fruit'?'#ffb7f2':'#d8d6ff');}); }));
       S('land', 2);
       nodes.forEach((n, i) => { if (n && n.id !== newGrid[i]) n.id = newGrid[i]; });
     }
@@ -171,8 +175,8 @@
       const spinStart=state.score;
       setSpinWin(0);
       setSpots(sp.spots || new Array(cols * rows).fill(0), false);
-      await dropIn(sp.first);
-      await st.wait(theme==='gems'?650:450);
+      await dropIn(sp.first,true);
+      await st.wait(routineTime(theme==='gems'?650:450));
       if (sp.add) { S('free'); }
       let base = 0, stepNo = 0;
       for (const step of sp.steps) {
@@ -197,7 +201,7 @@
           };
           outlines.push(outline);
         }
-        await pulse(hits.map((i) => nodes[i]).filter(Boolean), color);
+        await pulse(hits.map((i) => nodes[i]).filter(Boolean), color,true);
         if(cfg.spots){
           if([2,4,8,12].includes(stepNo))await st.featureCue('CHAIN ×'+stepNo,groups.length+' クラスター成立',{color:'#ffb5df',hold:250,sound:'pop'});
           for(const group of groups){
@@ -211,7 +215,7 @@
         const texts = groups.map((g) => { const c = centroid(g.cells); return st.popText(c.x, c.y, cfg.spots?(g.mult>1?`${hooks.fmt(g.base)} × ${g.mult} = ${hooks.fmt(g.pay)}`:`${g.cells.length}個 +${hooks.fmt(g.pay)}`):(g.mult > 1 ? `×${g.mult} ` : '') + hooks.fmt(g.pay), { size: Math.max(14, L.cell * (cfg.spots?.32:.46)) }); });
         outlines.forEach(n=>st.remove(n));
         await explode(hits, color);
-        if(cfg.spots){setSpots(step.spots,true);await st.wait(120);}
+        if(cfg.spots){setSpots(step.spots,true);await st.wait(routineTime(120));}
         const pay = groups.reduce((s, g) => s + g.pay, 0);
         base += pay; setSpinWin(base);
         if(cfg.spots&&Number.isFinite(step.credited))hooks.onScore(spinStart+step.credited);

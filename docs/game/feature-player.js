@@ -95,6 +95,8 @@
    }
   }});
   st.theme=mode;
+  // NORMAL regular spins and tumbling only; leave special sequences untouched.
+  const routineTime=ms=>st.speed>=1?Math.round(ms*.74):ms;
   function reset(){cols=cfg.cols;rows=cfg.rows;hits=[];note=cfg.title;trainTotal=0;trainRemaining=trainReset=3;trainSource=null;godsMult=0;godsTumble='0 C';fall={v:0,dist:[]};dogHeights=[4,4,4,4,4,4];dogWays=4096;dogPay=0;dogPrepared=false;grid=Array.from({length:cols*rows},(_,i)=>mode==='train'?null:'s'+(i%(mode==='dogs'?6:9)));}
   async function reveal(title,subtitle,color=cfg.accent){
    ZG.sfx?.play('free');st.flash(color,.15);st.impact(st.w/2,st.h/2,Math.min(st.w*.32,145),color,2);await st.banner([title,subtitle],{rainbow:false});
@@ -110,15 +112,15 @@
    const panel=document.createElement('div');panel.className='feature-tickets';panel.innerHTML='<strong>FREE SPIN REVEAL</strong><div>'+values.map(()=>'<span>?</span>').join('')+'</div><b>0 SPINS</b>';canvas.parentElement.append(panel);
    let sum=0;try{for(const [i,v] of values.entries()){await st.wait(240);const card=panel.querySelectorAll('span')[i];card.textContent='+'+v;card.classList.add('revealed');sum+=v;panel.querySelector('b').textContent=sum+' SPINS';ZG.sfx?.play('land',i%5);}await st.wait(650);}finally{panel.remove();}
   }
-  async function show(g,h=[],locked=[]){
+  async function show(g,h=[],locked=[],routine=false){
    offset.locked=new Set(mode==='dogs'?grid.flatMap((item,j)=>typeof item==='string'&&item.startsWith('W')&&item===g[j]?[j]:[]):mode==='train'&&rows===3?g.flatMap((item,j)=>item&&typeof item==='object'&&grid[j]?.id===item.id&&grid[j]?.value===item.value?[j]:[]):[]);
    for(const j of locked)offset.locked.add(j);
-   grid=g;hits=[];await reelSpin(mode==='train'?320:530,mode==='train'?75:145);hits=h;highlight(h);
+   grid=g;hits=[];const timing=ms=>routine&&mode==='gods'?routineTime(ms):ms;await reelSpin(timing(mode==='train'?320:530),timing(mode==='train'?75:145));hits=h;highlight(h);
   }
   function cellPoint(j){if(!Number.isInteger(j))return null;if(mode==='dogs')return dogPositions[j];if(!board)return null;return {x:board.x+(j%cols+.5)*board.cell,y:board.y+(Math.floor(j/cols)+.5)*board.cell};}
   function highlight(h){for(const j of h||[]){const p=cellPoint(j);if(p)st.impact(p.x,p.y,Math.min(32,board?.cell*.37||23),cfg.accent,.38);}}
   async function reelSpin(base,stagger){offset.v=1;offset.reels=Array.from({length:cols},()=>({v:0}));ZG.sfx?.play('spin');await Promise.all(offset.reels.map((r,c)=>st.tween(r,{v:1},base+c*stagger,ZG.Ease.linear).then(()=>{if(mode==='dogs')dogWays*=dogHeights[c];const p=cellPoint(c);if(p)st.landing(p.x,p.y,20,cfg.accent);ZG.sfx?.play('land',c);})));offset.v=0;}
-  async function showDogs(sp){dogHeights=sp.heights;dogWays=1;dogPay=0;const locked=sp.mode==='sticky'?grid.flatMap((v,j)=>v?.startsWith('W')&&v===sp.grid[j]?[j]:[]):[];offset.locked=new Set(locked);grid=sp.grid;hits=[];await reelSpin(430,135);dogWays=sp.ways;const freshWilds=[];
+  async function showDogs(sp,routine=false){dogHeights=sp.heights;dogWays=1;dogPay=0;const locked=sp.mode==='sticky'?grid.flatMap((v,j)=>v?.startsWith('W')&&v===sp.grid[j]?[j]:[]):[];offset.locked=new Set(locked);grid=sp.grid;hits=[];await reelSpin(routine?routineTime(430):430,routine?routineTime(135):135);dogWays=sp.ways;const freshWilds=[];
    for(const [j,v] of grid.entries())if(v?.startsWith('W')&&!offset.locked.has(j)){
     freshWilds.push(v);const p=cellPoint(j);if(p){st.burst(p.x,p.y+12,{n:8,colors:['#ddb786','#fff0c3'],speed:2,life:280});const img=st.scenes?.reaction;if(img){const pup=st.add({x:p.x-16,y:p.y-22,z:31});pup.draw=ctx=>ctx.drawImage(img,0,0,img.width/4,img.height,-17,-17,34,34);try{await st.tween(pup,p,220,ZG.Ease.outCubic);}finally{st.remove(pup);}}st.impact(p.x,p.y,29,'#ffe295',.72);}
    }
@@ -190,14 +192,14 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
     const cells=group.cells.map(cellPoint).filter(Boolean);
     for(let i=1;i<cells.length;i++)st.beam(cells[i-1].x,cells[i-1].y,cells[i].x,cells[i].y,'#b9afff');
    }
-   hits=step.hits;ZG.sfx?.play('win');highlight(hits);await st.wait(350);
+   hits=step.hits;ZG.sfx?.play('win');highlight(hits);await st.wait(routineTime(350));
    hooks.onTumble?.(step.groups);
    const texts=step.groups.map(g=>{const p=board,center=g.cells.reduce((a,j)=>({x:a.x+p.x+(j%6+.5)*p.cell,y:a.y+p.y+(Math.floor(j/6)+.5)*p.cell}),{x:0,y:0});return st.popText(center.x/g.cells.length,center.y/g.cells.length,g.cells.length+'個 +'+hooks.fmt(g.pay),{size:Math.min(25,p.cell*.48),hold:300});});
    godsTumble=hooks.fmt(step.tumbleTotal*currentUnit)+' C';hooks.onScore(score+step.credited);
    const removed=new Set(hits),dist=Array(30).fill(0);
-   for(const j of hits){const p=cellPoint(j);if(p)st.burst(p.x,p.y,{n:8,colors:['#d6baff','#ffe5a0','#fff'],speed:3,life:420,shape:'star',size:3});}grid=grid.map((v,j)=>removed.has(j)?null:v);await st.wait(200);
+   for(const j of hits){const p=cellPoint(j);if(p)st.burst(p.x,p.y,{n:8,colors:['#d6baff','#ffe5a0','#fff'],speed:3,life:420,shape:'star',size:3});}grid=grid.map((v,j)=>removed.has(j)?null:v);await st.wait(routineTime(200));
    for(let c=0;c<6;c++){const keep=[];for(let row=0;row<5;row++)if(grid[row*6+c]!=null)keep.push(row);const fresh=5-keep.length;for(let j=0;j<fresh;j++)dist[j*6+c]=fresh;keep.forEach((row,i)=>{dist[(fresh+i)*6+c]=fresh+i-row;});}
-   grid=step.grid;hits=[];fall.dist=dist;fall.v=1;await st.tween(fall,{v:0},520,ZG.Ease.landing);ZG.sfx?.play('land');await Promise.all(texts);
+   grid=step.grid;hits=[];fall.dist=dist;fall.v=1;await st.tween(fall,{v:0},routineTime(520),ZG.Ease.landing);ZG.sfx?.play('land');await Promise.all(texts);
   }
   let currentUnit=1;
   async function godsOrbs(sp){
@@ -216,7 +218,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    grid=entry.grid;trainTotal=grid.reduce((s,t)=>s+(t?.value||0),0);hits=[];await st.wait(300);await trainEvents(entry.events);
   }
   return {st,idle:reset,prepareDogs,async warm(cb){if(mode==='dwarf')[arena,escapeArt]=await Promise.all(['arena','escape'].map(n=>im('./assets/anime/dwarf/'+n+'.webp')));await Promise.all(({dwarf:['gate','knockout'],gods:['gate','cast'],dogs:['reaction'],train:[]})[mode].map(name=>st.loadScene(name)));[bg,atlas,actions,plates,kennels,monsters,trophies,blanks,glyphs]=await Promise.all([im('./assets/anime/'+mode+'/bg.webp'),im('./assets/anime/'+mode+(['dwarf','gods','dogs'].includes(mode)?'/atlas-v2.webp':'/atlas.webp')),['train','dwarf'].includes(mode)?im('./assets/anime/'+mode+'/actions.webp'):null,['train','gods'].includes(mode)?im('./assets/anime/'+mode+'/multipliers.webp'):null,mode==='dogs'?im('./assets/anime/dogs/kennels.webp'):null,...['monsters','trophies'].map(name=>mode==='dwarf'?im('./assets/anime/dwarf/'+name+'.webp'):null),...['blanks','glyphs'].map(name=>mode==='train'?im('./assets/anime/train/'+name+'.webp'):null)]);cb?.(1)},async play(r){
-   if(mode==='dogs'){if(!dogPrepared){reset();await showDogs(r.entry);await reveal('BONUS ACTIVE',r.entry.initialSpins+' FREE SPINS');}dogPrepared=false;currentUnit=r.unit||1;let score=0;hooks.onSpin(0,r.entry.initialSpins);hooks.onMode?.('BONUS');for(const [i,sp] of r.script.entries()){note=sp.note;hooks.onSpin(i+1,sp.total);await showDogs(sp);dogPay=sp.win;if(sp.groups?.some(g=>g.cells.some(j=>sp.grid[j]?.startsWith('W'))))await st.transition('reaction');if(sp.win){ZG.sfx?.play('win');for(const g of sp.groups){const p=dogPositions[g.cells[0]];for(const j of g.cells){const q=cellPoint(j);if(q)st.popText(q.x,q.y+12,'🐾',{size:13,hold:130});}if(p)await st.popText(p.x,p.y,g.ways+' WAYS · +'+hooks.fmt(g.value*currentUnit),{size:Math.min(20,st.w*.05),hold:220});}await st.wait(280);}hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.unit,hooks.fmt,[20,40,50,100]);await st.roundPause();}if(r.guarantee)await st.banner(['最低保証','+'+hooks.fmt(r.guarantee)+' C'],{});if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);await finishDogs(r);hooks.onMode?.('COMPLETE');return;}
+   if(mode==='dogs'){if(!dogPrepared){reset();await showDogs(r.entry);await reveal('BONUS ACTIVE',r.entry.initialSpins+' FREE SPINS');}dogPrepared=false;currentUnit=r.unit||1;let score=0;hooks.onSpin(0,r.entry.initialSpins);hooks.onMode?.('BONUS');for(const [i,sp] of r.script.entries()){note=sp.note;hooks.onSpin(i+1,sp.total);await showDogs(sp,true);dogPay=sp.win;if(sp.groups?.some(g=>g.cells.some(j=>sp.grid[j]?.startsWith('W'))))await st.transition('reaction');if(sp.win){ZG.sfx?.play('win');for(const g of sp.groups){const p=dogPositions[g.cells[0]];for(const j of g.cells){const q=cellPoint(j);if(q)st.popText(q.x,q.y+12,'🐾',{size:13,hold:130});}if(p)await st.popText(p.x,p.y,g.ways+' WAYS · +'+hooks.fmt(g.value*currentUnit),{size:Math.min(20,st.w*.05),hold:220});}await st.wait(280);}hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.unit,hooks.fmt,[20,40,50,100]);await st.roundPause();}if(r.guarantee)await st.banner(['最低保証','+'+hooks.fmt(r.guarantee)+' C'],{});if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);await finishDogs(r);hooks.onMode?.('COMPLETE');return;}
    reset();currentUnit=r.unit||1;let score=0;hooks.onMode?.('ENTRY');hooks.onSpin(0,r.entry?.initialSpins??10);if(mode==='train'&&r.entry)await trainEntry(r.entry);else if(r.entry){await show(r.entry.grid);hits=r.entry.grid.map((s,i)=>s==='S'?i:-1).filter(i=>i>=0);await st.wait(300);if(r.entry.tickets)await tickets(r.entry.tickets);if(mode==='gods'){score=r.entry.win;godsTumble=hooks.fmt(score)+' C';hooks.onScore(score);}await reveal(cfg.title,r.entry.initialSpins+' FREE SPINS');if(mode==='gods'){const start=document.createElement('button');start.className='rush-entry-start';start.textContent=r.entry.initialSpins+' FREE SPINS　タップで開始';canvas.parentElement.append(start);try{await new Promise(resolve=>{const done=()=>{clearInterval(timer);resolve();};const timer=setInterval(()=>{if(st.dead||!start.isConnected)done();},100);start.onclick=done;});}finally{start.remove();}}}else if(mode==='dwarf'){hooks.onSpin(0,10);await reveal('宝箱ラッシュ','10フリースピン');}else await reveal(cfg.title,'BONUS START');hooks.onMode?.('BONUS');
    for(let i=0;i<r.script.length;i++){const sp=r.script[i];cols=sp.cols;rows=sp.rows;note=sp.battle?'バトル':sp.note;if(mode==='dwarf')hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining-(sp.battle?sp.awarded:0));else if(mode==='train')hooks.onSpin(i+1,i+1+Math.max(0,trainRemaining-1));else hooks.onSpin(i+1,Math.max(i+1,(sp.total||r.played)-(sp.add||0)));
     if(mode==='train'){
@@ -226,7 +228,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
      await trainEvents(sp.events);cols=sp.cols;grid=sp.grid;trainTotal=sp.totalMultiple;trainRemaining=sp.remaining;trainReset=sp.resetValue;note=sp.note;hooks.onSpin(i+1,i+1+sp.remaining);
      hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.roundPause();continue;
     }
-    else if(!sp.battle){if(mode==='gods'){godsTumble='0 C';godsMult=sp.previousMult;}await show(sp.grid,sp.hits||[]);}
+    else if(!sp.battle){if(mode==='gods'){godsTumble='0 C';godsMult=sp.previousMult;}await show(sp.grid,sp.hits||[],[],true);}
     if(sp.battle){
      await st.transition('gate');
      const panel=document.createElement('div');
