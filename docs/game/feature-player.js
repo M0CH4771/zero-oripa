@@ -14,6 +14,7 @@
   let actions=null,plates=null,kennels=null,monsters=null,trophies=null;
   const values=mode==='train'?[1,2,3,4,5,6,8,10,20,21,22,25,30,40,50,75,100,200]:[2,3,4,5,6,8,10,12,15,20,25,50,100,250,500];
   function drawPlate(ctx,value,cx,cy,size){
+   if(ZG.multiplierEmblem(ctx,mode,value,cx,cy,size))return true;
    const i=values.indexOf(value);if(!plates)return false;
    if(i<0){
     if(mode!=='train'||!blanks||!glyphs||!Number.isInteger(value)||value<0)return false;
@@ -63,7 +64,7 @@
     ctx.fillStyle='#a16b43';ctx.fillRect(xx,yy,cw,2);ctx.fillRect(xx,yy,3,ch);
     if(offset.locked?.has(j)){ctx.strokeStyle='#ffcc56';ctx.lineWidth=3;ctx.strokeRect(xx+3,yy+3,cw-6,ch-6);}if(!s)continue;const k=s==='S'?7:s.startsWith('W')?6:Number(s.slice(1)),d=Math.min(cw*.98,ch*.96),dy=spinning?((st.t%70)/70-.5)*ch*.88:-m.shift*ch;
     ctx.save();ctx.beginPath();ctx.rect(xx,yy,cw,ch);ctx.clip();if(k>=9){const ranks=['A','K','Q','J','10'],colors=['#b82342','#1974b6','#8a45aa','#17865a','#dc871a'];ctx.lineWidth=3;ctx.strokeStyle='#fff8dc';ctx.font='900 '+Math.min(d*.72,45)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeText(ranks[k-9],cx,cy-dy);text(ctx,ranks[k-9],cx,cy-dy,Math.min(d*.72,45),colors[k-9]);}else if(kennels&&s.startsWith('W')){const kw=kennels.width/3;ctx.drawImage(kennels,(Number(s.slice(1))-1)*kw,0,kw,kennels.height,cx-d/2,cy-d/2-dy,d,d);}else if(atlas){const aw=atlas.width/3,ah=atlas.height/3;if(spinning){ctx.globalAlpha=.16;ctx.drawImage(atlas,k%3*aw,Math.floor(k/3)*ah,aw,ah,cx-d/2,cy-d/2-dy-ch*.22,d,d);ctx.globalAlpha=1;}ctx.drawImage(atlas,k%3*aw,Math.floor(k/3)*ah,aw,ah,cx-d/2,cy-d/2-dy,d,d);}else text(ctx,cfg.fallback[k],cx,cy,d*.7);
-    if(s.startsWith('W'))ZG.multiplierLabel(ctx,Number(s.slice(1)),cx,cy-dy+d*.15,Math.min(cw*.91,d*.97),d*.47);else if(s==='S'){ctx.fillStyle='#572218ee';ZG.rr(ctx,xx+3,yy+ch*.71,cw-6,ch*.25,4);ctx.fill();text(ctx,'BONUS',cx,yy+ch*.835,Math.min(13,cw*.18,ch*.19),'#fff3ad');}ctx.restore();}}
+    if(s.startsWith('W')){if(!ZG.multiplierEmblem(ctx,'dogs',Number(s.slice(1)),cx,cy-dy,d))ZG.multiplierLabel(ctx,Number(s.slice(1)),cx,cy-dy+d*.15,Math.min(cw*.91,d*.97),d*.47);}else if(s==='S'){ctx.fillStyle='#572218ee';ZG.rr(ctx,xx+3,yy+ch*.71,cw-6,ch*.25,4);ctx.fill();text(ctx,'BONUS',cx,yy+ch*.835,Math.min(13,cw*.18,ch*.19),'#fff3ad');}ctx.restore();}}
     return;
    }
    const r=opt.region(w,h),gap=3,targetCell=Math.max(8,Math.min((r.w-22)/cols,(r.h-(['train','gods'].includes(mode)?100:75))/rows,mode==='dwarf'?170:130)),cell=expansion?expansion.cell+(targetCell-expansion.cell)*expansion.progress:targetCell,

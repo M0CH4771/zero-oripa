@@ -20,6 +20,8 @@ const Stage=ZG.Stage;ZG.Stage=class extends Stage{constructor(...a){super(...a);
 ZG.rr=(c,x,y,w,h)=>{c.beginPath();c.rect(x,y,w,h)};
 capturedLabels=[];for(const value of [1,2,3,10,50,100,128,500,1000,20000])ZG.multiplierLabel(ctx,value,20,20,30,15);
 assert.deepEqual(capturedLabels,['×1','×2','×3','×10','×50','×100','×128','×500','×1,000','×20,000']);capturedLabels=null;
+await Promise.resolve();capturedLabels=[];for(const theme of ['gems','fruit','mine','gods','dogs','train'])for(const value of [2,12,100])assert.equal(ZG.multiplierEmblem(ctx,theme,value,20,20,40),true);
+assert.deepEqual(capturedLabels,Array.from({length:6},()=>['×2','×12','×100']).flat());capturedLabels=null;
 ZG.scene={background:()=>({}),character(){},frame(){},text3d(){}};
 ZG.art={sprite:()=>({width:100,height:100,pad:0}),preload:async()=>{},IDS:{gems:['l1','l2','l3','l4','l5','h1','h2','h3','h4'],fruit:['f1','f2','f3','f4','f5','f6','f7']},COLORS:{gems:{},fruit:{},mine:new Proxy({},{get:()=> '#987654'})}};
 ZG.shade=x=>x;ZG.sfx={play(){}};

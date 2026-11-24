@@ -4,6 +4,26 @@
 (function () {
   const ZG = (window.ZG = window.ZG || {});
 
+  // Generated emblem atlas: six game themes, three frames per theme.
+  const multiplierArt=new Image();let multiplierArtReady=false;
+  multiplierArt.onload=()=>{multiplierArtReady=true;};
+  multiplierArt.src='./assets/anime/multiplier-emblems.webp?v=57';
+  const multiplierRows={gems:0,fruit:1,mine:2,gods:3,dogs:4,train:5};
+  ZG.multiplierEmblem=(ctx,theme,value,x,y,size)=>{
+    const n=Number(value),row=multiplierRows[theme];if(!Number.isFinite(n)||n<0||row===undefined||size<=0)return false;
+    if(!multiplierArtReady)return false;
+    const [middle,high]=({mine:[5,8],dogs:[2,3],fruit:[8,32],train:[10,50]})[theme]||[10,50];
+    const tier=n>=high?2:n>=middle?1:0;
+    const [top,height,center]=[[0,265,155],[265,250,410],[515,238,663],[753,243,883],[996,240,1141],[1236,300,1367]][row];
+    const sx=multiplierArt.width/1024,sy=multiplierArt.height/1536, left=[35,355,675][tier];
+    ctx.save();ctx.drawImage(multiplierArt,left*sx,top*sy,300*sx,height*sy,x-size/2,y-size/2,size,size);
+    const label='×'+n.toLocaleString('en-US');
+    const tx=x+(tier===0?size*.025:0),ty=y+size*((center-top)/height-.5);
+    ctx.font='1000 '+Math.max(9,size*.39)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
+    ctx.lineWidth=Math.max(1.2,size*.038);ctx.strokeStyle='#130c1c';ctx.strokeText(label,tx,ty,size*.61);
+    ctx.fillStyle=tier===2?'#fff2b4':'#fff';ctx.fillText(label,tx,ty,size*.61);ctx.restore();return true;
+  };
+
   // Draw exact multiplier values as text, independent of the artwork resolution.
   ZG.multiplierLabel = (ctx,value,x,y,width,height=width*.42) => {
     const n=Number(value);if(!Number.isFinite(n)||n<0||width<=0||height<=0)return;
