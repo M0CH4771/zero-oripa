@@ -2,7 +2,7 @@
 import * as rush from './rush.js?v=min70';
 import * as fruit from './fruit.js?v=min70';
 import * as mine from './mine.js?v=min70';
-import * as plinko from './plinko.js?v=plinko78';
+import * as plinko from './plinko.js?v=plinko79';
 import {FEATURE_CONFIG,featureModule} from './features.js?v=quest73';
 
 import {hasFeature} from './bonus-round.js';

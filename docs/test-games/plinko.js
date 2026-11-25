@@ -1,7 +1,7 @@
 import {secureRandom} from './common.js';
 // Symmetric test-only tables in hundredths; weighted binomial mean is 90%.
 const HALF={
- 12:{low:[1101,300,180,120,95,80,67],medium:[2920,1000,400,200,100,45,30],high:[10105,3000,700,200,73,15,0]}
+ 12:{low:[1101,300,180,120,95,80,67],medium:[2920,1000,400,200,100,45,30],high:[9643,3000,700,200,73,15,1]}
 };
 export function plinkoConfig(rows=12,risk='medium'){
  const half=HALF[rows]?.[risk];
