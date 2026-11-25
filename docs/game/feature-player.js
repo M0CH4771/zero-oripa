@@ -69,6 +69,7 @@
    }
    if(mode==='train'){
     const r=opt.region(w,h),cell=Math.min((r.w-12)/6,(r.h-48)/8),bw=cell*6,x=r.x+(r.w-bw)/2,y=r.y+(r.h-cell*8)/2+cell;board={x,y,cell};
+    ZG.rr(ctx,x-7,y-cell-7,bw+14,cell*8+14,12);ctx.fillStyle='#20130fee';ctx.fill();ctx.strokeStyle='#c69b57';ctx.lineWidth=3;ctx.stroke();
     const labels={coin:'COIN',mult:'MULTI',dynamite:'BOMB',bag:'BAG',chest:'CHEST',dwarf:'DWARF'},icons={coin:'🪙',mult:'✦',dynamite:'🧨',bag:'💰',chest:'📦',dwarf:'⛏'},ids={coin:0,mult:1,dynamite:2,bag:3,chest:4,dwarf:5};
     const icon=(i,cx,cy,d,fallback)=>{if(atlas){const sw=atlas.width/3,sh=atlas.height/3;ctx.drawImage(atlas,i%3*sw,Math.floor(i/3)*sh,sw,sh,cx-d/2,cy-d/2,d,d);}else text(ctx,fallback,cx,cy,d*.65);};
     text(ctx,'LUCKY WAGON  ·  '+trainRemaining+' RESPINS',w/2,y-cell-13,Math.min(18,cell*.35),'#ffe5a2');
@@ -111,7 +112,7 @@
   st.theme=mode;
   // NORMAL regular spins and tumbling only; leave special sequences untouched.
   const routineTime=ms=>st.speed>=1?Math.round(ms*.58):ms;
-  function reset(){cols=cfg.cols;rows=cfg.rows;hits=[];note=cfg.title;trainTotal=0;trainRemaining=trainReset=3;trainSource=null;godsMult=0;godsTumble='0 C';fall={v:0,dist:[]};dogHeights=[4,4,4,4,4,4];dogWays=4096;dogPay=0;dogPrepared=false;grid=Array.from({length:cols*rows},(_,i)=>mode==='train'?null:'s'+(i%(mode==='dogs'?6:9)));}
+  function reset(){cols=cfg.cols;rows=cfg.rows;hits=[];note=cfg.title;trainTotal=0;trainRemaining=trainReset=3;trainSource=null;wagonEnhancers=[];wagonOpened=[];wagonCollected=0;godsMult=0;godsTumble='0 C';fall={v:0,dist:[]};dogHeights=[4,4,4,4,4,4];dogWays=4096;dogPay=0;dogPrepared=false;grid=Array.from({length:cols*rows},(_,i)=>mode==='train'?(i>=12?{id:'s2',kind:'rock',value:0}:null):'s'+(i%(mode==='dogs'?6:9)));}
   async function reveal(title,subtitle,color=cfg.accent){
    ZG.sfx?.play('free');st.flash(color,.15);st.impact(st.w/2,st.h/2,Math.min(st.w*.32,145),color,2);await st.banner([title,subtitle],{rainbow:false});
   }
