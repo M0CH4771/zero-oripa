@@ -1,5 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml} from './game-info.js?v=detail80';
+import {gameInfoHtml} from './game-info.js?v=wagon82';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -439,7 +439,7 @@ function themeIcons(theme, size = 44) {
 const RULES = {
   gods:['6×5の盤面で同じ絵柄8個以上がそろうと消えて連鎖。','4スキャッターで15回。4/5/6個は基準ベットの3/5/100倍。フリースピン中は3個以上で5回追加。','×2〜500の新規オーブが当たりスピンに出た場合だけ累積倍率を加算・適用。ハズレ時のオーブは不発。',featureBounds('gods')],
   dogs:['6リール・各2〜7段。左から3リール以上の連続一致。最大117,649 WAYS。','3〜6個の肉球でSTICKY（7/12/15/20回）かRAINING（15/18/25/30回）を選択。','ワイルドは2〜5リールのみ。×1〜3の倍率は組み合わせごとに乗算。再トリガーなし。',featureBounds('dogs')],
-  train:['5×3、3リスピンから開始。空きマスに新しいコインが着地すると回数がリセット。','通常コイン×1〜10、GOLDEN×20〜200（基準ベット倍率）。','PAYER・COLLECTOR・COLLECTOR/PAYER・SNIPER・NECROMANCER・RESET PLUSが発動。P付きは毎回発動します。','最大7列へ拡張。全マス完成で合計×2。TOTAL×基準ベットが最終配当です。',featureBounds('train')],
+  train:['6列・最大6段。開始時に2〜4段のコースを選択。コインが着地すると残り3回に戻ります。','上段のトロッコが、同じ列の新規コインを強化。爆弾で岩を除去し、下の宝箱を開けることも。','バッグ・チェスト・ドワーフの回収と、終了時の宝箱追加報酬を合計します。',featureBounds('train')],
   dwarf:['最初のフリースピンは10回。基準Cは消費Cの1%。宝箱の倍率に基準Cを掛けて配当を計算。','10回でゴブリン、20回でトロール、40回でドラゴン。勝利で順に＋10／20／30回。ドラゴン撃破後は最終宝箱ラッシュ。','勝率はゴブリン80%・トロール60%・ドラゴン30%。敗北で終了。','勝利時は基準C強化宝箱も獲得。10,000C消費時、ゴブリン＋10／20／50／70／100C、トロール＋50／60／80／110／200C、ドラゴン＋100／150／200／250／300C（各20%）。以降のスピンのみ適用。宝箱倍率：×1:9.8%、×2:10%、×3:13.6%、×5:25%、×8:12%、×10:11.8%、×15:12.1%、×20:3.9%、×50:1%、×100:0.8%。',featureBounds('dwarf')],
   plinko:['ボールが12段のピンを左右に通過します。','最下段に表示されたコイン数を1球ごとに獲得します。BETに応じて表示が変わります。','全3設定で配当表還元率約90%。0 Cの着地枠もあり、全ボール合計が0Cの場合のみ1Cになります。配当上限なし。'],
   rush: ['テストコインのレートを選び、BONUSで10回のフリースピンを開始します', '6×5の盤面のどこでも、同じ宝石が8個以上あれば配当。消えたあと上から落ちてきて連鎖します',
@@ -458,7 +458,7 @@ const RULES = {
 const FEATURES = {
   gods:[['s0','天空の宝石連鎖','累積倍率でスコア増加'],['s9','15フリースピン','スキャッターで追加']],
   dogs:[['s0','MEGAWAYS','6リール・最大117,649通り'],['s6','2種類のワイルド','STICKY / RAINING']],
-  train:[['s0','コインをホールド','追加ごとに3回へ戻る'],['s6','特殊キャラクター','貨車拡張と集金']],
+  train:[['s0','コインをホールド','追加ごとに3回へ戻る'],['s6','鉱山トロッコ','爆破・倍率・回収']],
   dwarf:[['s0','ドワーフのバトル','勝利でスピン追加'],['s5','宝箱の収集','コイン配当']],
   plinko:[['l1','12段のピンボード','ボールの落下を見届けよう'],['h4','着地で獲得コイン確定','テストコインのスコアに反映']],
   rush: [['h4', '8個そろえば消えて連鎖', '盤面のどこでもOK'], ['bomb', 'ボムで最大 ×100', '出たボムの合計が掛かる']],
@@ -693,6 +693,7 @@ async function gameSpin() {
   try {
     if(daily&&!(await api('/api/daily')).available){location.hash='#bonus';return;}
     let strategy='battle',dogEntry=null;
+    if(p.game==='train'&&!daily){strategy=await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>LUCKY WAGON</strong><b>'+num(cost)+' C</b><small>開始時に開く段数を選択</small><div><button data-tier="train2">2段</button><button data-tier="train3">3段</button><button data-tier="train4">4段</button><button data-tier="">取消</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.tier)});});if(!strategy)return;}
     if(p.game==='dogs'){
       if(!daily&&!await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>BUY FREE SPINS</strong><b>'+num(cost)+' C</b><small>1ゲームの消費C</small><div><button data-buy="no">取消</button><button data-buy="yes">確定</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.buy==='yes')});}))return;
       const {dogsEntry}=await import('./test-games/features.js?v=dogs');dogEntry=dogsEntry();strategy=await game.prepareDogs(dogEntry);if(!strategy)return;

@@ -1,6 +1,6 @@
-import { playGame, tierFor } from './test-games/index.js?v=detail80';
+import { playGame, tierFor } from './test-games/index.js?v=wagon82';
 import { plinkoConfig } from './test-games/plinko.js?v=plinko79';
-import {FEATURE_CONFIG} from './test-games/features.js?v=quest73';
+import {FEATURE_CONFIG} from './test-games/features.js?v=wagon82';
 import {createEarnState,earnView,earnAction} from './earn.js?v=earn52';
 window.plinkoConfig=plinkoConfig;
 window.FEATURE_CONFIG=FEATURE_CONFIG;
@@ -67,7 +67,7 @@ async function api(path,b){
    if(p.game==='plinko')plinkoConfig(rows,risk);
    const cost=rate*count;
 
-   const strategy=p.game==='dogs'?(b.strategy==='raining'?'raining':'sticky'):b.strategy==='run'?'run':'battle';
+   const strategy=p.game==='train'&&['train2','train3','train4'].includes(b.strategy)?b.strategy:p.game==='dogs'?(b.strategy==='raining'?'raining':'sticky'):b.strategy==='run'?'run':'battle';
    const r=playGame(p.game,{rate,volatility:p.volatility,maxMult:50,count,risk,rows,strategy,encounter:b.encounter,dogEntry:p.game==='dogs'?b.dogEntry:null}), t=tierFor(p.tiers,r.score,cost), c={...t,value:r.score};
    if(!demo&&!daily)pay(cost);
    if(daily){s.dailyPlayed=dailyDate();try{localStorage.setItem(key+'-daily',s.dailyPlayed)}catch{}}
@@ -89,4 +89,4 @@ const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
 window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=detail80');
+await import('./app.js?v=wagon82');

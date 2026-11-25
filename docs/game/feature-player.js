@@ -3,7 +3,7 @@
  const styles={
   gods:{cols:6,rows:5,accent:'#e9ca78',panel:'#251a46',title:'DIVINE MULTIPLIER',fallback:['👑','⌛','💍','🏆','♦','🔮','🔶','💚','💎','⚡','🌟']},
   dogs:{cols:6,rows:7,accent:'#ffe4a0',panel:'#54342e',title:'MEGAWAYS',fallback:['🐕','🐶','🐩','🐕‍🦺','🦮','🦴','🏠','🐾','🎾']},
-  train:{cols:5,rows:3,accent:'#efb46a',panel:'#332b23',title:'MONEY CART',fallback:['🪙','💰','🔒','⌚','🏮','⚙️','🎩','🕴️','🎯']},
+  train:{cols:6,rows:6,accent:'#efb46a',panel:'#332b23',title:'LUCKY WAGON',fallback:['🪙','💰','🔒','⌚','🏮','⚙️','🎩','🕴️','🎯']},
   dwarf:{cols:3,rows:3,accent:'#d4edaa',panel:'#213a30',title:'TREASURE RUSH',fallback:['🧔','👹','🐉','🛡️','🔨','🪙','🎁','🪨','🧝']}
  };
  const im=src=>new Promise(resolve=>{let i=new Image();i.onload=()=>resolve(i);i.onerror=()=>resolve(null);i.src=src});
@@ -36,7 +36,7 @@
   }
   let duel=null,arena=null,escapeArt=null,upgradeArt=null,arrivalArt=null,arrivalAlt=null,combatArt=null,combatAlt=null;
   const foeNames={Goblin:'ゴブリン',Troll:'トロール',Dragon:'ドラゴン'};
-  let expansion=null,trainOrder='';
+  let expansion=null,trainOrder='',wagonEnhancers=[],wagonOpened=[],wagonCollected=0;
   let dogHeights=[4,4,4,4,4,4],dogWays=4096,dogPositions=[],dogPrepared=false,dogPay=0;
   const reelState=(j,n=cols)=>{const v=offset.reels?.[j%n]?.v??1,locked=offset.locked?.has(j);return locked?{rolling:false,shift:0}:{rolling:v<.76,shift:v>=.76&&v<1?-(1-ZG.Ease.landing((v-.76)/.24)):0};};
   function tile(ctx,x,y,w,h,active,light=false){const g=ctx.createLinearGradient(x,y,x,y+h);g.addColorStop(0,active?'#ce9c4e':light?'#fff8db':'#ffffff22');g.addColorStop(1,active?'#926126':light?'#e9c48d':'#00000022');ctx.fillStyle=g;ZG.rr(ctx,x,y,w,h,6);ctx.fill();if(active){ctx.strokeStyle='#fff2ac';ctx.lineWidth=2;ctx.stroke();}}
@@ -66,6 +66,16 @@
     ctx.save();ctx.beginPath();ctx.rect(xx,yy,cw,ch);ctx.clip();if(k>=9){const ranks=['A','K','Q','J','10'],colors=['#b82342','#1974b6','#8a45aa','#17865a','#dc871a'];ctx.lineWidth=3;ctx.strokeStyle='#fff8dc';ctx.font='900 '+Math.min(d*.72,45)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.strokeText(ranks[k-9],cx,cy-dy);text(ctx,ranks[k-9],cx,cy-dy,Math.min(d*.72,45),colors[k-9]);}else if(kennels&&s.startsWith('W')){const kw=kennels.width/3;ctx.drawImage(kennels,(Number(s.slice(1))-1)*kw,0,kw,kennels.height,cx-d/2,cy-d/2-dy,d,d);}else if(atlas){const aw=atlas.width/3,ah=atlas.height/3;if(spinning){ctx.globalAlpha=.16;ctx.drawImage(atlas,k%3*aw,Math.floor(k/3)*ah,aw,ah,cx-d/2,cy-d/2-dy-ch*.22,d,d);ctx.globalAlpha=1;}ctx.drawImage(atlas,k%3*aw,Math.floor(k/3)*ah,aw,ah,cx-d/2,cy-d/2-dy,d,d);}else text(ctx,cfg.fallback[k],cx,cy,d*.7);
     if(s.startsWith('W')){if(!ZG.multiplierEmblem(ctx,'dogs',Number(s.slice(1)),cx,cy-dy,d))ZG.multiplierLabel(ctx,Number(s.slice(1)),cx,cy-dy+d*.15,Math.min(cw*.91,d*.97),d*.47);}else if(s==='S'){ctx.fillStyle='#572218ee';ZG.rr(ctx,xx+3,yy+ch*.71,cw-6,ch*.25,4);ctx.fill();text(ctx,'BONUS',cx,yy+ch*.835,Math.min(13,cw*.18,ch*.19),'#fff3ad');}ctx.restore();}}
     return;
+   }
+   if(mode==='train'){
+    const r=opt.region(w,h),cell=Math.min((r.w-12)/6,(r.h-48)/8),bw=cell*6,x=r.x+(r.w-bw)/2,y=r.y+(r.h-cell*8)/2+cell;board={x,y,cell};
+    const labels={coin:'COIN',mult:'MULTI',dynamite:'BOMB',bag:'BAG',chest:'CHEST',dwarf:'DWARF'},icons={coin:'🪙',mult:'✦',dynamite:'🧨',bag:'💰',chest:'📦',dwarf:'⛏'},ids={coin:0,mult:1,dynamite:2,bag:3,chest:4,dwarf:5};
+    const icon=(i,cx,cy,d,fallback)=>{if(atlas){const sw=atlas.width/3,sh=atlas.height/3;ctx.drawImage(atlas,i%3*sw,Math.floor(i/3)*sh,sw,sh,cx-d/2,cy-d/2,d,d);}else text(ctx,fallback,cx,cy,d*.65);};
+    text(ctx,'LUCKY WAGON  ·  '+trainRemaining+' RESPINS',w/2,y-cell-13,Math.min(18,cell*.35),'#ffe5a2');
+    for(let c=0;c<6;c++){const xx=x+c*cell,e=wagonEnhancers[c];tile(ctx,xx+2,y-cell+2,cell-4,cell-4,false);if(e){icon(ids[e.kind],xx+cell/2,y-cell*.60,cell*.76,icons[e.kind]);text(ctx,labels[e.kind]+(e.value?' '+e.value:''),xx+cell/2,y-cell*.13,cell*.20,'#ffe1a2',cell-3);}else text(ctx,'◆',xx+cell/2,y-cell*.5,cell*.4,'#b58b4c');}
+    for(let j=0;j<36;j++){const xx=x+j%6*cell,yy=y+Math.floor(j/6)*cell,item=grid[j],rock=item?.kind==='rock';tile(ctx,xx+2,yy+2,cell-4,cell-4,hits.includes(j));if(rock){icon(6,xx+cell/2,yy+cell/2,cell*.91,'▧');}else if(item){const cy=yy+cell/2;icon(item.kind==='dwarf'?5:0,xx+cell/2,cy-cell*.06,cell*.89,'🪙');text(ctx,hooks.fmt(Math.floor(item.value*currentUnit))+' C',xx+cell/2,cy+cell*.31,cell*.24,'#fff2ba',cell-4);}else if(reelState(j).rolling)text(ctx,'✧',xx+cell/2,yy+cell/2,cell*.38,'#ffd380');}
+    for(let c=0;c<6;c++){const xx=x+c*cell,cy=y+cell*6.5;tile(ctx,xx+2,y+cell*6+2,cell-4,cell-4,!!wagonOpened[c]);icon(wagonOpened[c]?8:7,xx+cell/2,cy-cell*.08,cell*.84,wagonOpened[c]?'💰':'🔒');text(ctx,wagonOpened[c]?'OPEN':'LOCK',xx+cell/2,cy+cell*.34,cell*.18,wagonOpened[c]?'#aaffbb':'#c8b49a');}
+    text(ctx,'回収 '+hooks.fmt(Math.floor(wagonCollected*currentUnit))+' C  ·  '+note,w/2,y+cell*7+14,Math.min(13,cell*.24),'#ffe1a2',w-12);return;
    }
    const r=opt.region(w,h),compact=w<=640,gap=3,topPad=compact?(mode==='train'?50:mode==='gods'?29:24):(['train','gods'].includes(mode)?60:28),bottomPad=compact?(mode==='train'?25:15):40,targetCell=Math.max(8,Math.min((r.w-(compact?8:22))/cols,(r.h-topPad-bottomPad)/rows,mode==='dwarf'?170:130)),cell=expansion?expansion.cell+(targetCell-expansion.cell)*expansion.progress:targetCell,
     visibleCols=expansion?cols-1+expansion.progress:cols,bw=visibleCols*cell,bh=rows*cell,x=r.x+(r.w-bw)/2,y=r.y+Math.max(topPad,(r.h-bh)/2);
@@ -209,16 +219,16 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    }finally{st.remove(conductor);}
   }
   async function trainEvents(events){
-   const labels={'NEW COINS':'コイン着地・回数リセット',COLLECTOR:'盤上の合計を回収',PAYER:'対象コインに加算',SNIPER:'対象コインを2倍に',REVIVE:'特殊コインを再起動','NEW CART':'貨車を1列追加','RESET PLUS':'リセット回数 +1','FULL CART ×2':'全マス完成・合計2倍'};
+   const labels={'NEW COINS':'コイン着地・回数リセット',COIN:'コイン値を追加',MULT:'倍率アップ',DYNAMITE:'岩を爆破',BAG:'列のコインを合体',CHEST:'列のコインを回収',DWARF:'ドワーフ登場','DWARF COLLECT':'全盤面を回収','COLLECT CHEST':'宝箱が回収','FINAL CHEST':'宝箱の最終3回分'};
    for(const [index,ev] of (events||[]).entries()){
-    trainOrder=(index+1)+' / '+events.length+'　'+ev.name;
+    trainOrder=(index+1)+' / '+events.length+'　'+ev.name;wagonEnhancers=ev.enhancers||wagonEnhancers;wagonOpened=ev.opened||wagonOpened;wagonCollected=ev.collected??wagonCollected;
     if(ev.name==='NEW CART'){await attachCart();expansion={progress:0,cell:board?.cell||24};await st.featureCue('NEW CART','貨車 +1 列',{color:'#ffce83',hold:380,sound:'whistle'});}
     const activation=cellPoint(ev.source);
     if(activation&&ev.name!=='NEW CART'){const color=({PAYER:'#70ffd4',SNIPER:'#ff7878',REVIVE:'#c792ff',COLLECTOR:'#ffd682'})[ev.name]||'#ffe3ab';st.impact(activation.x,activation.y,board.cell*.58,color,1);if(ev.name!=='NEW COINS')await st.featureCue(ev.name,labels[ev.name]||ev.name,{color,hold:240,sound:'crystal'});}
     if(ev.name==='COLLECTOR')await collectCoins(ev);
     if((ev.remaining??0)>trainRemaining)await st.carry(activation||{x:st.w/2,y:board.y}, {x:st.w*.25,y:board.y-50},'+'+(ev.remaining-trainRemaining),'#ffe191',18);
     cols=ev.cols;rows=ev.rows;trainSource=ev.source??null;trainTotal=ev.totalMultiple??trainTotal;trainRemaining=ev.remaining??trainRemaining;trainReset=ev.resetValue??trainReset;hooks.onRemaining?.(trainRemaining);
-    hooks.onFeatureMetric?.('合計倍率','×'+hooks.fmt(trainTotal));
+    hooks.onFeatureMetric?.('獲得見込',hooks.fmt(Math.floor(trainTotal*currentUnit))+' C');
     note=(labels[ev.name]||ev.name)+(ev.amount!=null&&ev.name!=='RESET PLUS'?' '+(ev.name==='SNIPER'?'×':'+')+hooks.fmt(ev.amount):'');
     if(ev.name==='NEW COINS')await show(ev.grid,ev.hits);
     else if(ev.name==='NEW CART'){grid=ev.grid;hits=[];try{await st.tween(expansion,{progress:1},420,ZG.Ease.outCubic);highlight([cols-1,cols*2-1,cols*3-1]);await st.wait(160);}finally{expansion=null;}}
@@ -247,23 +257,21 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(godsMult));godsTumble=hooks.fmt(sp.tumbleRaw*currentUnit)+' C × '+sp.mult;await st.wait(320);godsTumble=hooks.fmt(sp.win)+' C';await st.wait(350);});
   }
   async function trainEntry(entry){
-   cols=5;rows=4;note='BONUS TRIGGER';const tableau=Array.from({length:20},(_,i)=>'s'+(i%9));const trigger=[];
-   entry.grid.forEach((t,j)=>{if(t){tableau[j]='S';trigger.push(j);}});
-   await show(tableau,trigger);await st.atNormalSpeed(()=>st.banner(['MONEY CART','通常 ×1–10 · GOLDEN ×20–200'],{rainbow:false}));
+   cols=6;rows=6;note='LUCKY WAGON';wagonEnhancers=[];wagonOpened=[];wagonCollected=0;grid=entry.grid;await st.atNormalSpeed(()=>st.banner(['LUCKY WAGON','岩を爆破して宝箱を開けよう'],{rainbow:false}));
    const start=document.createElement('button');start.className='rush-entry-start';start.textContent='MONEY CART　タップで開始';canvas.parentElement.append(start);
    try{await new Promise(resolve=>{const done=()=>{clearInterval(timer);resolve();};const timer=setInterval(()=>{if(st.dead||!start.isConnected)done();},100);start.onclick=done;});}finally{start.remove();}
-   note='貨車へ移動';await st.banner(['MONEY CART','3 RESPINS'],{});cols=5;rows=3;
+   note='鉱山へ移動';await st.banner(['LUCKY WAGON','3 RESPINS'],{});cols=6;rows=6;
    grid=entry.grid;trainTotal=grid.reduce((s,t)=>s+(t?.value||0),0);hits=[];await st.wait(300);await trainEvents(entry.events);
   }
-  return {st,idle:reset,prepareDogs,async warm(cb){if(mode==='dwarf')[arena,escapeArt,upgradeArt,arrivalArt,arrivalAlt,combatArt,combatAlt]=await Promise.all(['arena','escape','upgrade-reel-v1','arrival-v3','arrival-v4','combat-v3','combat-v4'].map(n=>im('./assets/anime/dwarf/'+n+'.webp')));await Promise.all(({dwarf:['gate','knockout'],gods:['gate','cast'],dogs:[],train:[]})[mode].map(name=>st.loadScene(name)));[bg,atlas,actions,plates,kennels,monsters,trophies,blanks,glyphs]=await Promise.all([im('./assets/anime/'+mode+'/bg.webp'),im('./assets/anime/'+mode+(['dwarf','gods','dogs'].includes(mode)?'/atlas-v2.webp':'/atlas.webp')),['train','dwarf'].includes(mode)?im('./assets/anime/'+mode+'/actions.webp'):null,['train','gods'].includes(mode)?im('./assets/anime/'+mode+'/multipliers.webp'):null,mode==='dogs'?im('./assets/anime/dogs/kennels.webp'):null,...['monsters','trophies'].map(name=>mode==='dwarf'?im('./assets/anime/dwarf/'+name+'.webp'):null),...['blanks','glyphs'].map(name=>mode==='train'?im('./assets/anime/train/'+name+'.webp'):null)]);cb?.(1)},async play(r){
+  return {st,idle:reset,prepareDogs,async warm(cb){if(mode==='dwarf')[arena,escapeArt,upgradeArt,arrivalArt,arrivalAlt,combatArt,combatAlt]=await Promise.all(['arena','escape','upgrade-reel-v1','arrival-v3','arrival-v4','combat-v3','combat-v4'].map(n=>im('./assets/anime/dwarf/'+n+'.webp')));await Promise.all(({dwarf:['gate','knockout'],gods:['gate','cast'],dogs:[],train:[]})[mode].map(name=>st.loadScene(name)));[bg,atlas,actions,plates,kennels,monsters,trophies,blanks,glyphs]=await Promise.all([im('./assets/anime/'+mode+'/bg.webp'),im('./assets/anime/'+mode+(['dwarf','gods','dogs'].includes(mode)?'/atlas-v2.webp':mode==='train'?'/wagon-atlas.webp':'/atlas.webp')),['train','dwarf'].includes(mode)?im('./assets/anime/'+mode+'/actions.webp'):null,['train','gods'].includes(mode)?im('./assets/anime/'+mode+'/multipliers.webp'):null,mode==='dogs'?im('./assets/anime/dogs/kennels.webp'):null,...['monsters','trophies'].map(name=>mode==='dwarf'?im('./assets/anime/dwarf/'+name+'.webp'):null),...['blanks','glyphs'].map(name=>mode==='train'?im('./assets/anime/train/'+name+'.webp'):null)]);cb?.(1)},async play(r){
    if(mode==='dogs'){if(!dogPrepared){reset();await showDogs(r.entry);await reveal('BONUS ACTIVE',r.entry.initialSpins+' FREE SPINS');}dogPrepared=false;currentUnit=r.unit||1;let score=0;hooks.onSpin(0,r.entry.initialSpins);hooks.onMode?.('BONUS');for(const [i,sp] of r.script.entries()){note=sp.note;hooks.onSpin(i+1,sp.total);await showDogs(sp,true);dogPay=sp.win;if(sp.win){ZG.sfx?.play('win');for(const g of sp.groups){const p=dogPositions[g.cells[0]];for(const j of g.cells){const q=cellPoint(j);if(q)st.popText(q.x,q.y+12,'🐾',{size:13,hold:130});}if(p)await st.popText(p.x,p.y,g.ways+' WAYS · +'+hooks.fmt(g.value*currentUnit),{size:Math.min(20,st.w*.05),hold:220});}await st.wait(280);}hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.rate||opt.getRate?.(),hooks.fmt);await st.roundPause();}if(r.guarantee)await st.banner(['最終配当','1 C'],{hold:350});if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);note='FREE SPINS COMPLETED';hooks.onMode?.('COMPLETE');return;}
    reset();currentUnit=r.unit||1;let score=0;hooks.onMode?.('ENTRY');hooks.onSpin(0,r.entry?.initialSpins??10);if(mode==='train'&&r.entry)await trainEntry(r.entry);else if(r.entry){await show(r.entry.grid);hits=r.entry.grid.map((s,i)=>s==='S'?i:-1).filter(i=>i>=0);await st.wait(300);if(r.entry.tickets)await tickets(r.entry.tickets);if(mode==='gods'){score=r.entry.win;godsTumble=hooks.fmt(score)+' C';hooks.onScore(score);}await reveal(cfg.title,r.entry.initialSpins+' FREE SPINS');if(mode==='gods'){const start=document.createElement('button');start.className='rush-entry-start';start.textContent=r.entry.initialSpins+' FREE SPINS　タップで開始';canvas.parentElement.append(start);try{await new Promise(resolve=>{const done=()=>{clearInterval(timer);resolve();};const timer=setInterval(()=>{if(st.dead||!start.isConnected)done();},100);start.onclick=done;});}finally{start.remove();}}}else if(mode==='dwarf'){hooks.onSpin(0,10);await reveal('宝箱ラッシュ','10フリースピン');hooks.onBaseUnit?.(currentUnit);await st.banner(['宝箱×1の獲得C',currentUnit.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C · BETの1%'],{hold:800});}else await reveal(cfg.title,'BONUS START');hooks.onMode?.('BONUS');
    for(let i=0;i<r.script.length;i++){const sp=r.script[i];cols=sp.cols;rows=sp.rows;note=sp.battle?'バトル':sp.note;if(mode==='dwarf')hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining-(sp.battle?sp.awarded:0));else if(mode==='train')hooks.onSpin(i+1,i+1+Math.max(0,trainRemaining-1));else hooks.onSpin(i+1,Math.max(i+1,(sp.total||r.played)-(sp.add||0)));
     if(mode==='train'){
-     cols=sp.landingCols;rows=3;note='空きマスをリスピン';trainRemaining=Math.max(0,trainRemaining-1);
+     cols=sp.landingCols;rows=6;wagonEnhancers=sp.enhancers;note='空きマスをリスピン';trainRemaining=Math.max(0,trainRemaining-1);
      ZG.sfx?.play('rails',trainRemaining<=1);
      if(!sp.events?.some(e=>e.name==='NEW COINS'))await show(sp.landing,[]);
-     await trainEvents(sp.events);cols=sp.cols;grid=sp.grid;trainTotal=sp.totalMultiple;trainRemaining=sp.remaining;trainReset=sp.resetValue;note=sp.note;hooks.onSpin(i+1,i+1+sp.remaining);
+     await trainEvents(sp.events);cols=sp.cols;grid=sp.grid;trainTotal=sp.totalMultiple;trainRemaining=sp.remaining;trainReset=sp.resetValue;wagonOpened=sp.opened;wagonCollected=sp.collected;note=sp.note;hooks.onSpin(i+1,i+1+sp.remaining);hooks.onFeatureMetric?.('獲得見込',hooks.fmt(Math.min((r.rate||opt.getRate?.())*200,Math.floor(trainTotal*currentUnit)))+' C');
      hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.rate||opt.getRate?.(),hooks.fmt);await st.roundPause();continue;
     }
     else if(!sp.battle){if(mode==='gods'){godsTumble='0 C';godsMult=sp.previousMult;hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(godsMult));}await show(sp.grid,sp.hits||[],[],true);}
@@ -308,7 +316,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
      if(origin){ZG.sfx?.play('coin');await st.carry(origin,destination,'×'+hooks.fmt(value),'#ffe5a2',24,200);}
     }
     // The final result is presented by the shared result sheet.
-    await st.banner(['TOTAL ×'+hooks.fmt(trainTotal),hooks.fmt(r.score)+' C'],{hold:1000});
+    await st.banner(['TOTAL WIN',hooks.fmt(r.score)+' C · '+r.script.length+' SPINS'],{hold:1000});
    });
    hooks.onScore(r.score);hooks.onMode?.('COMPLETE');
   }};

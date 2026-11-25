@@ -3,7 +3,7 @@ import {secureRandom,picker,bonusEntry} from './common.js';
 export const FEATURE_CONFIG={
 gods:{id:12,title:'ZERO GODS',badge:'天空の累積倍率',minCoins:1,max:50,scale:.01,cols:6,rows:5,initial:15},
 dogs:{id:13,title:'ZERO DOGS',badge:'6リール・最大117,649 WAYS',minCoins:1,max:75,scale:.01,cols:6,rows:7,initial:7},
- train:{id:14,title:'ZERO TRAIN',badge:'貨車ホールド＆リスピン',minCoins:1,max:200,scale:.01,cols:5,rows:3,initial:3},
+ train:{id:14,title:'ZERO TRAIN',badge:'6列・鉱山トロッコ＆宝箱',minCoins:1,max:200,scale:.015,cols:6,rows:6,initial:3},
  dwarf:{id:15,title:'ZERO DWARF',badge:'バトル＆宝箱ラッシュ',minCoins:1,max:200,scale:.0025832,cols:3,rows:3,initial:10}
 };
 const lottery=(r,a)=>a[Math.floor(r()*a.length)];
@@ -63,64 +63,35 @@ function dogs(r,{strategy='sticky',dogEntry=null}={}){
  }
  spins[0].entry={...entry,mode,initialSpins:total,win:0};return spins;
 }
-function train(r){
- const rows=3,spins=[],completed=new Set(),specials=['payer','collector','collectorpayer','sniper'];
- let cols=5,resetValue=3,remaining=3,previous=0,tokens=Array(cols*rows).fill(null);
- const sum=()=>tokens.reduce((a,t)=>a+(t?.v||0),0);
- const bound=v=>Math.min(20000,v);
- const kinds=picker({coin:91,golden:1.1,payer:2.6,collector:1.7,sniper:1.6,collectorpayer:.35,necromancer:.25,reset:.4},r);
- const make=()=>{
-  const kind=kinds(),golden=kind==='golden';
-  return {kind,v:golden?lottery(r,[20,21,22,25,30,40,50,75,100,200]):lottery(r,[1,1,1,2,2,3,4,5,6,8,10]),persistent:specials.includes(kind)&&r()<.035,spent:false};
- };
- const icons={coin:'s0',golden:'s1',collector:'s6',payer:'s7',collectorpayer:'s2',necromancer:'s4',sniper:'s8',reset:'s5'};
- const snapshot=()=>tokens.map(t=>t?{id:icons[t.kind],kind:t.kind,value:t.v,persistent:t.persistent,spent:t.spent}:null);
- const select=(items,n)=>{const pool=items.slice(),out=[];while(pool.length&&out.length<n)out.push(pool.splice(Math.floor(r()*pool.length),1)[0]);return out;};
- const available=grid(tokens.length,i=>i);
- for(const j of select(available,3))tokens[j]=make();
- const initialGrid=snapshot();
- function process(events,initial=false){
-  const capture=(name,indices=[],source=null,amount=null)=>events.push({name,cols,rows,grid:snapshot(),hits:indices,source,amount,totalMultiple:sum(),remaining,resetValue});
-  const activate=t=>{
-   const i=tokens.indexOf(t),targets=tokens.filter(x=>x&&x!==t);
-   t.spent=true;
-   if(t.kind==='payer'||t.kind==='collectorpayer'){
-    if(t.kind==='collectorpayer'){const collected=targets.reduce((a,x)=>a+x.v,0);t.v=bound(t.v+collected);capture('COLLECTOR',[i],i,collected);}
-    const amount=t.kind==='collectorpayer'?targets.reduce((a,x)=>a+x.v,0):t.v;
-    for(const x of targets){x.v=bound(x.v+amount);capture('PAYER',[tokens.indexOf(x)],i,amount);}
-   }else if(t.kind==='collector'){
-    const amount=targets.reduce((a,x)=>a+x.v,0);t.v=bound(t.v+amount);capture('COLLECTOR',[i],i,amount);
-   }else if(t.kind==='sniper'){
-    for(const x of select(targets,3+Math.floor(r()*6))){x.v=bound(x.v*2);capture('SNIPER',[tokens.indexOf(x)],i,2);}
-   }else if(t.kind==='reset'){resetValue++;remaining=resetValue;capture('RESET PLUS',[i],i,1);}
-   else if(t.kind==='necromancer'){
-    const revived=select(targets.filter(x=>specials.includes(x.kind)&&x.spent&&!x.persistent),2+Math.floor(r()*6));
-    capture('REVIVE',revived.map(x=>tokens.indexOf(x)),i);
-    for(const x of revived)activate(x);
-   }
-  };
-  for(const t of tokens){if(!t||t.kind==='coin'||t.kind==='golden')continue;if(!t.spent||t.persistent)activate(t);}
-  for(let c=0;c<cols&&cols<7;c++){
-   if(completed.has(c)||!grid(rows,j=>tokens[j*cols+c]).every(Boolean))continue;
-   completed.add(c);const old=cols;cols++;tokens=grid(cols*rows,j=>j%cols===old?null:tokens[Math.floor(j/cols)*old+j%cols]);capture('NEW CART');
+// Six fixed columns, progressively excavated from top to bottom.
+function train(r,{strategy}={}){
+ const cols=6,rows=6,spins=[],depth=Array(cols).fill(strategy==='train4'?4:strategy==='train3'?3:2),opened=Array(cols).fill(false),coins=Array(cols*rows).fill(null);
+ const pick=picker({1:35,2:26,3:18,10:10,15:5,25:3.5,50:2,100:.5},r),enhance=picker({coin:64,mult:16,dynamite:13,bag:4,chest:2.5,dwarf:.5},r),mult=picker({2:55,3:25,4:10,5:6,10:3,25:1},r);
+ let remaining=3,collected=0,previous=0,dwarf=-1;
+ const snap=()=>coins.map((v,j)=>v?{id:j===dwarf?'s7':'s0',kind:j===dwarf?'dwarf':'coin',value:v}:Math.floor(j/cols)>=depth[j%cols]?{id:'s2',kind:'rock',value:0}:null);
+ const total=()=>Math.min(20000,collected+coins.reduce((a,b)=>a+(b||0),0));
+ const initialGrid=snap(), initialDepth=depth.slice();
+ while(remaining>0&&spins.length<100){
+  remaining--;const events=[],hits=[],enhancers=Array.from({length:cols},()=>{const kind=enhance();return {kind,value:kind==='mult'?+mult():kind==='coin'?+pick():0};});
+  const capture=(name,indices=[],source=null,amount=null)=>events.push({name,cols,rows,grid:snap(),hits:indices,source,amount,totalMultiple:total(),remaining,resetValue:3,depth:depth.slice(),opened:opened.slice(),enhancers:enhancers.map(x=>({...x})),collected,dwarf});
+  for(let j=0;j<coins.length;j++)if(Math.floor(j/cols)<depth[j%cols]&&!coins[j]&&r()<.075){coins[j]=1;hits.push(j);}
+  if(hits.length)remaining=3;
+  const landing=snap();if(hits.length)capture('NEW COINS',hits);
+  for(const j of hits){if(!coins[j])continue;const c=j%cols,e=enhancers[c],indices=coins.flatMap((v,i)=>i%cols===c&&v&&i!==dwarf?[i]:[]);let amount=0;
+   if(e.kind==='coin'){coins[j]=e.value;amount=e.value;}
+   else if(e.kind==='mult'){coins[j]*=e.value;amount=e.value;}
+   else if(e.kind==='dynamite'){if(depth[c]<rows)depth[c]++;else opened[c]=true;}
+   else if(e.kind==='bag'||e.kind==='chest'){amount=indices.reduce((s,i)=>s+coins[i],0);for(const i of indices)coins[i]=null;if(e.kind==='bag')coins[j]=amount;else collected+=amount;}
+   else if(e.kind==='dwarf'){if(dwarf<0)dwarf=j;}
+   capture(e.kind.toUpperCase(),[j],j,amount||null);
   }
+  for(let c=0;c<cols;c++)if(opened[c]){const v=coins.reduce((s,n,i)=>s+(i%cols===c?(n||0):0),0);collected+=v;capture('COLLECT CHEST',[],null,v);}
+  if(dwarf>=0){const v=coins.reduce((s,n)=>s+(n||0),0);collected+=v;capture('DWARF COLLECT',[dwarf],dwarf,v);}
+  if(coins.every(Boolean)||total()>=20000||spins.length===99)remaining=0;
+  if(!remaining){for(let c=0;c<cols;c++)if(opened[c]){const v=coins.reduce((s,n,i)=>s+(i%cols===c?(n||0):0),0)*3;collected+=v;capture('FINAL CHEST',[],null,v);}}
+  const now=total();spins.push({grid:snap(),landing,landingCols:cols,events,raw:now-previous,cols,rows,hits,total:spins.length+1+remaining,note:'残り '+remaining+' RESPINS',remaining,resetValue:3,totalMultiple:now,depth:depth.slice(),opened:opened.slice(),enhancers,collected,dwarf});previous=now;
  }
- const initialEvents=[];process(initialEvents,true);
- while(remaining>0&&spins.length<120){
-  remaining--;const hits=[],events=[];
-  for(let j=0;j<tokens.length;j++)if(!tokens[j]&&r()<.049){tokens[j]=make();hits.push(j);}
-  if(hits.length)remaining=resetValue;
-  const landing=snapshot(),landingCols=cols;
-  if(hits.length)events.push({name:'NEW COINS',cols,rows,grid:landing,hits,totalMultiple:sum(),remaining,resetValue});
-  process(events);
-  const full=cols===7&&tokens.every(Boolean);
-  if(full){remaining=0;events.push({name:'FULL CART ×2',cols,rows,grid:snapshot(),hits:[],totalMultiple:sum()*2,remaining,resetValue});}
-  const now=Math.min(20000,sum()*(full?2:1)),raw=Math.max(0,now-previous);previous=now;
-  if(now>=20000)remaining=0;
-  spins.push({grid:snapshot(),landing,landingCols,events,raw,cols,rows,hits,total:spins.length+1+remaining,note:'残り '+remaining+' RESPINS',remaining,resetValue,totalMultiple:now,full});
- }
- if(spins.length){spins[0].initialGrid=initialGrid;spins[0].initialEvents=initialEvents;}
- return spins;
+ spins[0].initialGrid=initialGrid;spins[0].initialDepth=initialDepth;spins[0].initialEvents=[];return spins;
 }
 const DWARF_MONSTERS={Goblin:{hp:3,win:10,icon:'s1'},Troll:{hp:4,win:20,icon:'s3'},Dragon:{hp:5,win:30,icon:'s2'}};
 export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1,-4]};
@@ -169,10 +140,10 @@ function dwarf(r){
 const generators={gods,dogs,train,dwarf};
 export function featureRaw(game,rand=secureRandom,opts={}){return generators[game](rand,opts);}
 export function featurePlay(game,{rate,rand=secureRandom,withScript=true,strategy='battle',dogEntry=null,encounter=null}){
- const c=FEATURE_CONFIG[game],initialUnit=game==='dwarf'?rate*DWARF_INITIAL_SCALE:rate*c.scale,spins=featureRaw(game,rand,{strategy,dogEntry,encounter}),cap=Math.floor(c.max*rate),floor=1;let unit=initialUnit;
+ const c=FEATURE_CONFIG[game],wagonBP=({train3:110,train4:48}[strategy]||270),initialUnit=game==='dwarf'?rate*DWARF_INITIAL_SCALE:game==='train'?rate*wagonBP/10000:rate*c.scale,spins=featureRaw(game,rand,{strategy,dogEntry,encounter}),cap=Math.floor(c.max*rate),floor=1;let unit=initialUnit;
  let running=game==='gods'?3*c.scale*rate:0,paid=Math.floor(running);
  const entryWin=paid;
- for(const s of spins){if(game==='dwarf'){s.unit=unit;if(s.battle&&s.won){s.upgrade=dwarfUpgrade(rate,s.monster,rand);unit+=s.upgrade.amount;s.nextUnit=unit;}}const before=running;running+=game==='dwarf'?s.raw*s.unit:s.raw*c.scale*rate;let next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;
+ for(const s of spins){if(game==='dwarf'){s.unit=unit;if(s.battle&&s.won){s.upgrade=dwarfUpgrade(rate,s.monster,rand);unit+=s.upgrade.amount;s.nextUnit=unit;}}const before=running;running=game==='train'?s.totalMultiple*rate*wagonBP/10000:running+(game==='dwarf'?s.raw*s.unit:s.raw*c.scale*rate);let next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;
   if(game==='dwarf'&&s.chests?.length){let subtotal=before+(s.raw-s.chests.reduce((n,chest)=>n+chest.value,0))*unit,credited=Math.min(cap,Math.floor(subtotal));for(const [i,chest] of s.chests.entries()){subtotal+=chest.value*unit;const end=i===s.chests.length-1?next:Math.min(cap,Math.floor(subtotal));chest.win=Math.max(0,end-credited);credited=end;}}
   if(s.steps)for(const step of s.steps){step.win=Math.floor(step.value*c.scale*rate);if(game==='gods'){step.groups=step.groups.map(g=>({...g,pay:g.base*c.scale*rate,base:g.base*c.scale*rate,mult:1}));step.credited=Math.min(s.win,Math.floor(step.tumbleTotal*c.scale*rate));}}
  }
@@ -185,7 +156,7 @@ export function featurePlay(game,{rate,rand=secureRandom,withScript=true,strateg
   for(let j=0;j<scatters;j++)tableau[Math.floor(rows/2)*cols+(game==='dogs'?j*2:j)]='S';
   entry={grid:spins[0].entry.grid,scatters,initialSpins:c.initial,win:entryWin};
  }
- if(game==='train')entry={grid:spins[0].initialGrid,events:spins[0].initialEvents,initialSpins:3,win:0};
+ if(game==='train')entry={grid:spins[0].initialGrid,depth:spins[0].initialDepth,events:spins[0].initialEvents,initialSpins:3,win:0};
  return {score,played:spins.length,freePlayed:game==='dwarf'?spins.filter(s=>!s.battle).length:undefined,spins:withScript?spins:[],guarantee:score-paid,capped:game==='gods'?running>=cap:running>cap,unit:initialUnit,finalUnit:unit,entry};
 }
 export const featureModule=game=>({VOLATILITY,play:opts=>featurePlay(game,opts)});
