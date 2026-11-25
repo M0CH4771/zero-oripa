@@ -1,5 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml} from './game-info.js?v=plinko89';
+import {gameInfoHtml} from './game-info.js?v=symbol92';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -605,7 +605,7 @@ async function viewGame(id, demo, daily=false) {
     onFeatureMetric:(label,value)=>showMetric(label,value),
     onBaseUnit:unit=>{const el=$('#dwarfBase');if(el){el.hidden=false;el.textContent='宝箱×1の獲得C：'+unit.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C';}},
     onSpinWin: (v) => { const el = $('#gmRoundAmount');if(el)el.textContent=num(v)+' C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当'); },
-    onTumble:(groups)=>{const el=$('#fruitDetailItems');if(!el)return;for(const g of groups){const row=document.createElement('span');row.textContent=g.cells.length+'個 · '+(g.mult>1?num(g.base??g.pay)+' ×'+g.mult+' = ':'')+num(g.pay)+' C';if(p.game==='gods'){const i=Number(g.sym.slice(1)),icon=document.createElement('i');icon.style.cssText='width:24px;height:24px;background-image:url(./assets/anime/gods/atlas-v2.webp);background-size:400% 300%;background-position:'+(i%4*100/3)+'% '+(Math.floor(i/4)*50)+'%';row.prepend(icon);}else{const icon=document.createElement('img');icon.src=ZG.art.sprite(theme,g.sym,24).toDataURL();row.prepend(icon);}el.append(row);}el.scrollLeft=el.scrollWidth;},
+    onTumble:(groups)=>{const el=$('#fruitDetailItems');if(!el)return;for(const g of groups){const row=document.createElement('span');row.textContent=g.cells.length+'個 · '+(g.mult>1?num(g.base??g.pay)+' ×'+g.mult+' = ':'')+num(g.pay)+' C';if(p.game==='gods'){const i=Number(g.sym.slice(1)),icon=document.createElement('i');icon.style.cssText='width:24px;height:24px;background-image:url(./assets/anime/symbol92-gods.png);background-size:400% 300%;background-position:'+(i%4*100/3)+'% '+(Math.floor(i/4)*50)+'%';row.prepend(icon);}else{const icon=document.createElement('img');icon.src=ZG.art.sprite(theme,g.sym,24).toDataURL();row.prepend(icon);}el.append(row);}el.scrollLeft=el.scrollWidth;},
     onSpin: (n, total) => { if(p.game==='plinko'){if(n===0){gameCtx.ballTotal=0;$('#gmRoundAmount').textContent='0 C';$('#plinkoLastCoin').textContent='—';}}else if(gameCtx.spinIndex!==n){if($('#gmRoundAmount'))$('#gmRoundAmount').textContent='0 C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当');if(p.game==='rush'&&$('#gmMetric'))$('#gmMetric').hidden=true;if($('#fruitDetailItems'))$('#fruitDetailItems').replaceChildren();} gameCtx.spinIndex=n; $('#rSpin').textContent = String(Math.max(0,total-n)); const el=$('#gmStatus'); if(el) el.textContent=p.game==='plinko'?`着地 ${n} / ${total} 球`:p.game==='train'?`リスピン ${n} 回目`:`スピン ${n} / ${total}`; },
     onRemaining: remaining => {$('#rSpin').textContent=String(Math.max(0,remaining));},
     onMode: (mode) => {const el=$('#gmMode'); if(el)el.textContent=mode==='ENTRY'?'ボーナス開始':mode==='COMPLETE'?'プレイ終了':p.game==='train'?'貨車リスピン':p.game==='mine'?'採掘チャレンジ':'フリースピン'; if(mode==='ENTRY'&&$('#gmMetric'))$('#gmMetric').hidden=true;if(mode==='COMPLETE'){$('#rSpin').textContent='0';if(p.game==='mine')roundLabel('確定獲得');} $('#gm')?.classList.toggle('bonus-mode',mode==='BONUS');},
@@ -620,7 +620,7 @@ async function viewGame(id, demo, daily=false) {
   await sleep(80);
   // ---- スタート画面 ----
   const feats = FEATURES[p.game || 'rush'];
-  const featIcon = (id) => { if(isFeature(theme)){const i=Number(id.slice(1)),g=theme==='gods',cols=g?4:3;return `<i class="feature-sprite" style="width:64px;height:64px;background-image:url('./assets/anime/${theme}/${g||theme==='dogs'?'atlas-v2':'atlas'}.webp');background-size:${cols*100}% 300%;background-position:${i%cols*100/(cols-1)}% ${Math.floor(i/cols)*50}%"></i>`;}const th = id === 'bomb'||theme==='plinko' ? 'gems' : theme; const c = ZG.art.sprite(th, id, 64); return `<img src="${c.toDataURL()}" style="width:${64 + c.pad * 2}px;margin:-${c.pad}px" alt="">`; };
+  const featIcon = (id) => { if(isFeature(theme)){const i=Number(id.slice(1)),cols=4,rows=theme==='dogs'?4:3;return `<i class="feature-sprite" style="width:64px;height:64px;background-image:url('./assets/anime/symbol92-${theme}.png');background-size:${cols*100}% ${rows*100}%;background-position:${i%cols*100/(cols-1)}% ${Math.floor(i/cols)*100/(rows-1)}%"></i>`;}const th = id === 'bomb'||theme==='plinko' ? 'gems' : theme; const c = ZG.art.sprite(th, id, 64); return `<img src="${c.toDataURL()}" style="width:${64 + c.pad * 2}px;margin:-${c.pad}px" alt="">`; };
   if (!gameCtx.logo) { const lg = document.querySelector('.gm-logo'); if (lg) lg.innerHTML = titleHtml(p.game, 46); }
   if (p.game === 'mine') $('#rSpin').textContent = '5';
   if(isFeature(p.game))$('#rSpin').textContent=FEATURE_CONFIG[p.game].initial;

@@ -406,6 +406,14 @@
   const NO_OUTLINE = new Set(['crack1', 'crack2', 'crack3']);
   ZG.outline = { on: true, color: 'rgba(28,10,40,.92)', ratio: 0.035 };
 
+  const atlasSpecs={gems:{name:'rush',cols:4,rows:3,ids:['l1','l2','l3','l4','l5','h1','h2','h3','h4','S','bomb']},fruit:{name:'fruits',cols:3,rows:3,ids:['f1','f2','f3','f4','f5','f6','f7','S']},mine:{name:'mine',cols:4,rows:4,ids:['D','T','C','I','G','X','R','E','Q','pick','book','goldbook','N','dyn','H','chest-open']}};
+  const atlasReady={};
+  async function warmAtlas(theme){const spec=atlasSpecs[theme];if(!spec||atlasReady[theme])return;const img=await ZG.loadSymbolAtlas(spec.name);if(img){atlasReady[theme]=img;for(const k of [...cache.keys()])if(k.startsWith(theme+':'))cache.delete(k);}}
+  function atlasIndex(theme,id){
+    const spec=atlasSpecs[theme];if(!spec)return -1;
+    if(theme==='mine'){if(id.startsWith('pick-'))return 9;if(id.startsWith('chest-open-'))return 15;if(id.startsWith('chest-half-'))return 15;if(id.startsWith('chest-'))return 14;}
+    return spec.ids.indexOf(id);
+  }
   function sprite(theme, id, size, extra) {
     const dpr = Math.min(3, window.devicePixelRatio || 1);
     const key = `${theme}:${id}:${Math.round(size)}:${extra || ''}`;
@@ -417,7 +425,14 @@
     ctx.setTransform(dpr, 0, 0, dpr, (size / 2 + pad) * dpr, (size / 2 + pad) * dpr);
     const url = images[theme]?.[id];
     let fromImage = false;
-    if (url) {
+    const idx=atlasIndex(theme,id),spec=atlasSpecs[theme],newAtlas=atlasReady[theme];
+    if(newAtlas&&idx>=0){
+      const sw=newAtlas.width/spec.cols,sh=newAtlas.height/spec.rows;
+      const scale=theme==='mine'?1.02:1.03,dim=size*scale;
+      ctx.imageSmoothingQuality='high';
+      if(theme==='mine'&&id.startsWith('chest-')){const v=Number(id.split('-').at(-1));if(v<5)ctx.filter='hue-rotate(165deg) saturate(.7)';else if(v<8)ctx.filter='hue-rotate(56deg) saturate(.9)';}
+      ctx.drawImage(newAtlas,idx%spec.cols*sw,Math.floor(idx/spec.cols)*sh,sw,sh,-dim/2,-dim/2,dim,dim);ctx.filter='none';fromImage=true;
+    } else if (url) {
       let img = loaded.get(url);
       if (!img) { img = new Image(); img.src = url; loaded.set(url, img); img.onload = () => { for (const k of [...cache.keys()]) if (k.startsWith(`${theme}:${id}:`)) cache.delete(k); }; }
       if (img.complete && img.naturalWidth) {
@@ -439,6 +454,7 @@
   }
   // 読み込み画面で、使う絵柄をまとめて先に作っておく
   async function preload(theme, ids, size, onProgress) {
+    await warmAtlas(theme);
     for (let i = 0; i < ids.length; i++) {
       sprite(theme, ids[i], size);
       onProgress && onProgress((i + 1) / ids.length);

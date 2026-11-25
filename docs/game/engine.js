@@ -5,10 +5,27 @@
   const ZG = (window.ZG = window.ZG || {});
   ZG.SPIN_TIMING=Object.freeze({reel:1100,pause:200,normal:1,quick:.5,turbo:.25});
 
-  // Generated emblem atlas: six game themes, three frames per theme.
-  const multiplierArt=new Image();let multiplierArtReady=false;
-  multiplierArt.onload=()=>{multiplierArtReady=true;};
-  multiplierArt.src='./assets/anime/multiplier-emblems.webp?v=57';
+  // Normalize each cell, remove nearly transparent color fringe, keep a full-size sprite.
+  ZG.cleanSymbolAtlas=(img,cols,rows)=>{
+    try{
+      const c=document.createElement('canvas'),cell=256;c.width=cols*cell;c.height=rows*cell;
+      const g=c.getContext('2d',{willReadFrequently:true}),sw=img.width/cols,sh=img.height/rows;
+      g.imageSmoothingQuality='high';
+      for(let i=0;i<cols*rows;i++)g.drawImage(img,(i%cols)*sw+1,Math.floor(i/cols)*sh+1,sw-2,sh-2,(i%cols)*cell,Math.floor(i/cols)*cell,cell,cell);
+      const pixels=g.getImageData(0,0,c.width,c.height);
+      for(let i=3;i<pixels.data.length;i+=4){const a=pixels.data[i];if(a<48)pixels.data[i]=0;else if(a<96)pixels.data[i]=Math.round((a-48)*2);}
+      g.putImageData(pixels,0,0);return c;
+    }catch{return img;}
+  };
+  const atlasDims={rush:[4,3],fruits:[3,3],mine:[4,4],gods:[4,3],dogs:[4,4],dwarf:[4,3],plinko:[3,2],multipliers:[3,6]},atlasPromises=new Map();
+  ZG.loadSymbolAtlas=(name)=>{
+    if(!atlasDims[name])return Promise.resolve(null);
+    if(!atlasPromises.has(name))atlasPromises.set(name,new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(ZG.cleanSymbolAtlas(img,...atlasDims[name]));img.onerror=()=>resolve(null);img.src='./assets/anime/symbol92-'+name+'.png';}));
+    return atlasPromises.get(name);
+  };
+  const multiplierSource=new Image();let multiplierArt=multiplierSource,multiplierArtReady=false;
+  multiplierSource.onload=()=>{multiplierArt=ZG.cleanSymbolAtlas(multiplierSource,3,6);multiplierArtReady=true;};
+  multiplierSource.src='./assets/anime/symbol92-multipliers.png';
   const multiplierRows={gems:0,fruit:1,mine:2,gods:3,dogs:4,train:5};
   const multiplierTier=(theme,n)=>{const [middle,high]=({mine:[5,8],dogs:[2,3],fruit:[8,32],train:[10,50]})[theme]||[10,50];return n>=high?2:n>=middle?1:0;};
   const motionReduced=()=>typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -22,14 +39,12 @@
     const n=Number(value),row=multiplierRows[theme];if(!Number.isFinite(n)||n<0||row===undefined||size<=0)return false;
     if(!multiplierArtReady)return false;
     const tier=multiplierTier(theme,n);
-    const [top,height,center]=[[0,265,155],[265,250,410],[515,238,663],[753,243,883],[996,240,1141],[1236,300,1367]][row];
-    const sx=multiplierArt.width/1024,sy=multiplierArt.height/1536, left=[35,355,675][tier];
-    ctx.save();ctx.drawImage(multiplierArt,left*sx,top*sy,300*sx,height*sy,x-size/2,y-size/2,size,size);
-    const label='×'+n.toLocaleString('en-US');
-    const tx=x+(tier===0?size*.025:0),ty=y+size*((center-top)/height-.5);
-    ctx.font='1000 '+Math.max(9,size*.39)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
-    ctx.lineWidth=Math.max(1.2,size*.038);ctx.strokeStyle='#130c1c';ctx.strokeText(label,tx,ty,size*.61);
-    ctx.fillStyle=tier===2?'#fff2b4':'#fff';ctx.fillText(label,tx,ty,size*.61);ctx.restore();return true;
+    const sw=multiplierArt.width/3,sh=multiplierArt.height/6;
+    ctx.save();ctx.drawImage(multiplierArt,tier*sw,row*sh,sw,sh,x-size/2,y-size/2,size,size);
+    const label='×'+n.toLocaleString('en-US'),ty=y+size*(theme==='mine'?.19:theme==='dogs'?.12:theme==='gems'?.05:.04);
+    ctx.font='1000 '+Math.max(9,size*.46)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
+    ctx.lineWidth=Math.max(1.5,size*.045);ctx.strokeStyle='#130c1c';ctx.strokeText(label,x,ty,size*.73);
+    ctx.fillStyle=tier===2?'#fff2b4':'#fff';ctx.fillText(label,x,ty,size*.73);ctx.restore();return true;
   };
 
   // Draw exact multiplier values as text, independent of the artwork resolution.
