@@ -131,7 +131,8 @@ export const DWARF_WEIGHTS={Goblin:[2764,2764,2236,2236],Troll:[2764,2764,2236,2
 export const DWARF_INITIAL_SCALE=.001;
 export const DWARF_UPGRADE_SCALES=[.00005,.0001,.0002,.00025,.00027];
 export const DWARF_UPGRADE_WEIGHTS=[1950,2000,2000,2000,2050];
-function dwarfUpgrade(rate,monster,rand){const factor={Goblin:1,Troll:2,Dragon:3}[monster];let ticket=rand()*10000,selected=4;for(let i=0;i<DWARF_UPGRADE_WEIGHTS.length;i++){ticket-=DWARF_UPGRADE_WEIGHTS[i];if(ticket<0){selected=i;break;}}const values=DWARF_UPGRADE_SCALES.map(s=>rate*s*factor);return {selected,values,weights:DWARF_UPGRADE_WEIGHTS,amount:values[selected]};}
+export function dwarfUpgradeTable(rate,monster){const factor={Goblin:1,Troll:2,Dragon:3}[monster];const raw=DWARF_UPGRADE_SCALES.map(s=>rate*s*factor);if(rate<1000)return {values:raw,weights:[...DWARF_UPGRADE_WEIGHTS]};const masses=new Map();for(const [i,value] of raw.entries()){const w=DWARF_UPGRADE_WEIGHTS[i],lo=Math.floor(value+1e-10),f=Math.max(0,value-lo);for(const [v,p] of [[lo,w*(1-f)],[lo+1,w*f]])if(p>1e-9)masses.set(v,(masses.get(v)||0)+p);}const values=[...masses.keys()].sort((a,b)=>a-b);return {values,weights:values.map(v=>masses.get(v))};}
+function dwarfUpgrade(rate,monster,rand){const {values,weights}=dwarfUpgradeTable(rate,monster);let ticket=rand()*weights.reduce((a,b)=>a+b,0),selected=values.length-1;for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}return {selected,values,weights,amount:values[selected]};}
 function dwarf(r){
  const spins=[];
  const pick=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:1,s9:.9},r);
