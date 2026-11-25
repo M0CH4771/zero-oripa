@@ -1,5 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml} from './game-info.js?v=info75';
+import {gameInfoHtml} from './game-info.js?v=info76';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -502,7 +502,7 @@ function leaveGame() {
   document.body.classList.remove('gamemode');
   gameCtx = null;
 }
-function plinkoInfo(rows,risk){const c=window.plinkoConfig(rows,risk);return `<p class="muted">1球 ${num(rushRate)} C · 配当表還元率 約90% · ${rows}段 / ${risk.toUpperCase()}（左右対称）</p><div class="plinko-paytable"><div class="plinko-payrow head"><span>着地枠</span><span>獲得コイン</span><span>確率（1枠）</span></div>${c.multipliers.slice(0,rows/2+1).map((m,i)=>`<div class="plinko-payrow"><span>${i===rows/2?'中央':`左右・外から${i+1}番目`}</span><b class="plinko-mult ${m>=10?'high':m>=1?'even':m>0?'low':'zero'}">${num(Math.round(rushRate*c.cents[i]/100))} C</b><span>${(c.probabilities[i]*100).toFixed(5)}%</span></div>`).join('')}</div>`;}
+function plinkoInfo(rows,risk){const c=window.plinkoConfig(rows,risk);return `<p class="muted">1球 ${num(rushRate)} C · 配当表還元率 約90% · ${rows}段 / ${risk.toUpperCase()}（左右対称）</p><div class="plinko-paytable"><div class="plinko-payrow head"><span>着地枠</span><span>獲得コイン</span></div>${c.multipliers.slice(0,rows/2+1).map((m,i)=>`<div class="plinko-payrow"><span>${i===rows/2?'中央':`左右・外から${i+1}番目`}</span><b class="plinko-mult ${m>=10?'high':m>=1?'even':m>0?'low':'zero'}">${num(Math.round(rushRate*c.cents[i]/100))} C</b></div>`).join('')}</div>`;}
 async function viewGame(id, demo, daily=false) {
   if (!demo && !ME.user) { location.hash = `#play-${id}-demo`; return; }
   const { pack: p } = await api('/api/packs/' + id);
