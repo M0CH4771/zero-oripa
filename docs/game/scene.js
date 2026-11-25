@@ -159,7 +159,7 @@
     },
     // 盤面のまわりの装飾フレーム
     frame(ctx, theme, x, y, w, h, t) {
-      const b = theme==='fruit'?Math.max(5,Math.min(w,h)*.019):Math.max(9, Math.min(w, h) * 0.039);
+      const b = theme==='fruit'||(theme==='gems'&&w<=640)?Math.max(5,Math.min(w,h)*.019):Math.max(9, Math.min(w, h) * 0.039);
       ctx.save();
       // 内側（半透明の盤面）
       ZG.rr(ctx, x, y, w, h, b);

@@ -56,9 +56,9 @@
     }}return;
    }
    if(mode==='dogs'){
-    const r=opt.region(w,h),bw=Math.min(r.w-20,700),bh=Math.max(70,Math.min(r.h-76,bw*1.12)),x=r.x+(r.w-bw)/2,y=r.y+Math.max(42,(r.h-bh)/2),cw=bw/6;
+    const r=opt.region(w,h),compact=w<=640,bw=Math.min(r.w-(compact?14:20),700),bh=Math.max(70,Math.min(r.h-(compact?56:76),bw*1.12)),x=r.x+(r.w-bw)/2,y=r.y+Math.max(compact?30:42,(r.h-bh)/2),cw=bw/6;
     ZG.rr(ctx,x-7,y-7,bw+14,bh+14,12);ctx.fillStyle='#4d271de8';ctx.fill();ctx.strokeStyle='#ffe1a5';ctx.lineWidth=3;ctx.stroke();
-    text(ctx,dogWays.toLocaleString()+' MEGAWAYS',w/2,y-29,Math.min(24,w/17),cfg.accent,w-24);text(ctx,note+' · GAME PAYS '+hooks.fmt(dogPay)+' C',w/2,y+bh+23,Math.min(16,w/24),'#fff',w-18);
+    text(ctx,dogWays.toLocaleString()+' MEGAWAYS',w/2,y-(compact?20:29),Math.min(24,w/17),cfg.accent,w-24);text(ctx,note+' · GAME PAYS '+hooks.fmt(dogPay)+' C',w/2,y+bh+(compact?16:23),Math.min(16,w/24),'#fff',w-18);
     dogPositions=[];for(let c=0;c<6;c++){const count=dogHeights[c],ch=bh/count;for(let row=0;row<count;row++){const j=row*6+c,xx=x+c*cw,yy=y+row*ch,cx=xx+cw/2,cy=yy+ch/2;dogPositions[j]={x:cx,y:cy};const m=reelState(j,6),spinning=m.rolling,s=spinning?'s'+([0,1,2,3,4,5,9,10,11,12,13][(Math.floor(st.t/70)+j)%11]):grid[j];
     tile(ctx,xx+2,yy+2,cw-4,ch-4,hits.includes(j),true);
     ctx.fillStyle='#a16b43';ctx.fillRect(xx,yy,cw,2);ctx.fillRect(xx,yy,3,ch);
@@ -67,8 +67,8 @@
     if(s.startsWith('W')){if(!ZG.multiplierEmblem(ctx,'dogs',Number(s.slice(1)),cx,cy-dy,d))ZG.multiplierLabel(ctx,Number(s.slice(1)),cx,cy-dy+d*.15,Math.min(cw*.91,d*.97),d*.47);}else if(s==='S'){ctx.fillStyle='#572218ee';ZG.rr(ctx,xx+3,yy+ch*.71,cw-6,ch*.25,4);ctx.fill();text(ctx,'BONUS',cx,yy+ch*.835,Math.min(13,cw*.18,ch*.19),'#fff3ad');}ctx.restore();}}
     return;
    }
-   const r=opt.region(w,h),gap=3,targetCell=Math.max(8,Math.min((r.w-22)/cols,(r.h-(['train','gods'].includes(mode)?100:75))/rows,mode==='dwarf'?170:130)),cell=expansion?expansion.cell+(targetCell-expansion.cell)*expansion.progress:targetCell,
-    visibleCols=expansion?cols-1+expansion.progress:cols,bw=visibleCols*cell,bh=rows*cell,x=r.x+(r.w-bw)/2,y=r.y+Math.max(['train','gods'].includes(mode)?60:28,(r.h-bh)/2);
+   const r=opt.region(w,h),compact=w<=640,gap=3,topPad=compact?(mode==='train'?57:mode==='gods'?38:28):(['train','gods'].includes(mode)?60:28),bottomPad=compact?(mode==='train'?25:15):40,targetCell=Math.max(8,Math.min((r.w-(compact?18:22))/cols,(r.h-topPad-bottomPad)/rows,mode==='dwarf'?170:130)),cell=expansion?expansion.cell+(targetCell-expansion.cell)*expansion.progress:targetCell,
+    visibleCols=expansion?cols-1+expansion.progress:cols,bw=visibleCols*cell,bh=rows*cell,x=r.x+(r.w-bw)/2,y=r.y+Math.max(topPad,(r.h-bh)/2);
    board={x,y,cell};
    ZG.rr(ctx,x-9,y-9,bw+18,bh+18,13);ctx.fillStyle='#060815e8';ctx.fill();ctx.strokeStyle=cfg.accent;ctx.lineWidth=3;ctx.stroke();
    if(mode!=='gods')text(ctx,note,w/2,y-25,Math.min(19,w/22),cfg.accent,w-24);
