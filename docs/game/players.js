@@ -405,10 +405,10 @@
         const chestSize=L.cell*(nd.open?1.12:1.03);
         const sp=ZG.art.sprite('mine',(nd.open?'chest-open-':nd.half?'chest-half-':'chest-')+nd.m,chestSize);
         const full=chestSize+sp.pad*2;
-        if(nd.open||!ZG.multiplierEmblem(ctx,'mine',nd.m,0,0,L.cell*.98)){
-          ctx.drawImage(sp,-full/2,-full/2-(nd.open?L.cell*.045:0),full,full);
-          if(!ZG.multiplierEmblem(ctx,'mine',nd.m,0,L.cell*.18,L.cell*.72))ZG.multiplierLabel(ctx,nd.m,0,L.cell*.19,L.cell*.90,L.cell*.38);
-        }
+        // The multiplier emblem itself depicts a closed chest. Never layer it
+        // over the state-specific chest artwork (especially after opening).
+        ctx.drawImage(sp,-full/2,-full/2-(nd.open?L.cell*.045:0),full,full);
+        ZG.multiplierLabel(ctx,nd.m,0,L.cell*.19,L.cell*.76,L.cell*.31);
         if (!nd.open && dug[nd.c] && dug[nd.c].filter(Boolean).length >= ROWS - 1) {
           const k = 0.5 + 0.5 * Math.sin((t || 0) / 140 + nd.t0);
           ctx.save(); ctx.globalAlpha = 0.4 + 0.5 * k; ctx.strokeStyle = '#fff36a'; ctx.lineWidth = 3; ZG.rr(ctx, -L.cell / 2 + 2, -L.cell / 2 + 2, L.cell - 4, L.cell - 4, 8); ctx.stroke(); ctx.restore();

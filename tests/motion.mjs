@@ -27,7 +27,10 @@ for(const [theme,values] of Object.entries({gems:[2,10,50],fruit:[2,8,32],mine:[
  globalThis.matchMedia=()=>({matches:true});stage.emblemLand(theme,values[2],40,40,32);assert.equal(stage.rings.length,count);delete globalThis.matchMedia;stage.draw();stage.destroy();
 }
 ZG.scene={background:()=>({}),character(){},frame(){},text3d(){}};
-ZG.art={sprite:()=>({width:100,height:100,pad:0}),preload:async()=>{},IDS:{gems:['l1','l2','l3','l4','l5','h1','h2','h3','h4'],fruit:['f1','f2','f3','f4','f5','f6','f7']},COLORS:{gems:{},fruit:{},mine:new Proxy({},{get:()=> '#987654'})}};
+let openChestDraws=0,mineEmblemDraws=0;
+const originalEmblem=ZG.multiplierEmblem;
+ZG.multiplierEmblem=(ctx,theme,...args)=>{if(theme==='mine')mineEmblemDraws++;return originalEmblem(ctx,theme,...args);};
+ZG.art={sprite:(theme,id)=>{if(theme==='mine'&&id.startsWith('chest-open-'))openChestDraws++;return {width:100,height:100,pad:0};},preload:async()=>{},IDS:{gems:['l1','l2','l3','l4','l5','h1','h2','h3','h4'],fruit:['f1','f2','f3','f4','f5','f6','f7']},COLORS:{gems:{},fruit:{},mine:new Proxy({},{get:()=> '#987654'})}};
 ZG.shade=x=>x;ZG.sfx={play(){}};
 await import('../docs/game/feature-player.js');await import('../docs/game/players.js');
 const origError=console.error;console.error=(...a)=>{errors.push(a);origError(...a)};
@@ -46,6 +49,8 @@ for(const game of ['rush','fruit','mine','plinko','gods','dogs','train','dwarf']
  assert.ok(times[0]>times[1]&&times[1]>times[2],game+' speed order');console.log(game,'normal / quick / turbo, score & remaining passed',times.map(v=>Math.round(v/100)/10+'s').join(' / '));
 }
 assert.ok(draws>10000);
+assert.ok(openChestDraws>0,'MINE opened chest sprites rendered');
+assert.equal(mineEmblemDraws,0,'MINE chest art never receives a closed-chest emblem overlay');
 viewport={w:320,h:600};
 for(const rows of [8,12,16])for(const risk of ['low','medium','high']){
  let rate=100;const config=plinkoConfig(rows,risk),g=ZG.createGame(canvas(),{game:'plinko',region:()=>({x:0,y:110,w:320,h:265}),plinko:config,getRate:()=>rate},{fmt:String,onScore(){},onSpin(){}});await g.warm();g.idle();
