@@ -615,7 +615,7 @@ async function viewGame(id, demo, daily=false) {
     onBallLand:(v)=>{gameCtx.ballTotal=(gameCtx.ballTotal||0)+v;const el=$('#gmRoundAmount');if(el)el.textContent=num(gameCtx.ballTotal)+' C';const latest=$('#plinkoLastCoin');if(latest&&Number.isFinite(v))latest.textContent=num(v)+' C';},
     onMultiplier:(base,mult)=>{if(p.game==='rush'){roundLabel(base?'倍率適用前':'配当なし');$('#gmRoundAmount').textContent=num(base)+' C';showMetric('適用倍率','×'+num(mult));}},
     onFeatureMetric:(label,value)=>showMetric(label,value),
-    onBaseUnit:unit=>{const el=$('#dwarfBase');if(el){el.hidden=false;el.textContent='宝箱計算基準 '+unit.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C';}},
+    onBaseUnit:unit=>{const el=$('#dwarfBase');if(el){el.hidden=false;el.textContent='今回の宝箱基準 '+unit.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C';}},
     onSpinWin: (v) => { const el = $('#gmRoundAmount');if(el)el.textContent=num(v)+' C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当'); },
     onTumble:(groups)=>{const el=$('#fruitDetailItems');if(!el)return;for(const g of groups){const row=document.createElement('span');row.textContent=g.cells.length+'個 · '+num(g.base??g.pay)+(g.mult>1?' ×'+g.mult:'')+' = '+num(g.pay)+' C';if(p.game==='gods'){const i=Number(g.sym.slice(1)),icon=document.createElement('i');icon.style.cssText='width:24px;height:24px;background-image:url(./assets/anime/gods/atlas-v2.webp);background-size:400% 300%;background-position:'+(i%4*100/3)+'% '+(Math.floor(i/4)*50)+'%';row.prepend(icon);}else{const icon=document.createElement('img');icon.src=ZG.art.sprite('fruit',g.sym,24).toDataURL();row.prepend(icon);}el.append(row);}el.scrollLeft=el.scrollWidth;},
     onSpin: (n, total) => { if(p.game==='plinko'){if(n===0){gameCtx.ballTotal=0;$('#gmRoundAmount').textContent='0 C';$('#plinkoLastCoin').textContent='—';}}else if(gameCtx.spinIndex!==n){if($('#gmRoundAmount'))$('#gmRoundAmount').textContent='0 C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当');if(p.game==='rush'&&$('#gmMetric'))$('#gmMetric').hidden=true;if($('#fruitDetailItems'))$('#fruitDetailItems').replaceChildren();} gameCtx.spinIndex=n; $('#rSpin').textContent = String(Math.max(0,total-n)); const el=$('#gmStatus'); if(el) el.textContent=p.game==='plinko'?`着地 ${n} / ${total} 球`:p.game==='train'?`リスピン ${n} 回目`:`スピン ${n} / ${total}`; },
@@ -695,6 +695,7 @@ async function gameSpin() {
   if (demo && cost > gameCtx.credits) {toast('お試しコインが不足しています。球数を減らしてください');return;}
   gameCtx.busy = true;
   gameCtx.spinIndex = -1;
+  if($('#dwarfBase'))$('#dwarfBase').hidden=true;
   if(p.game==='plinko'&&$('#plinkoLastCoin'))$('#plinkoLastCoin').textContent='—';
   const btn = $('#rPlay');
   btn.classList.add('busy');

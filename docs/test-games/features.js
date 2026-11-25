@@ -128,6 +128,10 @@ export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1
 // distribution keeps expected added spins below ten per battle.
 export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
 export const DWARF_WEIGHTS={Goblin:[2764,2764,2236,2236],Troll:[2764,2764,2236,2236],Dragon:[2764,2764,2236,2236]};
+// Fractions of the purchased bonus cost. Weighted mean = 0.0025832.
+export const DWARF_BASE_SCALES=[.001,.002,.0025,.003,.005];
+export const DWARF_BASE_WEIGHTS=[2000,2000,2000,2584,1416];
+function dwarfBase(rate,rand){let ticket=rand()*10000,selected=DWARF_BASE_WEIGHTS.length-1;for(let i=0;i<DWARF_BASE_WEIGHTS.length;i++){ticket-=DWARF_BASE_WEIGHTS[i];if(ticket<0){selected=i;break;}}return {selected,values:DWARF_BASE_SCALES.map(s=>rate*s),weights:DWARF_BASE_WEIGHTS};}
 function dwarf(r){
  const spins=[];
  const pick=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:1,s9:.9},r);
@@ -161,11 +165,11 @@ function dwarf(r){
 const generators={gods,dogs,train,dwarf};
 export function featureRaw(game,rand=secureRandom,opts={}){return generators[game](rand,opts);}
 export function featurePlay(game,{rate,rand=secureRandom,withScript=true,strategy='battle',dogEntry=null,encounter=null}){
- const c=FEATURE_CONFIG[game],spins=featureRaw(game,rand,{strategy,dogEntry,encounter}),cap=Math.floor(c.max*rate),floor=Math.ceil(c.min*rate);
+ const c=FEATURE_CONFIG[game],baseDraw=game==='dwarf'?dwarfBase(rate,rand):null,unit=baseDraw?baseDraw.values[baseDraw.selected]:rate*c.scale,spins=featureRaw(game,rand,{strategy,dogEntry,encounter}),cap=Math.floor(c.max*rate),floor=Math.ceil(c.min*rate);
  let running=game==='gods'?3*c.scale*rate:0,paid=Math.floor(running);
  const entryWin=paid;
- for(const s of spins){const before=running;running+=s.raw*c.scale*rate;let next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;
-  if(game==='dwarf'&&s.chests?.length){let subtotal=before+(s.raw-s.chests.reduce((n,chest)=>n+chest.value,0))*c.scale*rate,credited=Math.min(cap,Math.floor(subtotal));for(const [i,chest] of s.chests.entries()){subtotal+=chest.value*c.scale*rate;const end=i===s.chests.length-1?next:Math.min(cap,Math.floor(subtotal));chest.win=Math.max(0,end-credited);credited=end;}}
+ for(const s of spins){const before=running;running+=game==='dwarf'?s.raw*unit:s.raw*c.scale*rate;let next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;
+  if(game==='dwarf'&&s.chests?.length){let subtotal=before+(s.raw-s.chests.reduce((n,chest)=>n+chest.value,0))*unit,credited=Math.min(cap,Math.floor(subtotal));for(const [i,chest] of s.chests.entries()){subtotal+=chest.value*unit;const end=i===s.chests.length-1?next:Math.min(cap,Math.floor(subtotal));chest.win=Math.max(0,end-credited);credited=end;}}
   if(s.steps)for(const step of s.steps){step.win=Math.floor(step.value*c.scale*rate);if(game==='gods'){step.groups=step.groups.map(g=>({...g,pay:g.base*c.scale*rate,base:g.base*c.scale*rate,mult:1}));step.credited=Math.min(s.win,Math.floor(step.tumbleTotal*c.scale*rate));}}
  }
  const score=Math.max(floor,paid);
@@ -178,6 +182,6 @@ export function featurePlay(game,{rate,rand=secureRandom,withScript=true,strateg
   entry={grid:spins[0].entry.grid,scatters,initialSpins:c.initial,win:entryWin};
  }
  if(game==='train')entry={grid:spins[0].initialGrid,events:spins[0].initialEvents,initialSpins:3,win:0};
- return {score,played:spins.length,freePlayed:game==='dwarf'?spins.filter(s=>!s.battle).length:undefined,spins:withScript?spins:[],guarantee:score-paid,capped:game==='gods'?running>=cap:running>cap,unit:rate*c.scale,entry};
+ return {score,played:spins.length,freePlayed:game==='dwarf'?spins.filter(s=>!s.battle).length:undefined,spins:withScript?spins:[],guarantee:score-paid,capped:game==='gods'?running>=cap:running>cap,unit,baseDraw,entry};
 }
 export const featureModule=game=>({VOLATILITY,play:opts=>featurePlay(game,opts)});
