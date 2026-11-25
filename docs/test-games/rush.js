@@ -84,7 +84,7 @@ function runSpin(cellGen) {
       const fresh=[];while(fresh.length<ROWS-keep.length){const s=cellGen(!hasScatter,fresh.at(-1));if(s==='S')hasScatter=true;fresh.push(s);}
       [...fresh, ...keep].forEach((s, r) => (next[r * COLS + c] = s));
     }
-    steps.push({ hits, syms: wins, pay, grid: next, cols });
+    steps.push({ hits, syms: wins, pay, wins:wins.map(sym=>({sym,cells:hits.filter(i=>grid[i]===sym),pay:PAYS[sym][payIndex(counts[sym])],mult:1})), grid: next, cols });
     grid = next;
   }
   const bombs = [];
@@ -117,7 +117,7 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
     if (withScript) {
       spins.push({
         first: s.first,
-        steps: s.steps.map((x) => ({ hits: x.hits, syms: x.syms, pay: Number((x.pay * payUnit).toFixed(4)), grid: x.grid, cols: x.cols })),
+        steps: s.steps.map((x) => ({ hits: x.hits, syms: x.syms, pay: Number((x.pay * payUnit).toFixed(4)), wins:x.wins.map(g=>({...g,pay:Number((g.pay*payUnit).toFixed(4)),base:Number((g.pay*payUnit).toFixed(4))})), grid: x.grid, cols: x.cols })),
         bombs: s.mult > 1 ? s.bombs : [],
         mult: s.mult,
         win: settled,

@@ -205,8 +205,8 @@
             await Promise.all(active.map(i=>st.carry(pos(i),center,'×'+Math.min(128,spotNodes[i].v*2),'#ffe786',Math.max(12,L.cell*.27),280)));
             if(group.mult>1){st.impact(center.x,center.y,L.cell*.65,'#ff9dd4',1);S('wild');}
           }
-          hooks.onTumble?.(groups);
         }
+        hooks.onTumble?.(groups);
         const texts = groups.map((g) => { const c = centroid(g.cells); return st.popText(c.x, c.y, cfg.spots?(g.mult>1?`${hooks.fmt(g.base)} × ${g.mult} = ${hooks.fmt(g.pay)}`:`${g.cells.length}個 +${hooks.fmt(g.pay)}`):(g.mult > 1 ? `×${g.mult} ` : '') + hooks.fmt(g.pay), { size: Math.max(14, L.cell * (cfg.spots?.32:.46)) }); });
         outlines.forEach(n=>st.remove(n));
         await explode(hits, color);

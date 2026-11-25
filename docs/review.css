@@ -25,7 +25,7 @@
  .gm:not(.theme-plinko) .gm-demo {top:calc(65px + env(safe-area-inset-top));font-size:9px}
  .gm:not(.theme-plinko) .gm-round-win,.gm.theme-mine .gm-round-win {top:calc(80px + env(safe-area-inset-top));min-height:32px;padding:2px 6px;width:calc(100% - 12px)}
  .gm.theme-fruit:not(.theme-plinko) .gm-round-win {top:calc(80px + env(safe-area-inset-top));min-height:30px}
- .gm.theme-fruit .gm-round-win+.fruit-detail,.gm.theme-gods .gm-round-win+.fruit-detail {top:calc(119px + env(safe-area-inset-top));height:26px}
+ .gm.theme-gems .gm-round-win+.fruit-detail,.gm.theme-fruit .gm-round-win+.fruit-detail,.gm.theme-gods .gm-round-win+.fruit-detail {top:calc(119px + env(safe-area-inset-top));height:26px}
  .gm .gm-hud {padding-inline:5px}
  .gm .gm-row {gap:3px}.gm .gm-row .gm-box {padding:3px 1px}
  .gm .gm-bet #betSelect #hUnit {font-size:9px!important}

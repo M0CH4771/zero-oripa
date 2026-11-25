@@ -23,6 +23,7 @@ for(const [i,id] of ids.entries()){
  assert.equal((await call('/api/me')).data.user.coins,initial+20,'earn rewards credit shared demo balance');
  const demo=await call('/api/packs/'+id+'/rush-demo',{rate:1000,count:id===11?10:1});
  assert.equal(demo.status,200);assert.equal(demo.data.script.length,demo.data.played);
+ if(id===1)for(const spin of demo.data.script)for(const step of spin.steps){assert.ok(step.wins.every(g=>g.cells.length>=8&&g.pay>=0));assert.equal(step.wins.reduce((sum,g)=>sum+g.cells.length,0),step.hits.length);assert.ok(Math.abs(step.wins.reduce((sum,g)=>sum+g.pay,0)-step.pay)<.001);}
  assert.ok(demo.data.score>=1);assert.ok((demo.data.guarantee||0)<=1);
  if(id===15){assert.equal(demo.data.unit,10);assert.ok(demo.data.finalUnit>=10);for(const s of demo.data.script.filter(s=>s.battle&&s.won))assert.equal(s.upgrade.amount,s.upgrade.values[s.upgrade.selected]);}
  if(id!==11){for(const rate of slotRates){const r=await call('/api/packs/'+id+'/rush-demo',{rate,count:1});assert.equal(r.status,200);assert.equal(r.data.cost,rate);assert.ok(Number.isFinite(r.data.score));}assert.equal((await call('/api/packs/'+id+'/rush-demo',{rate:100})).status,400);}

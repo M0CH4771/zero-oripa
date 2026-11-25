@@ -1,5 +1,5 @@
 // ゲームの一覧。template.game で選ぶ（省略時は rush）
-import * as rush from './rush.js?v=min70';
+import * as rush from './rush.js?v=detail80';
 import * as fruit from './fruit.js?v=min70';
 import * as mine from './mine.js?v=min70';
 import * as plinko from './plinko.js?v=plinko79';
