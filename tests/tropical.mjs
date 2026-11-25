@@ -8,7 +8,7 @@ for(let i=0;i<n;i++){const r=round(bet,{rand});assert.ok(LINES[0].every(j=>r.ent
 const rtp=sum/n/bet;assert.ok(rtp>=.96&&rtp<=.98);console.log('Tropical: RTP',rtp,'mean spins',spins/n);
 for(let tier=0;tier<3;tier++)for(let i=0;i<2000;i++){
  const r=round(bet,{rand,tier});for(const s of r.steps){
-  if(s.phase===2){assert.equal(s.continuation.extra===true,s.wins.length===0);if(s.continuation.extra)assert.equal(s.mode,1);}
+  if(s.phase===2){assert.ok(s.grid.every(x=>x>=18&&x<=20));assert.ok(s.wins.every(w=>w.index===0));assert.equal(s.continuation.extra===true,s.wins.length===0);if(s.continuation.extra)assert.equal(s.mode,1);}
   else if(s.add){assert.ok(s.wins.some(w=>w.symbol===TIERS[s.phase].seven));assert.equal(s.add,8);}
   if(s.phase!==2&&s.continuation)assert.equal(s.continuation.success,s.wins.some(w=>w.symbol===TIERS[s.phase].seven));
  }
