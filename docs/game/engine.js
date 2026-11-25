@@ -211,7 +211,8 @@
     }
     popText(x, y, text, style = {}) {
       if (this.skip||this.dead) return Promise.resolve();
-      const o = { kind: 'text', x, y, text, a: 0, s: 0.86, size: style.size || 22, color: style.color || '#fff0a4', stroke: style.stroke || '#43230b', z: 50 };
+      if(style.exclusive)this.overlays=this.overlays.filter(o=>!o.exclusive);
+      const o = { kind: 'text', x, y, text, a: 0, s: 0.86, exclusive:!!style.exclusive, size: style.size || 22, maxWidth:style.maxWidth, color: style.color || '#fff0a4', stroke: style.stroke || '#43230b', z: 50 };
       this.overlays.push(o);
       return (async () => {
         await this.tween(o, { a: 1, s: 1.045 }, 155, Ease.outCubic);
@@ -399,10 +400,12 @@
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const font = (px) => `${px}px ${ZG.FONT || '"Arial Black",sans-serif'}`;
       if (o.kind === 'text') {
-        ctx.translate(o.x, o.y); ctx.scale(o.s, o.s);
-        ctx.font = font(o.size); ctx.lineJoin = 'round';
-        ctx.lineWidth = o.size / 4; ctx.strokeStyle = o.stroke; ctx.strokeText(o.text, 0, 0);
-        ctx.fillStyle = o.color; ctx.fillText(o.text, 0, 0);
+        ctx.font = font(o.size);ctx.lineJoin='round';
+        const region=this.overlayRegion?.(w,h)||{x:0,y:0,w,h},maxWidth=Math.max(12,Math.min(o.maxWidth||w-16,w-16,region.w-12)),tw=Math.min(maxWidth,ctx.measureText(o.text).width)*o.s;
+        const x=Math.max(6+tw/2,Math.min(w-6-tw/2,o.x)),y=Math.max(region.y+o.size*.60,Math.min(region.y+region.h-o.size*.60,o.y));
+        ctx.translate(x,y);ctx.scale(o.s,o.s);
+        ctx.lineWidth = o.size / 4; ctx.strokeStyle = o.stroke; ctx.strokeText(o.text, 0, 0,maxWidth);
+        ctx.fillStyle = o.color; ctx.fillText(o.text, 0, 0,maxWidth);
       } else if (o.kind === 'cue') {
         const boxW=Math.min(w*.86,420),boxH=62,y=Math.max(30,h*.30);
         ctx.translate(w/2,y);ctx.scale(o.s,o.s);ZG.rr(ctx,-boxW/2,-boxH/2,boxW,boxH,10);

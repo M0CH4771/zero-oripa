@@ -495,8 +495,13 @@ function rushPage(p) {
 
 // ===== ゲーム画面（全画面・毎回読み込み） =====
 let gameCtx = null; // { p, demo, credits, busy }
+let gameLayoutObserver=null,gameReadoutObserver=null,gameLayoutRAF=0;
+function stopGameObservers(){gameLayoutObserver?.disconnect();gameReadoutObserver?.disconnect();gameLayoutObserver=gameReadoutObserver=null;if(gameLayoutRAF)cancelAnimationFrame(gameLayoutRAF);gameLayoutRAF=0;}
+function fitGameReadouts(){for(const el of document.querySelectorAll('#hCoin,#rScore,#hBet,#gmRoundAmount,#gmRoundMultiplier,#plinkoLastCoin,#plinkoCost')){if(!el.getClientRects().length)continue;el.style.fontSize='';const width=el.clientWidth;if(width<=0)continue;const base=parseFloat(getComputedStyle(el).fontSize);if(el.scrollWidth>width&&Number.isFinite(base)){el.style.fontSize=Math.max(9,Math.floor(base*width/el.scrollWidth))+'px';}}}
+function observeGameLayout(root){stopGameObservers();const queue=()=>{if(gameLayoutRAF)return;gameLayoutRAF=requestAnimationFrame(()=>{gameLayoutRAF=0;if(!root.isConnected)return;fitGameReadouts();});};if(typeof MutationObserver==='function'){gameReadoutObserver=new MutationObserver(queue);for(const el of root.querySelectorAll('#hCoin,#rScore,#hBet,#gmRoundAmount,#gmRoundMultiplier,#plinkoLastCoin,#plinkoCost'))gameReadoutObserver.observe(el,{subtree:true,childList:true,characterData:true});}if(typeof ResizeObserver==='function'){gameLayoutObserver=new ResizeObserver(()=>{if(!root.isConnected)return;game?.resize();queue();});for(const el of root.querySelectorAll('.gm-top,.gm-hud,.gm-round-win,.fruit-detail'))gameLayoutObserver.observe(el);}queue();}
 const SPIN_SVG = '<svg viewBox="0 0 48 48"><path d="M38 17a16 16 0 1 0 2 12" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M40 6v12H28" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function leaveGame() {
+  stopGameObservers();
   if (game) { game.destroy(); game = null; }
   ZG.sfx && ZG.sfx.stopBgm();
   document.body.classList.remove('gamemode');
@@ -592,7 +597,7 @@ async function viewGame(id, demo, daily=false) {
     const visibleBottom=el=>el?.getClientRects().length?el.getBoundingClientRect().bottom-bounds.top:0;
     const top=Math.ceil(Math.max(0,...['.gm-top','.gm-tier','.gm-demo','.gm-mode','#gmRoundWin','#fruitDetail'].map(s=>visibleBottom($(s))))+5);
     const bottom=$('.gm-hud')?.getBoundingClientRect().top-bounds.top;
-    return {x:0,y:top,w,h:Math.max(80,(Number.isFinite(bottom)?bottom:h-140)-top)};
+    return {x:0,y:top,w,h:Math.max(1,(Number.isFinite(bottom)?bottom:h-140)-top-3)};
   };
   const showMetric=(label,value)=>{const metric=$('#gmMetric');if(!metric)return;$('#gmMetricLabel').textContent=label;$('#gmRoundMultiplier').textContent=value;metric.hidden=false;};
   const roundLabel=label=>{const el=$('#gmRoundLabel');if(el)el.textContent=label;};
@@ -615,6 +620,7 @@ async function viewGame(id, demo, daily=false) {
   await game.warm((k) => setLoad(0.4 + k * 0.55, '絵柄'));
   if (!gameCtx || gameCtx.p !== p) return;
   game.idle();
+  observeGameLayout($('#gm'));
   setRushTier(p, 0);
   setLoad(1, '完了');
   await sleep(80);

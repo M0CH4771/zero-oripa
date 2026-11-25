@@ -36,3 +36,66 @@
 }
 .dwarf-base {text-align:center;font:800 12px/1.5 system-ui;color:#fff4c4;background:#152d25;border:1px solid #b4cc8a;border-radius:6px;margin:0 0 4px;padding:2px 6px;font-variant-numeric:tabular-nums}
 .dwarf-base[hidden]{display:none}
+
+/* Mobile93: stable header, readable numbers and board-safe overlays. */
+.gm .gm-round-win{box-sizing:border-box}
+.gm .gm-box b,.gm .gm-betv b,.gm .round-readout b,.gm .round-metric #gmRoundMultiplier,.gm .plinko-result-mult strong,.gm .plinko-result-pay b{white-space:nowrap!important;overflow:hidden;text-overflow:clip;overflow-wrap:normal;min-width:0;max-width:100%;font-variant-numeric:tabular-nums}
+.gm .gm-box b,.gm .gm-betv b{display:block;width:100%}
+.gm .round-readout{min-width:0;flex:1;display:flex;align-items:center;justify-content:center;gap:5px}
+.gm .round-readout>span,.gm .round-metric>span{flex:none;white-space:nowrap;letter-spacing:0}
+.gm .round-readout b{flex:1;min-width:0;text-align:center;max-width:100%}
+.gm .round-metric{flex:0 1 43%;min-width:0;display:flex;flex-direction:column;gap:1px;justify-content:center;align-items:stretch;text-align:center;overflow:hidden}
+.gm .round-metric[hidden]{display:none}
+.gm .round-metric #gmRoundMultiplier{display:block;width:100%;padding:0;text-align:center}
+.gm .plinko-result-mult strong,.gm .plinko-result-pay b{display:block;width:100%;text-align:center}
+.gm .fruit-detail{z-index:3;max-width:100%;min-width:0}
+.gm .fruit-detail>div{min-width:0;scrollbar-width:thin;overscroll-behavior-inline:contain}
+.gm .rush-entry-start{top:50%;width:min(86%,340px);max-height:25%;padding:15px 9px;font-size:clamp(15px,4.8vw,20px);line-height:1.35}
+.gm .dog-choice{inset:auto;left:50%;top:50%;transform:translate(-50%,-50%);width:min(90%,420px);max-height:calc(100% - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow:auto;box-sizing:border-box;padding:12px;gap:8px}
+.gm .dog-choice button{padding:8px}
+.gm .attack-roulette{transform:translateX(-50%);width:min(90%,370px);padding:5px;max-width:92%;overflow:auto;box-sizing:border-box}
+.gm .attack-roulette strong{font-size:12px;margin-bottom:3px;line-height:1.2}
+.gm .attack-roulette div{gap:3px}
+.gm .attack-roulette span{min-height:28px;font-size:clamp(10px,3.1vw,13px);line-height:1.1}
+.gm .attack-roulette span small,.gm .attack-roulette span.chosen::after{font-size:9px}
+@media(max-width:640px){
+ .gm:not(.theme-plinko) .gm-tier{top:calc(44px + env(safe-area-inset-top));left:7px;right:auto;transform:none;max-width:58%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .gm:not(.theme-plinko) .gm-mode{top:calc(44px + env(safe-area-inset-top));left:auto;right:7px;transform:none;max-width:36%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .gm:not(.theme-plinko) .gm-round-win,.gm.theme-mine .gm-round-win{top:calc(80px + env(safe-area-inset-top));height:44px;min-height:44px;width:calc(100% - 12px);padding:3px 6px}
+ .gm:not(.theme-plinko) .round-readout b{font-size:clamp(16px,5.4vw,24px)}
+ .gm .round-metric #gmRoundMultiplier{font-size:clamp(13px,4.3vw,20px)}
+ .gm.theme-gems .gm-round-win+.fruit-detail,.gm.theme-fruit .gm-round-win+.fruit-detail,.gm.theme-gods .gm-round-win+.fruit-detail{top:calc(129px + env(safe-area-inset-top));height:27px;left:6px;right:6px}
+ .gm .gm-hud{padding-inline:5px}
+ .gm .gm-row .gm-box span{font-size:clamp(9px,2.65vw,11px);white-space:nowrap;letter-spacing:0}
+ .gm .gm-row .gm-box b{font-size:clamp(14px,4.5vw,23px)}
+ .gm .gm-row .gm-box.win b{font-size:clamp(16px,5vw,25px)}
+ .gm .gm-bet{min-width:0}
+ .gm .gm-bet #betSelect{min-width:0}
+ .gm .gm-bet #betSelect span{font-size:9px;white-space:nowrap}
+ .gm.theme-plinko .gm-round-win{top:calc(58px + env(safe-area-inset-top));height:43px;min-height:43px}
+ .gm.theme-plinko .gm-round-win b,.gm.theme-plinko .gm-round-win strong{font-size:clamp(14px,4.6vw,22px)}
+}
+@media(max-width:360px){
+ .gm .gm-ctl{gap:4px}
+ .gm .gm-icon.sm{width:36px}
+ .gm .gm-spin{width:60px;height:60px}
+ .gm .gm-pm{width:26px;min-width:26px}
+ .gm.theme-plinko .gm-spin{width:auto;height:45px}
+ .gm .gm-bet #betSelect b{font-size:clamp(12px,4vw,16px)}
+}
+@media(max-height:680px) and (max-width:640px){
+ .gm .gm-hud{padding-top:3px;padding-bottom:calc(4px + env(safe-area-inset-bottom))}
+ .gm .gm-status{margin-bottom:2px;min-height:12px;font-size:10px}
+ .gm .gm-row{margin-bottom:4px}
+ .gm .gm-row .gm-box{padding-block:2px}
+ .gm .gm-spin{height:57px;width:57px}
+ .gm .gm-spin svg{width:28px;height:28px}
+ .gm .gm-icon.sm{height:42px}
+ .gm.theme-plinko .gm-spin{width:auto;height:42px}
+ .gm.theme-plinko .plinko-options{gap:3px;margin-bottom:4px}
+ .gm.theme-plinko .plinko-label{display:none}
+ .gm.theme-plinko .plinko-settings select,.gm.theme-plinko .plinko-rtp b{height:25px}
+ .gm.theme-plinko .plinko-counts button{padding:3px 4px;font-size:13px}
+ .gm.theme-plinko .plinko-cost b{font-size:14px}
+ .gm .dog-choice button[data-mode]::before{width:37px;height:33px}
+}

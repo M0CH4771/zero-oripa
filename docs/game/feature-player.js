@@ -56,9 +56,9 @@
     }}return;
    }
    if(mode==='dogs'){
-    const r=opt.region(w,h),compact=w<=640,bw=Math.min(r.w-(compact?8:20),700),bh=Math.max(70,Math.min(r.h-(compact?37:65),bw*1.12)),x=r.x+(r.w-bw)/2,y=r.y+Math.max(compact?20:42,(r.h-bh)/2),cw=bw/6;
+    const r=opt.region(w,h),compact=w<=640,bw=Math.min(r.w-(compact?8:20),700),bh=Math.max(12,Math.min(r.h-(compact?35:60),bw*1.12)),x=r.x+(r.w-bw)/2,y=r.y+Math.max(compact?27:42,(r.h-bh)/2+8),cw=bw/6;
     ZG.rr(ctx,x-7,y-7,bw+14,bh+14,12);ctx.fillStyle='#4d271de8';ctx.fill();ctx.strokeStyle='#ffe1a5';ctx.lineWidth=3;ctx.stroke();
-    text(ctx,dogWays.toLocaleString()+' MEGAWAYS',w/2,y-(compact?20:29),Math.min(24,w/17),cfg.accent,w-24);text(ctx,note+' · GAME PAYS '+hooks.fmt(dogPay)+' C',w/2,y+bh+(compact?16:23),Math.min(16,w/24),'#fff',w-18);
+    text(ctx,dogWays.toLocaleString()+' MEGAWAYS',w/2,y-(compact?16:25),Math.min(21,w/19),cfg.accent,w-24);
     dogPositions=[];for(let c=0;c<6;c++){const count=dogVisualHeights[c].heightSlots,ch=bh/count;ctx.save();ctx.beginPath();ctx.rect(x+c*cw,y,cw,bh);ctx.clip();for(let row=0;row<Math.ceil(count);row++){const j=row*6+c,xx=x+c*cw,yy=y+row*ch,cx=xx+cw/2,cy=yy+ch/2;if(row<dogHeights[c])dogPositions[j]={x:cx,y:cy};const m=reelState(j,6),spinning=m.rolling,s=spinning?'s'+([0,1,2,3,4,5,9,10,11,12,13][(Math.floor(st.t/70)+j)%11]):grid[j];
     tile(ctx,xx+2,yy+2,cw-4,ch-4,hits.includes(j),true);
     ctx.fillStyle='#a16b43';ctx.fillRect(xx,yy,cw,2);ctx.fillRect(xx,yy,3,ch);
@@ -81,13 +81,13 @@
     for(let c=0;c<6;c++){const xx=x+c*cell,cy=y+cell*6.5;tile(ctx,xx+2,y+cell*6+2,cell-4,cell-4,!!wagonOpened[c]);icon(wagonOpened[c]?8:7,xx+cell/2,cy-cell*.08,cell*.84,wagonOpened[c]?'💰':'🔒');text(ctx,wagonOpened[c]?'OPEN':'LOCK',xx+cell/2,cy+cell*.34,cell*.18,wagonOpened[c]?'#aaffbb':'#c8b49a');}
     text(ctx,'回収 '+hooks.fmt(Math.floor(wagonCollected*currentUnit))+' C  ·  '+note,w/2,y+cell*7+14,Math.min(13,cell*.24),'#ffe1a2',w-12);return;
    }
-   const r=opt.region(w,h),compact=w<=640,gap=3,topPad=compact?(mode==='train'?50:mode==='gods'?29:24):(['train','gods'].includes(mode)?60:28),bottomPad=compact?(mode==='train'?25:15):40,targetCell=Math.max(8,Math.min((r.w-(compact?8:22))/cols,(r.h-topPad-bottomPad)/rows,mode==='dwarf'?170:130)),cell=expansion?expansion.cell+(targetCell-expansion.cell)*expansion.progress:targetCell,
+   const r=opt.region(w,h),compact=w<=640,gap=3,topPad=compact?(mode==='train'?50:mode==='gods'?11:34):(['train','gods'].includes(mode)?24:36),bottomPad=compact?(mode==='train'?25:12):24,targetCell=Math.max(8,Math.min((r.w-(compact?8:22))/cols,(r.h-topPad-bottomPad)/rows,mode==='dwarf'?170:130)),cell=expansion?expansion.cell+(targetCell-expansion.cell)*expansion.progress:targetCell,
     visibleCols=expansion?cols-1+expansion.progress:cols,bw=visibleCols*cell,bh=rows*cell,x=r.x+(r.w-bw)/2,y=r.y+Math.max(topPad,(r.h-bh)/2);
    board={x,y,cell};
    ZG.rr(ctx,x-9,y-9,bw+18,bh+18,13);ctx.fillStyle='#060815e8';ctx.fill();ctx.strokeStyle=cfg.accent;ctx.lineWidth=3;ctx.stroke();
-   if(mode!=='gods')text(ctx,note,w/2,y-25,Math.min(19,w/22),cfg.accent,w-24);
+   if(mode!=='gods')text(ctx,note,w/2,y-17,Math.min(16,w/24),cfg.accent,w-24);
    if(mode==='train'){if(trainOrder)text(ctx,trainOrder,w/2,y+bh+14,12,'#ffe19a',bw);text(ctx,'SPINS '+trainRemaining+' / '+trainReset,w*.25,y-50,Math.min(17,w/23),cfg.accent,w*.43);text(ctx,'合計 ×'+hooks.fmt(trainTotal),w*.75,y-50,Math.min(17,w/23),cfg.accent,w*.43);}
-   if(mode==='gods'){text(ctx,'連鎖配当 '+godsTumble,w/2,y-28,Math.min(25,w/13),'#fff5cf',w-20);}
+
    for(let j=0;j<cols*rows;j++){
     if(expansion&&j%cols===cols-1&&expansion.progress<.98)continue;
     const xx=x+j%cols*cell,yy=y+Math.floor(j/cols)*cell;
@@ -142,7 +142,7 @@
    try{ZG.sfx?.play('chest');await st.tween(reel,{frame:5.99},1200,ZG.Ease.linear);await st.wait(250);ZG.sfx?.play('spin');await st.tween(reel,{offset:n*5+selected},2300,ZG.Ease.outCubic);reel.locked=true;ZG.sfx?.play('rouletteLock');st.flash('#ffd980',.15);st.impact(reel.x,reel.y,90,'#ffe3a0',1.5);await st.wait(1300);}finally{st.remove(reel);}
   }
   async function attackRoulette(choices,selected,weights){
-   const panel=document.createElement('div');panel.className='attack-roulette';
+   const panel=document.createElement('div');panel.className='attack-roulette';const r=opt.region(st.w,st.h);if(panel.style){panel.style.top=(r.y+r.h*.55)+'px';panel.style.maxHeight=Math.max(64,r.h*.43)+'px';}
    panel.innerHTML='<strong>攻撃ルーレット</strong><div>'+choices.map((v,i)=>'<span class="'+(v>0?'attack':'damage')+'">'+(v>0?'⚔':'♥')+' '+Math.abs(v)+(v>0?' ダメージ':' 被ダメージ')+'<small>'+((weights?.[i]??2500)/100).toFixed(2)+'%</small></span>').join('')+'</div>';
    canvas.parentElement.append(panel);
    try{const cells=panel.querySelectorAll('span');const steps=12+selected;for(let i=0;i<=steps;i++){if(st.dead||st.skip)break;const cell=cells[i%4];if(!cell)continue;for(const c of cells)c.classList.remove('active');cell.classList.add('active');if(st.speed>=.45||i>=steps-2)ZG.sfx?.play('rouletteTick');await st.wait(45+Math.max(0,i-8)*24);}if(cells[selected]){for(const c of cells)c.classList.remove('active');cells[selected].classList.add('active');cells[selected].classList.add('chosen');}ZG.sfx?.play('rouletteLock');await st.wait(800);}finally{panel.remove();}
@@ -246,8 +246,8 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    }
    hits=step.hits;ZG.sfx?.play('win');highlight(hits);await st.wait(routineTime(350));
    hooks.onTumble?.(step.groups);
-   const texts=step.groups.map(g=>{const p=board,center=g.cells.reduce((a,j)=>({x:a.x+p.x+(j%6+.5)*p.cell,y:a.y+p.y+(Math.floor(j/6)+.5)*p.cell}),{x:0,y:0});return st.popText(center.x/g.cells.length,center.y/g.cells.length,g.cells.length+'個 +'+hooks.fmt(g.pay),{size:Math.min(25,p.cell*.48),hold:300});});
-   godsTumble=hooks.fmt(step.tumbleTotal*currentUnit)+' C';hooks.onScore(score+step.credited);
+   const texts=[st.popText(board.x+board.cell*3,board.y+board.cell*2.5,'+'+hooks.fmt(step.groups.reduce((sum,g)=>sum+g.pay,0))+' C',{size:Math.min(24,board.cell*.46),hold:160,maxWidth:board.cell*5})];
+   godsTumble=hooks.fmt(step.tumbleTotal*currentUnit)+' C';hooks.onSpinWin?.(step.credited);hooks.onScore(score+step.credited);
    const removed=new Set(hits),dist=Array(30).fill(0);
    for(const j of hits){const p=cellPoint(j);if(p)st.burst(p.x,p.y,{n:8,colors:['#d6baff','#ffe5a0','#fff'],speed:3,life:420,shape:'star',size:3});}grid=grid.map((v,j)=>removed.has(j)?null:v);await st.wait(routineTime(200));
    for(let c=0;c<6;c++){const keep=[];for(let row=0;row<5;row++)if(grid[row*6+c]!=null)keep.push(row);const fresh=5-keep.length;for(let j=0;j<fresh;j++)dist[j*6+c]=fresh;keep.forEach((row,i)=>{dist[(fresh+i)*6+c]=fresh+i-row;});}
@@ -268,7 +268,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    grid=entry.grid;trainTotal=grid.reduce((s,t)=>s+(t?.value||0),0);hits=[];await st.wait(300);await trainEvents(entry.events);
   }
   return {st,idle:reset,prepareDogs,async warm(cb){if(mode==='dwarf')[arena,escapeArt,upgradeArt,arrivalArt,arrivalAlt,combatArt,combatAlt]=await Promise.all(['arena','escape','upgrade-reel-v1','arrival-v3','arrival-v4','combat-v3','combat-v4'].map(n=>im('./assets/anime/dwarf/'+n+'.webp')));await Promise.all(({dwarf:['gate','knockout'],gods:['gate','cast'],dogs:[],train:[]})[mode].map(name=>st.loadScene(name)));[bg,atlas,actions,plates,kennels,monsters,trophies,blanks,glyphs]=await Promise.all([im('./assets/anime/'+mode+'/bg.webp'),mode==='train'?im('./assets/anime/train/wagon-atlas.webp'):ZG.loadSymbolAtlas(mode),['train','dwarf'].includes(mode)?im('./assets/anime/'+mode+'/actions.webp'):null,['train','gods'].includes(mode)?im('./assets/anime/'+mode+'/multipliers.webp'):null,mode==='dogs'?im('./assets/anime/dogs/kennels.webp'):null,...['monsters','trophies'].map(name=>mode==='dwarf'?im('./assets/anime/dwarf/'+name+'.webp'):null),...['blanks','glyphs'].map(name=>mode==='train'?im('./assets/anime/train/'+name+'.webp'):null)]);cb?.(1)},async play(r){
-   if(mode==='dogs'){if(!dogPrepared){reset();await showDogs(r.entry);await reveal('BONUS ACTIVE',r.entry.initialSpins+' FREE SPINS');}dogPrepared=false;currentUnit=r.unit||1;let score=0;hooks.onSpin(0,r.entry.initialSpins);hooks.onMode?.('BONUS');for(const [i,sp] of r.script.entries()){note=sp.note;hooks.onSpin(i+1,sp.total);await showDogs(sp,true);dogPay=sp.win;if(sp.win){ZG.sfx?.play('win');for(const g of sp.groups){const p=dogPositions[g.cells[0]];for(const j of g.cells){const q=cellPoint(j);if(q)st.popText(q.x,q.y+12,'🐾',{size:13,hold:130});}if(p)await st.popText(p.x,p.y,g.ways+' WAYS · +'+hooks.fmt(g.value*currentUnit),{size:Math.min(20,st.w*.05),hold:220});}await st.wait(280);}hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.rate||opt.getRate?.(),hooks.fmt);await st.roundPause();}if(r.guarantee)await st.banner(['最終配当','1 C'],{hold:350});if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);note='FREE SPINS COMPLETED';hooks.onMode?.('COMPLETE');return;}
+   if(mode==='dogs'){if(!dogPrepared){reset();await showDogs(r.entry);await reveal('BONUS ACTIVE',r.entry.initialSpins+' FREE SPINS');}dogPrepared=false;currentUnit=r.unit||1;let score=0;hooks.onSpin(0,r.entry.initialSpins);hooks.onMode?.('BONUS');for(const [i,sp] of r.script.entries()){note=sp.note;hooks.onSpin(i+1,sp.total);await showDogs(sp,true);dogPay=sp.win;if(sp.win){ZG.sfx?.play('win');for(const g of sp.groups){const p=dogPositions[g.cells[0]];for(const j of g.cells){const q=cellPoint(j);if(q)st.impact(q.x,q.y,Math.min(18,st.w*.035),'#ffe295',.35);}if(p)await st.popText(p.x,p.y,g.ways+' WAYS · +'+hooks.fmt(g.value*currentUnit),{size:Math.min(20,st.w*.05),hold:220});}await st.wait(280);}hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.rate||opt.getRate?.(),hooks.fmt);await st.roundPause();}if(r.guarantee)await st.banner(['最終配当','1 C'],{hold:350});if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);note='FREE SPINS COMPLETED';hooks.onMode?.('COMPLETE');return;}
    reset();currentUnit=r.unit||1;let score=0;hooks.onMode?.('ENTRY');hooks.onSpin(0,r.entry?.initialSpins??10);if(mode==='train'&&r.entry)await trainEntry(r.entry);else if(r.entry){await show(r.entry.grid);hits=r.entry.grid.map((s,i)=>s==='S'?i:-1).filter(i=>i>=0);await st.wait(300);if(r.entry.tickets)await tickets(r.entry.tickets);if(mode==='gods'){score=r.entry.win;godsTumble=hooks.fmt(score)+' C';hooks.onScore(score);}await reveal(cfg.title,r.entry.initialSpins+' FREE SPINS');if(mode==='gods'){const start=document.createElement('button');start.className='rush-entry-start';start.textContent=r.entry.initialSpins+' FREE SPINS　タップで開始';canvas.parentElement.append(start);try{await new Promise(resolve=>{const done=()=>{clearInterval(timer);resolve();};const timer=setInterval(()=>{if(st.dead||!start.isConnected)done();},100);start.onclick=done;});}finally{start.remove();}}}else if(mode==='dwarf'){hooks.onSpin(0,10);await reveal('宝箱ラッシュ','10フリースピン');hooks.onBaseUnit?.(currentUnit);await st.banner(['宝箱×1の獲得C',currentUnit.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C · BETの1%'],{hold:800});}else await reveal(cfg.title,'BONUS START');hooks.onMode?.('BONUS');
    for(let i=0;i<r.script.length;i++){const sp=r.script[i];cols=sp.cols;rows=sp.rows;note=sp.battle?'バトル':sp.note;if(mode==='dwarf')hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining-(sp.battle?sp.awarded:0));else if(mode==='train')hooks.onSpin(i+1,i+1+Math.max(0,trainRemaining-1));else hooks.onSpin(i+1,Math.max(i+1,(sp.total||r.played)-(sp.add||0)));
     if(mode==='train'){
@@ -284,7 +284,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
      if(i===0||r.script[i-1]?.monster!==sp.monster)await st.transition('gate');
      await monsterArrival(sp.monster,sp.monsterHP,sp.reward);
      duel={monster:sp.monster,hp:4,enemyHP:sp.monsterHP,max:sp.monsterHP};
-     const fighter=(id,x,flip)=>{const region=opt.region(st.w,st.h),n=st.add({x,y:region.y+region.h*.43,z:25,motion:0});n.draw=(ctx)=>{const d=Math.min(165,st.w*.40);if(drawCombat(ctx,flip===1?0:({Goblin:1,Troll:2,Dragon:3}[sp.monster]),n.motion||0,d))return;if(flip!==1&&sp.monster!=='Goblin'&&monsters){
+     const fighter=(id,x,flip)=>{const region=opt.region(st.w,st.h),d=Math.min(165,st.w*.40,Math.max(36,region.h*.25)),n=st.add({x,y:region.y+Math.max(52+d/2,region.h*.34),z:25,motion:0});n.draw=(ctx)=>{if(drawCombat(ctx,flip===1?0:({Goblin:1,Troll:2,Dragon:3}[sp.monster]),n.motion||0,d))return;if(flip!==1&&sp.monster!=='Goblin'&&monsters){
        const sw=monsters.width/4,sh=monsters.height/2;
        ctx.drawImage(monsters,(n.pose||0)*sw,sp.monster==='Dragon'?sh:0,sw,sh,-d/2,-d/2,d,d);return;
       }if(actions&&(flip===1||sp.monster==='Goblin'||sp.monster==='Troll')){drawPose(ctx,flip===1?0:sp.monster==='Goblin'?1:2,n.pose||0,d);return;}ctx.scale(flip,1);if(atlas){const aw=atlas.width/4,ah=atlas.height/3;ctx.drawImage(atlas,id%4*aw,Math.floor(id/4)*ah,aw,ah,-d/2,-d/2,d,d);}else text(ctx,cfg.fallback[id],0,0,d*.65);};return n;};

@@ -13,8 +13,8 @@ const numeric=new Set(['arc','ellipse','translate','scale','rotate','moveTo','li
 const ctx=new Proxy({}, {get(t,k){if(k in t)return t[k];return (...args)=>{if(numeric.has(k)){for(const v of args)if(typeof v==='number')assert.ok(Number.isFinite(v),`${String(k)}: nonfinite ${v}`);draws++;}if(k==='fillText'&&capturedLabels)capturedLabels.push(args[0]);if(String(k).includes('Gradient'))return gradient;if(k==='measureText')return {width:40};};}});
 let viewport={w:390,h:740};
 const canvas=()=>({clientWidth:viewport.w,clientHeight:viewport.h,parentElement:parent,style:{},getContext:()=>ctx});
-const parent={clientHeight:740,append(e){e.isConnected=true;setImmediate(()=>{if(e.onclick)e.onclick();else if(e.buttons?.length)e.buttons[0].onclick?.();});}};
-globalThis.document={createElement(tag){if(tag==='canvas')return canvas();return {isConnected:false,buttons:Array.from({length:4},()=>({dataset:{mode:'sticky'},classList:{add(){},remove(){}},onclick:null})),querySelectorAll(){return this.buttons},querySelector(){return this.buttons[0]},remove(){this.isConnected=false},focus(){}};}};
+const parent={clientHeight:740,append(e){e.isConnected=true;if(e.className==='attack-roulette'){assert.ok(parseFloat(e.style.top)>145,'roulette below top HUD');assert.ok(parseFloat(e.style.top)+parseFloat(e.style.maxHeight)<viewport.h-100,'roulette above bottom HUD');}setImmediate(()=>{if(e.onclick)e.onclick();else if(e.buttons?.length)e.buttons[0].onclick?.();});}};
+globalThis.document={createElement(tag){if(tag==='canvas')return canvas();return {style:{},isConnected:false,buttons:Array.from({length:4},()=>({dataset:{mode:'sticky'},classList:{add(){},remove(){}},onclick:null})),querySelectorAll(){return this.buttons},querySelector(){return this.buttons[0]},remove(){this.isConnected=false},focus(){}};}};
 await import('../docs/game/engine.js');
 assert.deepEqual([0,.49,.5,.99,1,2.99,3,4.99,5,9.99,10,100].map(ZG.winLevel),[0,0,1,1,2,2,3,3,4,4,5,5]);
 const Stage=ZG.Stage;ZG.Stage=class extends Stage{constructor(...a){super(...a);lastStage=this;}};
@@ -40,7 +40,7 @@ for(const game of ['rush','fruit','mine','plinko','gods','dogs','train','dwarf']
  let seed=640;const rand=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/2**32);const r=playGame(game,{rate:1000,rand,rows:12,risk:'medium',count:10,strategy:'sticky'});
  const times=[];
  for(const speed of [ZG.SPIN_TIMING.normal,ZG.SPIN_TIMING.quick,ZG.SPIN_TIMING.turbo]){
-  viewport=speed===ZG.SPIN_TIMING.quick?{w:320,h:600}:{w:390,h:740};
+  viewport=speed===ZG.SPIN_TIMING.quick?{w:320,h:568}:{w:390,h:740};
   let total=0,remaining=null,ballCount=0,ballTotal=0;const metrics=[];const hooks={fmt:v=>String(v),onScore:v=>total=v,onSpin(n,t){remaining=t-n;assert.ok(remaining>=0);},onRemaining(v){remaining=v;assert.ok(v>=0);},onRoundWin:async()=>{},onSpinWin(){},onBallLand(v){assert.ok(Number.isFinite(v));ballCount++;ballTotal+=v;},onFeatureMetric(label,value){assert.ok(label&&value);metrics.push([label,value]);},onMode(mode){if(mode==='COMPLETE')remaining=0;}};
   const g=ZG.createGame(canvas(),{game,region:()=>({x:0,y:145,w:viewport.w,h:viewport.h-295}),getRate:()=>1000,plinko:game==='plinko'?plinkoConfig(12,'medium'):null},hooks);await g.warm();g.idle();g.setSpeed(speed);lastStage.draw();
   if(game==='dogs')await pump(g.prepareDogs(r.entry));
