@@ -257,18 +257,9 @@
         const state = { score: r.entry?.win || 0,unit:r.unit };
         let total = r.entry?.initialSpins || 10;
         if(r.entry){
-          hooks.onMode?.('ENTRY');hooks.onSpin(0,total);
+          hooks.onSpin(0,total);
           setSpots(new Array(cols*rows).fill(0),false);
-          await dropIn(r.entry.grid);
-          await pulse(nodes.filter(n=>n&&n.id==='S'),'#ffe1a0');
-          setSpinWin(state.score);await hooks.onRoundWin?.(state.score);hooks.onScore(state.score);
-          S('free');
-          if(cfg.spots)await st.transition('gift',total+' SPINS');else await st.transition('torii',total+' SPINS');if(!st.scenes?.[cfg.spots?'gift':'torii'])await st.banner([`${total} FREE SPINS`,`${r.entry.scatters} SCATTERS · ボーナス確定`],{rainbow:true});
-          if(!st.skip){
-            const start=document.createElement('button');start.className='rush-entry-start';start.textContent=total+' FREE SPINS　タップで開始';
-            canvas.parentElement.append(start);start.focus();
-            try{await new Promise(resolve=>{const done=()=>{clearInterval(timer);resolve();};const timer=setInterval(()=>{if(st.skip||st.dead||!start.isConnected)done();},100);start.onclick=done;});}finally{start.remove();}
-          }
+          setSpinWin(state.score);hooks.onScore(state.score);
         }
         for (let k = 0; k < r.script.length; k++) {
           hooks.onMode?.('BONUS');
@@ -599,7 +590,7 @@
         const hp = r.board.map((col) => col.map((b) => HP[b]));
         const state = { base: 0 };
         setSpinWin(0);
-        hooks.onMode?.('ENTRY');hooks.onSpin(0,5);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{hold:400});hooks.onMode?.('BONUS');
+        hooks.onSpin(0,5);hooks.onMode?.('BONUS');
         for (let k = 0; k < r.script.length; k++) {
           const sp = r.script[k];
           const previousBase=state.base,previousValue=Math.min(r.score,Math.floor(state.base*mult));
@@ -696,9 +687,9 @@ return {st,configure(c){risk=c.risk;rows=c.rows;mult=c.multipliers;cents=c.cents
     return {
       idle: () => g.idle(),
       configure: (c) => g.configure?.(c),
-      warm: async (cb) => {const art={fruit:'fruit/bg.webp',mine:'mine/bg.webp',gods:'gods/bg.webp',dogs:'dogs/park.webp',train:'train/bg.webp',dwarf:'dwarf/hero.webp'}[opt.game];await Promise.all([g.warm(cb),st.loadWinArt(art?'./assets/anime/'+art:null),st.loadCinematic(opt.game)]);},
+      warm: async (cb) => {const art={fruit:'fruit/bg.webp',mine:'mine/bg.webp',gods:'gods/bg.webp',dogs:'dogs/park.webp',train:'train/bg.webp',dwarf:'dwarf/hero.webp'}[opt.game];await Promise.all([g.warm(cb),st.loadWinArt(art?'./assets/anime/'+art:null),opt.game==='fruit'?st.loadCinematic(opt.game):Promise.resolve()]);},
       prepareDogs: (entry) => g.prepareDogs?.(entry),
-      async play(r) { st.setSkip(false); if(!['rush','fruit'].includes(opt.game))await st.cinematic();await g.play(r); st.setSkip(false); },
+      async play(r) { st.setSkip(false); await g.play(r); st.setSkip(false); },
       async bigWin(level, amount) { await st.atNormalSpeed(()=>st.bigWin(level, amount, hooks.fmt)); },
       setSpeed(v) { st.speed = v; },
       skip() { st.setSkip(true); },
