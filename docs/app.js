@@ -529,6 +529,7 @@ async function viewGame(id, demo, daily=false) {
       <div class="gm-round-win" id="gmRoundWin" aria-live="polite">${p.game==='plinko'?'<div class="plinko-result-mult"><span>直近1球</span><strong id="plinkoLastCoin">—</strong></div><div class="plinko-result-pay"><span>今回の合計</span><b id="gmRoundAmount">0 C</b></div>':'<div class="round-readout"><span id="gmRoundLabel">'+(p.game==='mine'?'今回の採掘':'今回の配当')+'</span><b id="gmRoundAmount">0 C</b></div>'+(['rush','mine','gods','dogs','train','dwarf'].includes(p.game)?'<div class="round-metric" id="gmMetric" hidden><span id="gmMetricLabel"></span><strong id="gmRoundMultiplier"></strong></div>':'')}</div>
       ${['fruit','gods'].includes(p.game)?'<div class="fruit-detail" id="fruitDetail" aria-label="タンブル配当明細"><span>配当明細</span><div id="fruitDetailItems"></div></div>':''}
       <div class="gm-hud">
+        ${p.game==='dwarf'?'<div id="dwarfBase" class="dwarf-base" hidden></div>':''}
         <div class="gm-status" id="gmStatus">プレイ待機中</div>
         <div class="gm-row">
           <div class="gm-box"><span>${demo ? 'デモ残高' : 'コイン残高'}</span><b id="hCoin">0</b></div>
@@ -539,7 +540,7 @@ async function viewGame(id, demo, daily=false) {
         <div class="gm-ctl">
           <button class="gm-icon sm" id="gmInfo" aria-label="${p.game==='plinko'?'配当一覧・遊び方':'遊び方'}"><b>ⓘ</b><small>${p.game==='plinko'?'配当表':'遊び方'}</small></button>
           <div class="gm-bet"><button class="gm-pm" id="betMinus">−</button>
-            <button type="button" id="betSelect" class="gm-betv" aria-label="ベット額を選択"><span>${p.game==='plinko'?'1球の消費 C':'1回の消費 C'}</span><b id="hBet">${num(rushRate)}</b>${['rush','fruit'].includes(p.game)?'<small id="hUnit" style="display:block;font-size:10px;color:#fff">配当計算単位 '+num(rushRate/100)+' C</small>':''}</button>
+            <button type="button" id="betSelect" class="gm-betv" aria-label="ベット額を選択"><span>${p.game==='plinko'?'1球の消費 C':'1回の消費 C'}</span><b id="hBet">${num(rushRate)}</b></button>
             <button class="gm-pm" id="betPlus">＋</button></div>
           <button class="gm-spin" id="rPlay" aria-label="${p.game==='plinko'?'落とす':'ボーナス開始'}">${p.game==='plinko'?'<b>落とす</b><small>DROP</small>':SPIN_SVG+'<small>BONUS</small>'}</button>
           <button class="gm-icon sm" id="gmTurbo" aria-label="速度切替"><b>⚡</b><small>NORMAL</small></button>
@@ -553,7 +554,7 @@ async function viewGame(id, demo, daily=false) {
       </div>
     </div>`;
   const setLoad = (k, txt) => { const b = $('#gmBar'); if (b) b.style.width = Math.round(k * 100) + '%'; const t = $('#gmLoadTxt'); if (t) t.textContent = `${txt || '読み込み中…'} ${Math.round(k * 100)}%`; };
-  const hud = () => { $('#hCoin').textContent = num(gameCtx.credits); $('#hBet').textContent = num(rushRate); if($('#hUnit'))$('#hUnit').textContent='配当計算単位 '+num(rushRate/100)+' C';if($('#plinkoCost'))$('#plinkoCost').textContent=num(daily?0:rushRate*gameCtx.count)+' C'; };
+  const hud = () => { $('#hCoin').textContent = num(gameCtx.credits); $('#hBet').textContent = num(rushRate); if($('#plinkoCost'))$('#plinkoCost').textContent=num(daily?0:rushRate*gameCtx.count)+' C'; };
   if(p.game==='plinko'){
     const selectors=[...document.querySelectorAll('.plinko-counts button')],input=$('#plinkoCustom');
     const setCount=v=>{gameCtx.count=Math.max(1,Math.min(1000,Math.floor(Number(v)||1)));hud();$('#rSpin').textContent=gameCtx.count;};
@@ -614,6 +615,7 @@ async function viewGame(id, demo, daily=false) {
     onBallLand:(v)=>{gameCtx.ballTotal=(gameCtx.ballTotal||0)+v;const el=$('#gmRoundAmount');if(el)el.textContent=num(gameCtx.ballTotal)+' C';const latest=$('#plinkoLastCoin');if(latest&&Number.isFinite(v))latest.textContent=num(v)+' C';},
     onMultiplier:(base,mult)=>{if(p.game==='rush'){roundLabel(base?'倍率適用前':'配当なし');$('#gmRoundAmount').textContent=num(base)+' C';showMetric('適用倍率','×'+num(mult));}},
     onFeatureMetric:(label,value)=>showMetric(label,value),
+    onBaseUnit:unit=>{const el=$('#dwarfBase');if(el){el.hidden=false;el.textContent='宝箱計算基準 '+unit.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C';}},
     onSpinWin: (v) => { const el = $('#gmRoundAmount');if(el)el.textContent=num(v)+' C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当'); },
     onTumble:(groups)=>{const el=$('#fruitDetailItems');if(!el)return;for(const g of groups){const row=document.createElement('span');row.textContent=g.cells.length+'個 · '+num(g.base??g.pay)+(g.mult>1?' ×'+g.mult:'')+' = '+num(g.pay)+' C';if(p.game==='gods'){const i=Number(g.sym.slice(1)),icon=document.createElement('i');icon.style.cssText='width:24px;height:24px;background-image:url(./assets/anime/gods/atlas-v2.webp);background-size:400% 300%;background-position:'+(i%4*100/3)+'% '+(Math.floor(i/4)*50)+'%';row.prepend(icon);}else{const icon=document.createElement('img');icon.src=ZG.art.sprite('fruit',g.sym,24).toDataURL();row.prepend(icon);}el.append(row);}el.scrollLeft=el.scrollWidth;},
     onSpin: (n, total) => { if(p.game==='plinko'){if(n===0){gameCtx.ballTotal=0;$('#gmRoundAmount').textContent='0 C';$('#plinkoLastCoin').textContent='—';}}else if(gameCtx.spinIndex!==n){if($('#gmRoundAmount'))$('#gmRoundAmount').textContent='0 C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当');if(p.game==='rush'&&$('#gmMetric'))$('#gmMetric').hidden=true;if($('#fruitDetailItems'))$('#fruitDetailItems').replaceChildren();} gameCtx.spinIndex=n; $('#rSpin').textContent = String(Math.max(0,total-n)); const el=$('#gmStatus'); if(el) el.textContent=p.game==='plinko'?`着地 ${n} / ${total} 球`:p.game==='train'?`リスピン ${n} 回目`:`スピン ${n} / ${total}`; },
@@ -703,7 +705,7 @@ async function gameSpin() {
     if(daily&&!(await api('/api/daily')).available){location.hash='#bonus';return;}
     let strategy='battle',dogEntry=null;
     if(p.game==='dogs'){
-      if(!daily&&!await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>BUY FREE SPINS</strong><b>'+num(cost)+' C</b><small>基準ベット '+num(cost/100)+' C</small><div><button data-buy="no">取消</button><button data-buy="yes">確定</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.buy==='yes')});}))return;
+      if(!daily&&!await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>BUY FREE SPINS</strong><b>'+num(cost)+' C</b><small>1ゲームの消費C</small><div><button data-buy="no">取消</button><button data-buy="yes">確定</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.buy==='yes')});}))return;
       const {dogsEntry}=await import('./test-games/features.js?v=dogs');dogEntry=dogsEntry();strategy=await game.prepareDogs(dogEntry);if(!strategy)return;
     }
     const r = await api(`/api/packs/${p.id}/${daily?'daily':demo ? 'rush-demo' : 'rush'}`, { rate: rushRate,count,risk:gameCtx.risk,rows:gameCtx.rows,strategy,dogEntry });
@@ -714,7 +716,7 @@ async function gameSpin() {
     $('#rTier').dataset.name = ''; setRushTier(p, 0);
     await game.play(r);
     const ratio = r.score / r.rate;
-    const lvl = ratio >= 40 ? 4 : ratio >= 30 ? 3 : ratio >= 15 ? 2 : ratio >= 5 ? 1 : 0;
+    const lvl = Math.max(0,ZG.winLevel(ratio)-1);
     if (lvl&&p.game!=='dogs') await game.bigWin(lvl, r.score);
     // 結果表示より先に確定値へ同期。カウントアップ中の中間値を残さない。
     cancelAnimationFrame(scoreAnim);

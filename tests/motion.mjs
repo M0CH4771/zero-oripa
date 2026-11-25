@@ -16,6 +16,7 @@ const canvas=()=>({clientWidth:viewport.w,clientHeight:viewport.h,parentElement:
 const parent={clientHeight:740,append(e){e.isConnected=true;setImmediate(()=>{if(e.onclick)e.onclick();else if(e.buttons?.length)e.buttons[0].onclick?.();});}};
 globalThis.document={createElement(tag){if(tag==='canvas')return canvas();return {isConnected:false,buttons:Array.from({length:4},()=>({dataset:{mode:'sticky'},classList:{add(){},remove(){}},onclick:null})),querySelectorAll(){return this.buttons},querySelector(){return this.buttons[0]},remove(){this.isConnected=false},focus(){}};}};
 await import('../docs/game/engine.js');
+assert.deepEqual([0,.49,.5,.99,1,2.99,3,4.99,5,9.99,10,100].map(ZG.winLevel),[0,0,1,1,2,2,3,3,4,4,5,5]);
 const Stage=ZG.Stage;ZG.Stage=class extends Stage{constructor(...a){super(...a);lastStage=this;}};
 ZG.rr=(c,x,y,w,h)=>{c.beginPath();c.rect(x,y,w,h)};
 capturedLabels=[];for(const value of [1,2,3,10,50,100,128,500,1000,20000])ZG.multiplierLabel(ctx,value,20,20,30,15);

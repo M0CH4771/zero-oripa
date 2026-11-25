@@ -34,3 +34,5 @@
  .gm.theme-plinko .plinko-settings select {font-size:10px}
  .lobby-hero {margin:9px;min-height:145px!important}.lobby-hero .hero-copy {padding:14px}
 }
+.dwarf-base {text-align:center;font:800 12px/1.5 system-ui;color:#fff4c4;background:#152d25;border:1px solid #b4cc8a;border-radius:6px;margin:0 0 4px;padding:2px 6px;font-variant-numeric:tabular-nums}
+.dwarf-base[hidden]{display:none}

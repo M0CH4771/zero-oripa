@@ -256,17 +256,18 @@
       })();
     }
     // ビッグウィン：level 1=BIG 2=MEGA 3=EPIC。金額をカウントアップしながらコインを降らせる
-    async celebrateWin(amount, reference, fmt, thresholds = [5,15,30,40]) {
-      if (!(reference > 0)) return;
-      // Reference is the actual round cost, not the internal payout unit. Reserve the full
-      // screen celebration for the final result and label actual spin value.
-      const ratio=amount/reference;
-      if(ratio>=1)await this.featureCue('ROUND WIN',fmt(amount)+' C · '+ratio.toFixed(2)+'倍（消費C比）',{color:'#ffe19a',hold:ratio>=5?650:280,sound:ratio>=5?'featureWin':'win'});
+    async celebrateWin(amount, reference, fmt) {
+      if (!(reference > 0) || this.skip || this.dead) return;
+      const ratio=amount/reference,level=ZG.winLevel(ratio);
+      if(!level)return;
+      const title=['','NICE WIN','BIG WIN','MEGA WIN','SUPER WIN','ULTRA WIN'][level];
+      if(level===1)await this.featureCue(title,fmt(amount)+' C · '+ratio.toFixed(2)+'倍（消費C比）',{color:'#ffe19a',hold:280,sound:'win'});
+      else await this.bigWin(level-1,amount,fmt,title,{round:true,ratio});
     }
-    async bigWin(level, amount, fmt, title) {
+    async bigWin(level, amount, fmt, title, options={}) {
       if (this.skip||this.dead) return;
       const names = ['', 'BIG WIN', 'MEGA WIN', 'SUPER WIN', 'ULTRA WIN'];
-      const o = { kind: 'big', title: title || names[level], amount: 0, a: 0, s: .84, z: 90, level, fmt,born:this.t };
+      const o = { kind: 'big', title: title || names[level], amount: 0, a: 0, s: .84, z: 90, level, fmt,born:this.t,ratio:options.ratio };
       this.overlays.push(o);
       this.flash('#fff1bb', 0.22);
       this.shake(2 + level * 1.5, 350);
@@ -284,7 +285,7 @@
       await this.tween(o, { a: 1, s: 1 }, 350, Ease.outCubic);
       this.coinRain(5+level*3);
       const coinTimer = setInterval(() => this.coinRain(3 + level * 2), Math.max(60,160*this.speed));
-      try{if(!tapped)await this.tween(o, { amount }, 1400 + level * 600, Ease.outCubic);await this.wait(900);}finally{clearInterval(coinTimer);surface?.removeEventListener?.('click',tap);}
+      try{if(!tapped)await this.tween(o, { amount }, options.round?360+level*180:1400 + level * 600, Ease.outCubic);if(!tapped)await this.wait(options.round?220+level*150:900);}finally{clearInterval(coinTimer);surface?.removeEventListener?.('click',tap);}
       await this.tween(o, { a: 0 }, 300);
       const i=this.overlays.indexOf(o);if(i>=0)this.overlays.splice(i, 1);
     }
@@ -413,7 +414,7 @@
           const colors=[['#fff','#fff3c4','#ffd54a'],['#fff','#9eeaff','#39a8ff'],['#fff','#ddb4ff','#a848ec'],['#fff','#fff5a5','#ff9b26']][Math.max(0,Math.min(3,o.level-1))];
           ZG.scene.text3d(ctx, o.title, 0, -tsize * 0.55, tsize, { colors,rainbow:o.level===4 });
           ZG.scene.text3d(ctx, o.fmt(Math.round(o.amount)), 0, tsize * 0.48, tsize * 0.79, { colors: ['#ffffff', '#fff3c4', '#ffd54a'], mid: '#7a3a00', deep: '#3a1400' });
-          ctx.font='700 10px system-ui';ctx.fillStyle='#fff3c4';ctx.fillText('TEST COINS',0,tsize*1.02);
+          ctx.font='700 11px system-ui';ctx.fillStyle='#fff3c4';ctx.fillText(o.ratio!=null?'今回の配当 · 消費Cの '+o.ratio.toFixed(2)+'倍':'TEST COINS',0,tsize*1.02,pw-16);
         }
         ctx.restore();return;
       }
@@ -421,6 +422,7 @@
     }
   }
   ZG.Stage = Stage;
+  ZG.winLevel=ratio=>ratio>=10?5:ratio>=5?4:ratio>=3?3:ratio>=1?2:ratio>=.5?1:0;
 
   ZG.starPath = function (ctx, x, y, r1, r2, n = 5) {
     ctx.beginPath();
