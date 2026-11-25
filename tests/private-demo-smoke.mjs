@@ -3,7 +3,9 @@ import fs from 'node:fs';
 const fixture=JSON.parse(fs.readFileSync(new URL('../docs/test-data.json',import.meta.url),'utf8'));
 globalThis.window=globalThis;
 globalThis.location={origin:'https://example.test'};
-const ids=[1,2,3,11,12,13,14,15];
+const ids=[1,2,3,11,12,13,15];
+// Simulate an older persisted pack list; retired TRAIN must not be listed or playable.
+fixture.packs.push({...structuredClone(fixture.packs.find(p=>p.game==='rush')),id:14,game:'train',name:'ZERO TRAIN'});
 for(const [i,id] of ids.entries()){
  const mem=new Map();
  globalThis.localStorage={getItem:k=>mem.get(k)??null,setItem:(k,v)=>mem.set(k,v),removeItem:k=>mem.delete(k)};
@@ -12,6 +14,7 @@ for(const [i,id] of ids.entries()){
  const call=async(p,b)=>{const r=await fetch(p,b===undefined?undefined:{body:JSON.stringify(b)});return {status:r.status,data:await r.json()};};
  const packList=(await call('/api/packs')).data.packs;
  assert.deepEqual(packList.filter(p=>p.kind==='rush').map(p=>p.id),ids);
+ for(const suffix of ['', '/rush','/rush-demo','/daily','/draw'])assert.equal((await call('/api/packs/14'+suffix,suffix?{rate:1000,count:1}:undefined)).status,400);
  assert.ok(packList.filter(p=>p.kind==='rush').every(p=>p.min_coins===1&&p.min_mult===0));
  assert.ok(!packList.some(p=>p.tag==='daily'||p.tag==='new'));
  const slotRates=[500,1000,2000,3000,4000,5000,10000,20000,30000,50000,100000,200000,300000,400000,500000,1000000];

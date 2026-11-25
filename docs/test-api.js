@@ -26,7 +26,7 @@ function preparePacks(){
   s.packs.push({...structuredClone(base),id:11,name:'ZERO PLINKO',game:'plinko',theme:'plinko',tag:'rush',badge:'12段のピンボード',plays:0,actual_rtp:null,best:0});
  }
  const base=data.packs.find(p=>p.game==='rush');
- for(const [game,c] of Object.entries(FEATURE_CONFIG))if(!s.packs.some(p=>p.game===game))s.packs.push({...structuredClone(base),id:c.id,name:c.title,game,theme:game,tag:'rush',badge:c.badge,rates:[100,300,1000,3000,10000],max_mult:c.max,plays:0,bet:0,won:0,actual_rtp:null,best:0});
+ for(const [game,c] of Object.entries(FEATURE_CONFIG))if(game!=='train'&&!s.packs.some(p=>p.game===game))s.packs.push({...structuredClone(base),id:c.id,name:c.title,game,theme:game,tag:'rush',badge:c.badge,rates:[100,300,1000,3000,10000],max_mult:c.max,plays:0,bet:0,won:0,actual_rtp:null,best:0});
 }
 preparePacks();
 resetDailyCounters();
@@ -44,10 +44,11 @@ async function api(path,b){
  if(pth==='/api/earn')return {...earnView(s.earn),coins:s.coins};
  if(pth==='/api/earn/action'){const before=s.earn.points;const result=earnAction(s.earn,b?.action,b?.id);const delta=s.earn.points-before;if(delta>0)tx(delta,'earn');return {...result,coins:s.coins};}
  if(pth==='/api/me'){if(b){if(b.nickname)s.nickname=String(b.nickname).slice(0,12);if(b.daily_limit!==undefined)s.limit=+b.daily_limit||0;return {ok:true};}const profile=me();profile.user.bonus_available=dailyAvailable();profile.user.bonus_amount=0;return profile;}
- if(pth==='/api/packs')return {packs:s.packs.map(packView)};
+ if(pth==='/api/packs')return {packs:s.packs.filter(p=>p.game!=='train'&&p.id!==14).map(packView)};
  if(pth==='/api/daily')return {available:dailyAvailable(),rate:DAILY_RATE,date:dailyDate()};
  if(m=pth.match(/^\/api\/packs\/(\d+)(?:\/(draw|rush|rush-demo|daily))?$/)){
-   const p=s.packs.find(x=>x.id===+m[1]); if(!p)throw Error('パックが見つかりません');
+   if(+m[1]===14)throw Error('ZERO TRAINはサービス終了しました');
+   const p=s.packs.find(x=>x.id===+m[1]); if(!p||p.game==='train')throw Error('パックが見つかりません');
    if(!m[2])return {pack:packView(p)};
    if(m[2]==='draw'){
      let n=b.count==='all'?p.remaining:Math.max(1,Math.min(100,+b.count||1)); n=Math.min(n,p.remaining,p.per_user_daily?Math.max(0,p.per_user_daily-(p.playedToday||0)):Infinity); if(!n)throw Error('本日の上限です');
@@ -89,4 +90,4 @@ const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
 window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=wagon83');
+await import('./app.js?v=seven84');

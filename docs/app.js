@@ -134,7 +134,7 @@ function openEarn() {
   const s = sheet(`<div class="sheet-brand-icon">${brandIcon('coin')}</div><h3>コインを貯める</h3>
     <p class="muted" style="text-align:center">コインはすべて無料。購入はできません。</p>
     <div class="btns">
-      <button class="btn gold" id="eBonus">ログインボーナス<small>全8機種から1日1回・1,000 C相当</small></button>
+      <button class="btn gold" id="eBonus">ログインボーナス<small>全7機種から1日1回・1,000 C相当</small></button>
       ${canAd ? `<button class="btn blue" id="eAd" ${u.ad_today >= u.ad_max ? 'disabled' : ''}>広告を見て +${num(u.ad_reward)}<small>今日 ${u.ad_today}/${u.ad_max}回</small></button>` : ''}
       <button class="btn" id="eInv">友だちを招待して +${num(CFG.invite_bonus_inviter)}<small>招待した人が${CFG.invite_required_draws}口引いたらもらえます</small></button>
       <button class="btn ghost" id="eNo">閉じる</button>
@@ -348,7 +348,7 @@ function packCard(p) {
 function slidesData() {
   const u = ME.user;
   return [
-    u ? { bg: 'bg-daily', h: u.bonus_available ? '今日のログボ<br>受け取れます' : '本日の無料ゲーム<br>利用済み', p: `8機種から毎日1回 · 1,000 C相当を無料で`, deco: '📅', go: 'bonus' }
+    u ? { bg: 'bg-daily', h: u.bonus_available ? '今日のログボ<br>受け取れます' : '本日の無料ゲーム<br>利用済み', p: `7機種から毎日1回 · 1,000 C相当を無料で`, deco: '📅', go: 'bonus' }
       : { bg: 'bg-new', h: '登録だけで<br>' + num(CFG.signup_bonus) + 'コイン', p: '電話番号で無料登録。お金は1円もかかりません', deco: '🎁', go: 'signup' },
     { bg: 'bg-high', h: '招待すると<br>おたがいにコイン', p: `招待された人 +${num(CFG.invite_bonus_new)}・招待した人 +${num(CFG.invite_bonus_inviter)}`, deco: '🤝', go: 'invite' },
     { bg: 'bg-big', h: '連鎖スロットで<br>オリパを引こう', p: '8個そろうと消えて連鎖。倍率とフリースピンも', deco: '🎰', go: 'guide' },
@@ -402,7 +402,7 @@ async function viewHome() {
   const rest = featureOn ? shown.filter((p) => !rushes.includes(p)) : shown;
   $('#view').innerHTML = `
     ${ME.user ? '' : `<div class="notice">🎁 新規登録で ${num(CFG.signup_bonus)}コインプレゼント！ 完全無料</div>`}
-    <section class="lobby-hero"><div class="hero-copy"><span class="hero-kicker">ZERO ORIPA / GAME LOBBY</span><h1>ゼロ円から、<br>新しい冒険へ。</h1><p>8つのゲーム・オリパを無料で体験。</p><span class="hero-note">TEST EDITION · 実物景品なし</span></div><div class="hero-art" aria-hidden="true"></div></section>
+    <section class="lobby-hero"><div class="hero-copy"><span class="hero-kicker">ZERO ORIPA / GAME LOBBY</span><h1>ゼロ円から、<br>新しい冒険へ。</h1><p>7つのゲーム・オリパを無料で体験。</p><span class="hero-note">TEST EDITION · 実物景品なし</span></div><div class="hero-art" aria-hidden="true"></div></section>
     ${earnStrip()}
     <div class="stickybar">
       <div class="cats">${CATS.map((c) => `<button data-c="${c.key}" class="${c.key === homeCat ? 'on' : ''}">${c.label}</button>`).join('')}</div>
@@ -1425,7 +1425,7 @@ async function viewHistory() {
 const PAGES = {
   guide: () => `<h1>遊び方</h1>
     <h2>1. 無料で登録</h2><p>登録や個人情報の入力は不要です。無料のテストコインで遊べます。実広告・実物景品はありません。</p>
-    <h2>2. 無料ゲームとコイン</h2><ul><li>ログインボーナス：8機種から1つ選び毎日1回、1,000コイン相当のゲームを消費0コインでプレイできます。</li>
+    <h2>2. 無料ゲームとコイン</h2><ul><li>ログインボーナス：7機種から1つ選び毎日1回、1,000コイン相当のゲームを消費0コインでプレイできます。</li>
       <li>ポイ活・広告：貯めるページで共通テストコインを獲得できます。換金・実物交換はできません。</li>
       <li>友だち招待：招待された人 +${num(CFG.invite_bonus_new)}・招待した人 +${num(CFG.invite_bonus_inviter)}</li>
       <li>無料プレイは日本時間0時に更新されます。</li></ul>
