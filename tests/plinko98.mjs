@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {plinkoConfig,play} from '../docs/test-games/plinko.js';
-assert.deepEqual(plinkoConfig(12,'low').cents.slice(0,7),[1496,400,220,136,98,73,59]);
-assert.deepEqual(plinkoConfig(12,'medium').cents.slice(0,7),[3497,1050,430,199,101,43,26]);
-assert.deepEqual(plinkoConfig(12,'high').cents.slice(0,7),[11995,3200,700,200,65,14,1]);
+assert.deepEqual(plinkoConfig(12,'low').cents.slice(0,7),[3000,480,235,135,100,70,55]);
+assert.deepEqual(plinkoConfig(12,'medium').cents.slice(0,7),[5000,1285,455,208,104,34,21]);
+assert.deepEqual(plinkoConfig(12,'high').cents.slice(0,7),[20000,3995,655,163,52,14,1]);
 for(const rows of [12]){
  let previousVariance=0;
  for(const risk of ['low','medium','high']){
