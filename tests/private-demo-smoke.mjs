@@ -12,6 +12,7 @@ for(const [i,id] of ids.entries()){
  const call=async(p,b)=>{const r=await fetch(p,b===undefined?undefined:{body:JSON.stringify(b)});return {status:r.status,data:await r.json()};};
  const packList=(await call('/api/packs')).data.packs;
  assert.deepEqual(packList.filter(p=>p.kind==='rush').map(p=>p.id),ids);
+ assert.ok(packList.filter(p=>p.kind==='rush').every(p=>p.min_coins===1&&p.min_mult===0));
  assert.ok(!packList.some(p=>p.tag==='daily'||p.tag==='new'));
  const slotRates=[500,1000,2000,3000,4000,5000,10000,20000,30000,50000,100000,200000,300000,400000,500000,1000000];
  for(const p of packList.filter(p=>p.kind==='rush'))assert.deepEqual(p.rates,p.game==='plinko'?[100,300,1000,3000]:slotRates);
@@ -22,6 +23,7 @@ for(const [i,id] of ids.entries()){
  assert.equal((await call('/api/me')).data.user.coins,initial+20,'earn rewards credit shared demo balance');
  const demo=await call('/api/packs/'+id+'/rush-demo',{rate:1000,count:id===11?10:1});
  assert.equal(demo.status,200);assert.equal(demo.data.script.length,demo.data.played);
+ assert.ok(demo.data.score>=1);assert.ok((demo.data.guarantee||0)<=1);
  if(id===15){assert.equal(demo.data.unit,1);assert.ok(demo.data.finalUnit>=1);for(const s of demo.data.script.filter(s=>s.battle&&s.won))assert.equal(s.upgrade.amount,s.upgrade.values[s.upgrade.selected]);}
  if(id!==11){for(const rate of slotRates){const r=await call('/api/packs/'+id+'/rush-demo',{rate,count:1});assert.equal(r.status,200);assert.equal(r.data.cost,rate);assert.ok(Number.isFinite(r.data.score));}assert.equal((await call('/api/packs/'+id+'/rush-demo',{rate:100})).status,400);}
  else assert.equal((await call('/api/packs/'+id+'/rush-demo',{rate:1000000})).status,400);

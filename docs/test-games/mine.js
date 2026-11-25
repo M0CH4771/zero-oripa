@@ -13,7 +13,7 @@ import { picker, secureRandom } from './common.js';
 
 export const COLS = 5, ROWS = 6, REEL_ROWS = 3;
 export const FIRST_SPINS = 5, MAX_SPINS = 20;
-export const MIN_PAY = 0.1; // 最低保証（賭けの10%）
+export const MIN_PAY = 1; // 1ゲームあたりの最低配当C
 
 // hp：何回削ると壊れるか / v：賭け（1プレイの消費コイン）に対する配当
 export const BLOCKS = {
@@ -137,11 +137,11 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
     if (withScript) spins.push({ reel, events: ev, add, total, base: r2(base), mult });
   }
   const sum = base * mult;
-  const floor = Math.floor(rate * MIN_PAY), cap = rate * Math.min(50,maxMult);
+  const floor = MIN_PAY, cap = rate * Math.min(50,maxMult);
   const score = Math.max(floor, Math.min(Math.floor(sum), cap));
   const guaranteed = Math.floor(sum) < floor, capped = sum > cap;
   return {
-    score, capped, guaranteed, played: total,
+    score, capped, guaranteed, guarantee:guaranteed?score-Math.floor(sum):0, played: total,
     spins, board, chests, final: { base: Math.round(base * 100) / 100, mult, raw: Math.floor(sum), score, guaranteed, capped },
     opened,
   };

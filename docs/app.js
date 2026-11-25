@@ -230,7 +230,7 @@ const brandIcon=(name,extra='')=>`<img class="brand-icon ${extra}" src="${BRAND_
 const brandMasthead=(label,title,desc,icon)=>`<section class="brand-masthead"><div><span>${label}</span><h1>${title}</h1><p>${desc}</p></div>${brandIcon(icon,'masthead-icon')}</section>`;
 const FEATURE_CONFIG=window.FEATURE_CONFIG||{};
 const isFeature=g=>Boolean(FEATURE_CONFIG[g]);
-const featureBounds=g=>`RTP目標97%・最低${FEATURE_CONFIG[g].min}倍・最高${FEATURE_CONFIG[g].max}倍`;
+const featureBounds=g=>`RTP目標97%・最低1C・最高${FEATURE_CONFIG[g].max}倍`;
 const gameName = (g) => (GAME_TITLE[g] || GAME_TITLE.rush).join(' ');
 // 文字ロゴはゲームの文字と同じ立体文字で描いて画像にする（フォントの読み込み後に描き直す）
 const TITLE_COLORS = {
@@ -254,10 +254,10 @@ const GAME_NOTE = {
   dogs:()=>['最大117,649 WAYS・選べるワイルド',featureBounds('dogs')],
   train:()=>['3リスピンから始まる貨車ボーナス',featureBounds('train')],
   dwarf:()=>['10スピンごとにモンスターバトル',featureBounds('dwarf')],
-  rush: (p) => ['最初から10回のフリースピン', `6×5・8個以上で連鎖・RTP目標97%・最低0.1倍・最高50倍`],
-  fruit: (p) => ['スキャッター3〜7個で10〜30回のフリースピン', `7×7・5個以上のクラスター・倍率スポット最大128倍・RTP目標97%・最低0.1倍・最高50倍`],
-  mine: (p) => ['最初の採掘＋4スピンの合計で、もらえるカードが決まる', `荒さ ${esc(p.volatility_label)}・還元率 約97%・最低保証 ベットの10%・最高 ベットの${p.max_mult}倍`],
-  plinko:()=>['8・12・16段のピンを通るボールの行き先でスコアが決まる','球数を選択・理論RTP90%・配当上限なし'],
+  rush: (p) => ['最初から10回のフリースピン', `6×5・8個以上で連鎖・RTP目標97%・最低1C・最高50倍`],
+  fruit: (p) => ['スキャッター3〜7個で10〜30回のフリースピン', `7×7・5個以上のクラスター・倍率スポット最大128倍・RTP目標97%・最低1C・最高50倍`],
+  mine: (p) => ['最初の採掘＋4スピンの合計で、もらえるカードが決まる', `荒さ ${esc(p.volatility_label)}・還元率 約97%・最低1C・最高 ベットの${p.max_mult}倍`],
+  plinko:()=>['8・12・16段のピンを通るボールの行き先でスコアが決まる','球数を選択・配当表RTP約90%・配当上限なし'],
 };
 
 // ===== 画面：ホーム（オリパ一覧） =====
@@ -324,7 +324,7 @@ function barClass(p) { const r = p.total ? p.remaining / p.total : 0; return r <
 function packCard(p) {
   if (p.kind === 'rush') {
     return `<a class="pcard game-card game-${esc(p.theme)}" href="#pack-${p.id}">
-      <div class="ptags"><span class="tg red">${gameName(p.game)}</span><span class="tg game-rtp">${p.game==='plinko'?'理論RTP 90%':'目標RTP 97%'}</span></div>
+      <div class="ptags"><span class="tg red">${gameName(p.game)}</span><span class="tg game-rtp">${p.game==='plinko'?'配当表RTP 約90%':'目標RTP 97%'}</span></div>
       <div class="pimg">${artHtml(p)}</div>
       <div class="pinfo">
         <div class="pprice"><span class="coin-ico">C</span>${num(p.rates[0])}<small>〜${num(p.rates[p.rates.length - 1])} /1回</small></div>
@@ -439,20 +439,20 @@ const RULES = {
   gods:['6×5の盤面で同じ絵柄8個以上がそろうと消えて連鎖。','4スキャッターで15回。4/5/6個は基準ベットの3/5/100倍。フリースピン中は3個以上で5回追加。','×2〜500の新規オーブが当たりスピンに出た場合だけ累積倍率を加算・適用。ハズレ時のオーブは不発。',featureBounds('gods')],
   dogs:['6リール・各2〜7段。左から3リール以上の連続一致。最大117,649 WAYS。','3〜6個の肉球でSTICKY（7/12/15/20回）かRAINING（15/18/25/30回）を選択。','ワイルドは2〜5リールのみ。×1〜3の倍率は組み合わせごとに乗算。再トリガーなし。',featureBounds('dogs')],
   train:['5×3、3リスピンから開始。空きマスに新しいコインが着地すると回数がリセット。','通常コイン×1〜10、GOLDEN×20〜200（基準ベット倍率）。','PAYER・COLLECTOR・COLLECTOR/PAYER・SNIPER・NECROMANCER・RESET PLUSが発動。P付きは毎回発動します。','最大7列へ拡張。全マス完成で合計×2。TOTAL×基準ベットが最終配当です。',featureBounds('train')],
-  dwarf:['最初のフリースピンは10回。基準Cは消費Cの0.1%。宝箱の倍率に基準Cを掛けて配当を計算。','10回消化するたびにバトル。勝利でゴブリン＋10回、トロール＋20回、ドラゴン＋30回。','出現率：ゴブリン65%・トロール25%・ドラゴン10%。攻撃1／2は各27.64%、被ダメージ2択は各22.36%。','勝利時は追加スピンと基準C強化宝箱を獲得。ゴブリンは消費Cの0.005／0.01／0.02／0.025／0.027%を加算（出現率19.5／20／20／20／20.5%）。トロールは2倍、ドラゴンは3倍。1,000C以上では整数値に確率変換し、＋0Cの場合もあります。強化は以降のスピンのみ適用。平均勝率約60%。敗北時は追加なし。',featureBounds('dwarf')],
-  plinko:['ボールが8・12・16段のピンを左右に通過します。','最下段に表示されたコイン数を1球ごとに獲得します。BETに応じて表示が変わります。','全9設定で理論還元率90%。0 Cの着地枠もあり、配当額に別途上限は設けません。'],
+  dwarf:['最初のフリースピンは10回。基準Cは消費Cの0.1%。宝箱の倍率に基準Cを掛けて配当を計算。','10回消化するたびにバトル。勝利でゴブリン＋10回、トロール＋20回、ドラゴン＋30回。','出現率：ゴブリン65%・トロール25%・ドラゴン10%。攻撃1／2は各27.64%、被ダメージ2択は各22.36%。','勝利時は追加スピンと基準C強化宝箱を獲得。ゴブリンは消費Cの0.005／0.01／0.02／0.025／0.0287%を加算（出現率19.5／20／20／20／20.5%）。トロールは2倍、ドラゴンは3倍。1,000C以上では整数値に確率変換し、＋0Cの場合もあります。強化は以降のスピンのみ適用。平均勝率約60%。敗北時は追加なし。',featureBounds('dwarf')],
+  plinko:['ボールが8・12・16段のピンを左右に通過します。','最下段に表示されたコイン数を1球ごとに獲得します。BETに応じて表示が変わります。','全9設定で配当表還元率約90%。0 Cの着地枠もあり、全ボール合計が0Cの場合のみ1Cになります。配当上限なし。'],
   rush: ['テストコインのレートを選び、BONUSで10回のフリースピンを開始します', '6×5の盤面のどこでも、同じ宝石が8個以上あれば配当。消えたあと上から落ちてきて連鎖します',
-    '魔法のオーブ（×2〜×100）が出現し、勝った連鎖の合計に倍率を適用します', '魔法の杖が3個以上で5回追加。4／5／6個以上の杖には3／5／100倍の配当（テスト版の最大120回）','1回のボーナス全体の配当は0.1〜50倍。還元率目標97%。'],
+    '魔法のオーブ（×2〜×100）が出現し、勝った連鎖の合計に倍率を適用します', '魔法の杖が3個以上で5回追加。4／5／6個以上の杖には3／5／100倍の配当（テスト版の最大120回）','1回のボーナス全体の配当は最低1C・最高50倍。還元率目標97%。'],
   fruit: ['BONUSでスキャッター3〜7個が確定し、10／12／15／20／30回のフリースピンを開始します。追加時も同じ回数です', '7×7の盤面で、同じお菓子が縦横に5個以上つながると配当。消えて落ちてきて連鎖します',
     '消えたマスには印が付き、もう一度そこで消えると倍率スポット（×2→×4→…→×128）に。上で消えたつながりの配当に倍率の合計が掛かります',
-    '金のりんごが3〜7個で10／12／15／20／30フリースピン追加。フリースピン中は倍率スポットがリセットされません（テスト版の最大120回）','1回のボーナス全体の配当は0.1〜50倍。還元率目標97%。'],
+    '金のりんごが3〜7個で10／12／15／20／30フリースピン追加。フリースピン中は倍率スポットがリセットされません（テスト版の最大120回）','1回のボーナス全体の配当は最低1C・最高50倍。還元率目標97%。'],
   mine: ['テストコインのレートを選び、BONUSから直接採掘を開始。最初の採掘＋4スピン（5回）で1プレイです',
     '上のスロット枠（5×3）にアイテムが止まり、つるはしはそれぞれ真下の列のブロックを上から削ります。数字は削れる回数（1・2・3・5・7回）で、壊れたら次のブロックへ進みます',
     '強化の書：同じ列のつるはしを全部5回に。超強化の書（めったに出ない）：同じ列のつるはしを全部7回に。ダイナマイト：つるはしの後に落ちて、着地点を中心に3×3へ2ダメージ。スター：1個につきスピン+1',
     'ブロックを壊すと配当。石→石炭→鉄→金→ダイヤ→虹鉱石の順に高く、硬くなります。爆発鉱石は壊れると周り8マスに2ダメージ（連鎖）。ハテナは壊すと中身の配当が出ます',
     '掘れ具合は最後まで引き継ぎ。1列を下まで掘り切ると、その列の宝箱が開きます。宝箱は開ける前から色で倍率（青×2 → 緑×5 → 黄×8 → 赤×10）がわかります',
     '開いた宝箱の倍率は掛け算（×2 と ×4 なら ×8）で、最後に配当の合計に掛かります',
-    '最低保証：結果がベットの10%に届かなくても、10%は必ずもらえます。最大はベットの50倍です'],
+    '最終配当が0Cの場合のみ1Cになります。最大はベットの50倍です'],
 };
 const FEATURES = {
   gods:[['s0','天空の宝石連鎖','累積倍率でスコア増加'],['s9','15フリースピン','スキャッターで追加']],
@@ -475,7 +475,7 @@ function rushPage(p) {
   $('#view').innerHTML = `
     <div class="pimg">${artHtml(p)}${p.actual_rtp !== null ? `<span class="rtp-badge">実績還元率 <b>${(p.actual_rtp * 100).toFixed(1)}%</b></span>` : ''}</div>
     <div class="detail-info">
-      <div class="ptags" style="padding:0"><span class="tg red">オリジナルゲーム</span><span class="tg game-rtp">${p.game==='plinko'?'理論RTP 90%':'目標RTP 97%'}</span><span class="tg">テスト専用</span></div>
+      <div class="ptags" style="padding:0"><span class="tg red">オリジナルゲーム</span><span class="tg game-rtp">${p.game==='plinko'?'配当表RTP 約90%':'目標RTP 97%'}</span><span class="tg">テスト専用</span></div>
       <h1>${esc(p.name)}</h1>
       <div class="kv"><span>${esc(p.badge)}</span><span>${p.actual_rtp !== null ? `この端末の実績 <b>${(p.actual_rtp * 100).toFixed(1)}%</b>（${num(p.plays)}回）` : '実績データなし'}</span></div>
       <div class="kv"><span>最高スコア <b>${num(p.best)}</b></span><span>1プレイ ${num(p.rates[0])}〜${num(p.rates[p.rates.length - 1])} coin</span></div>
@@ -502,7 +502,7 @@ function leaveGame() {
   document.body.classList.remove('gamemode');
   gameCtx = null;
 }
-function plinkoInfo(rows,risk){const c=window.plinkoConfig(rows,risk);return `<p class="muted">1球 ${num(rushRate)} C · 理論還元率 90% · ${rows}段 / ${risk.toUpperCase()}（左右対称）</p><div class="plinko-paytable"><div class="plinko-payrow head"><span>着地枠</span><span>獲得コイン</span><span>確率（1枠）</span></div>${c.multipliers.slice(0,rows/2+1).map((m,i)=>`<div class="plinko-payrow"><span>${i===rows/2?'中央':`左右・外から${i+1}番目`}</span><b class="plinko-mult ${m>=10?'high':m>=1?'even':m>0?'low':'zero'}">${num(Math.round(rushRate*c.cents[i]/100))} C</b><span>${(c.probabilities[i]*100).toFixed(5)}%</span></div>`).join('')}</div>`;}
+function plinkoInfo(rows,risk){const c=window.plinkoConfig(rows,risk);return `<p class="muted">1球 ${num(rushRate)} C · 配当表還元率 約90% · ${rows}段 / ${risk.toUpperCase()}（左右対称）</p><div class="plinko-paytable"><div class="plinko-payrow head"><span>着地枠</span><span>獲得コイン</span><span>確率（1枠）</span></div>${c.multipliers.slice(0,rows/2+1).map((m,i)=>`<div class="plinko-payrow"><span>${i===rows/2?'中央':`左右・外から${i+1}番目`}</span><b class="plinko-mult ${m>=10?'high':m>=1?'even':m>0?'low':'zero'}">${num(Math.round(rushRate*c.cents[i]/100))} C</b><span>${(c.probabilities[i]*100).toFixed(5)}%</span></div>`).join('')}</div>`;}
 async function viewGame(id, demo, daily=false) {
   if (!demo && !ME.user) { location.hash = `#play-${id}-demo`; return; }
   const { pack: p } = await api('/api/packs/' + id);
@@ -536,7 +536,7 @@ async function viewGame(id, demo, daily=false) {
           <div class="gm-box win"><span>${p.game==='mine'?'獲得見込':'累計獲得'}</span><b id="rScore">0</b></div>
           <div class="gm-box"><span>${p.game==='plinko'?'残り球数':p.game==='train'?'残りリスピン':'残りスピン'}</span><b id="rSpin">${p.game==='mine'?5:p.game==='plinko'?1:FEATURE_CONFIG[p.game]?.initial??10}</b></div>
         </div>
-        ${p.game==='plinko'? `<div class="plinko-options"><div class="plinko-settings"><label>荒さ<select id="plinkoRisk"><option value="low">LOW・低変動</option><option value="medium" selected>MEDIUM・中変動</option><option value="high">HIGH・高変動</option></select></label><label>段数<select id="plinkoRows"><option>8</option><option selected>12</option><option>16</option></select></label><label class="plinko-rtp">理論RTP<b>90%</b></label></div><div class="plinko-label">落とす球数</div><div class="plinko-counts"><button data-count="1" class="selected">1</button><button data-count="10">10</button><button data-count="100">100</button><button data-count="custom">自由入力</button></div><input id="plinkoCustom" type="number" min="1" max="1000" value="1" inputmode="numeric" aria-label="球数" hidden><div class="plinko-cost">合計消費 <b id="plinkoCost">0 C</b></div></div>` : ''}
+        ${p.game==='plinko'? `<div class="plinko-options"><div class="plinko-settings"><label>荒さ<select id="plinkoRisk"><option value="low">LOW・低変動</option><option value="medium" selected>MEDIUM・中変動</option><option value="high">HIGH・高変動</option></select></label><label>段数<select id="plinkoRows"><option>8</option><option selected>12</option><option>16</option></select></label><label class="plinko-rtp">配当表RTP<b>約90%</b></label></div><div class="plinko-label">落とす球数</div><div class="plinko-counts"><button data-count="1" class="selected">1</button><button data-count="10">10</button><button data-count="100">100</button><button data-count="custom">自由入力</button></div><input id="plinkoCustom" type="number" min="1" max="1000" value="1" inputmode="numeric" aria-label="球数" hidden><div class="plinko-cost">合計消費 <b id="plinkoCost">0 C</b></div></div>` : ''}
         <div class="gm-ctl">
           <button class="gm-icon sm" id="gmInfo" aria-label="${p.game==='plinko'?'配当一覧・遊び方':'遊び方'}"><b>ⓘ</b><small>${p.game==='plinko'?'配当表':'遊び方'}</small></button>
           <div class="gm-bet"><button class="gm-pm" id="betMinus">−</button>
@@ -577,7 +577,7 @@ async function viewGame(id, demo, daily=false) {
     if(p.game==='dogs'){const {DOGS_PAYS}=await import('./test-games/features.js?v=dogs');const names=['ロットワイラー','シーズー','パグ','ビーグル','首輪','骨','A','K','Q','J','10'];paytable='<h3>シンボル配当表</h3><p>基準ベット倍率 × WAYS</p><table><thead><tr><th>絵柄</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody>'+Object.values(DOGS_PAYS).map((v,i)=>'<tr><td>'+names[i]+'</td>'+v.map(n=>'<td>×'+n+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
     const s = sheet(`<h3>${esc(p.name)} の遊び方</h3><ul class="rules">${RULES[p.game || 'rush'].map((x) => `<li>${x}</li>`).join('')}</ul>
       ${paytable}<h3 style="margin-top:14px;font-size:15px">スコアと景品（ベット ${num(rushRate)}）</h3>${p.game==='plinko'?plinkoInfo(gameCtx.rows,gameCtx.risk):tiersTable(p, rushRate)}
-      <p class="muted" style="margin-top:8px">テスト専用の独自抽選です。理論RTP ${p.game==='plinko'?90:97}%（長期平均）。${p.actual_rtp !== null ? `・この端末の実測 ${(p.actual_rtp * 100).toFixed(1)}%` : ''}</p>
+      <p class="muted" style="margin-top:8px">テスト専用の独自抽選です。RTP目標 ${p.game==='plinko'?90:97}%（長期平均）。${p.actual_rtp !== null ? `・この端末の実測 ${(p.actual_rtp * 100).toFixed(1)}%` : ''}</p>
       <div class="btns"><button class="btn ghost" id="infoClose">閉じる</button></div>`);
     $('#infoClose', s).onclick = closeSheet;
   };
@@ -773,7 +773,7 @@ function showRushResult(p, r, demo) {
   const s = sheet(`<h3>${demo ? 'お試し結果' : `${gameName(gameCtx && gameCtx.p && gameCtx.p.game)} 結果`}</h3>
     <div class="result-score"><div class="muted">獲得コイン（確定）</div><div class="sc">${num(r.score)} <small style="font-size:14px">C</small></div>
       <div class="muted">基準消費Cの ${ratio.toFixed(2)} 倍・${r.freePlayed??r.played}${p.game==='plinko'?'球':p.game==='dwarf'?'フリースピン':'スピン'}</div></div>
-    ${r.guarantee?`<p class="muted">最低保証により +${num(r.guarantee)} C を補填しました。</p>`:''}${r.capped?'<p class="muted">最大配当の上限に到達したため終了しました。</p>':''}
+    ${r.guarantee?`<p class="muted">最終配当0Cのため1Cを付与しました。</p>`:''}${r.capped?'<p class="muted">最大配当の上限に到達したため終了しました。</p>':''}
     <div class="result-breakdown"><div><span>消費</span><b>${num(r.cost)} C</b></div><div><span>獲得</span><b>${num(r.score)} C</b></div><div><span>差引</span><b class="${r.score-r.cost<0?'negative':''}">${r.score-r.cost>0?'+':''}${num(r.score-r.cost)} C</b></div></div>
     ${c ? `<div class="result-card"><div class="cardart" style="border-color:${col};background:${['S'].includes(c.rank) ? 'conic-gradient(#ff4fd8,#ffd54a,#4aa8ff,#4ee0a0,#ff4fd8)' : col}">${c.rank}</div>
       <div><div style="font-weight:900">${esc(c.name)}</div><div class="muted">カードの値段 ${num(c.value)}C</div></div></div>` : '<p class="muted" style="text-align:center">スコア0のため、カードはありません</p>'}

@@ -1,9 +1,9 @@
 // ゲームの一覧。template.game で選ぶ（省略時は rush）
-import * as rush from './rush.js?v=rtp97';
-import * as fruit from './fruit.js?v=rtp97';
-import * as mine from './mine.js?v=rtp97';
-import * as plinko from './plinko.js?v=rtp97';
-import {FEATURE_CONFIG,featureModule} from './features.js?v=motion69';
+import * as rush from './rush.js?v=min70';
+import * as fruit from './fruit.js?v=min70';
+import * as mine from './mine.js?v=min70';
+import * as plinko from './plinko.js?v=min70';
+import {FEATURE_CONFIG,featureModule} from './features.js?v=min70';
 
 import {hasFeature} from './bonus-round.js';
 import {secureRandom} from './common.js';
@@ -27,7 +27,7 @@ export function playGame(game, opts) { const mod=gameOf(game).mod;
   // target even when the DOGS entry or strategy was selected in advance.
   for(let attempt=0;attempt<2048;attempt++){
     const round=mod.play({...opts,rand,withScript:true});
-    if(!hasFeature(game,round))continue;
+    if(round.score!==1&&!hasFeature(game,round))continue;
     if(round.score<=target)low=round;
     if(round.score>=target)high=round;
     if(low&&high){

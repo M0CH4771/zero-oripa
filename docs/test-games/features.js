@@ -1,10 +1,10 @@
 // Original, virtual-coin-only feature games. All scripts are deterministic given rand.
 import {secureRandom,picker,bonusEntry} from './common.js';
 export const FEATURE_CONFIG={
-gods:{id:12,title:'ZERO GODS',badge:'天空の累積倍率',min:.05,max:50,scale:.01,cols:6,rows:5,initial:15},
-dogs:{id:13,title:'ZERO DOGS',badge:'6リール・最大117,649 WAYS',min:.05,max:75,scale:.01,cols:6,rows:7,initial:7},
- train:{id:14,title:'ZERO TRAIN',badge:'貨車ホールド＆リスピン',min:.05,max:200,scale:.01,cols:5,rows:3,initial:3},
- dwarf:{id:15,title:'ZERO DWARF',badge:'バトル＆宝箱ラッシュ',min:.05,max:200,scale:.0025832,cols:3,rows:3,initial:10}
+gods:{id:12,title:'ZERO GODS',badge:'天空の累積倍率',minCoins:1,max:50,scale:.01,cols:6,rows:5,initial:15},
+dogs:{id:13,title:'ZERO DOGS',badge:'6リール・最大117,649 WAYS',minCoins:1,max:75,scale:.01,cols:6,rows:7,initial:7},
+ train:{id:14,title:'ZERO TRAIN',badge:'貨車ホールド＆リスピン',minCoins:1,max:200,scale:.01,cols:5,rows:3,initial:3},
+ dwarf:{id:15,title:'ZERO DWARF',badge:'バトル＆宝箱ラッシュ',minCoins:1,max:200,scale:.0025832,cols:3,rows:3,initial:10}
 };
 const lottery=(r,a)=>a[Math.floor(r()*a.length)];
 const grid=(n,fn)=>Array.from({length:n},(_,i)=>fn(i));
@@ -129,7 +129,7 @@ export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1
 export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
 export const DWARF_WEIGHTS={Goblin:[2764,2764,2236,2236],Troll:[2764,2764,2236,2236],Dragon:[2764,2764,2236,2236]};
 export const DWARF_INITIAL_SCALE=.001;
-export const DWARF_UPGRADE_SCALES=[.00005,.0001,.0002,.00025,.00027];
+export const DWARF_UPGRADE_SCALES=[.00005,.0001,.0002,.00025,.000287];
 export const DWARF_UPGRADE_WEIGHTS=[1950,2000,2000,2000,2050];
 export function dwarfUpgradeTable(rate,monster){const factor={Goblin:1,Troll:2,Dragon:3}[monster];const raw=DWARF_UPGRADE_SCALES.map(s=>rate*s*factor);if(rate<1000)return {values:raw,weights:[...DWARF_UPGRADE_WEIGHTS]};const masses=new Map();for(const [i,value] of raw.entries()){const w=DWARF_UPGRADE_WEIGHTS[i],lo=Math.floor(value+1e-10),f=Math.max(0,value-lo);for(const [v,p] of [[lo,w*(1-f)],[lo+1,w*f]])if(p>1e-9)masses.set(v,(masses.get(v)||0)+p);}const values=[...masses.keys()].sort((a,b)=>a-b);return {values,weights:values.map(v=>masses.get(v))};}
 function dwarfUpgrade(rate,monster,rand){const {values,weights}=dwarfUpgradeTable(rate,monster);let ticket=rand()*weights.reduce((a,b)=>a+b,0),selected=values.length-1;for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}return {selected,values,weights,amount:values[selected]};}
@@ -166,7 +166,7 @@ function dwarf(r){
 const generators={gods,dogs,train,dwarf};
 export function featureRaw(game,rand=secureRandom,opts={}){return generators[game](rand,opts);}
 export function featurePlay(game,{rate,rand=secureRandom,withScript=true,strategy='battle',dogEntry=null,encounter=null}){
- const c=FEATURE_CONFIG[game],initialUnit=game==='dwarf'?rate*DWARF_INITIAL_SCALE:rate*c.scale,spins=featureRaw(game,rand,{strategy,dogEntry,encounter}),cap=Math.floor(c.max*rate),floor=Math.ceil(c.min*rate);let unit=initialUnit;
+ const c=FEATURE_CONFIG[game],initialUnit=game==='dwarf'?rate*DWARF_INITIAL_SCALE:rate*c.scale,spins=featureRaw(game,rand,{strategy,dogEntry,encounter}),cap=Math.floor(c.max*rate),floor=1;let unit=initialUnit;
  let running=game==='gods'?3*c.scale*rate:0,paid=Math.floor(running);
  const entryWin=paid;
  for(const s of spins){if(game==='dwarf'){s.unit=unit;if(s.battle&&s.won){s.upgrade=dwarfUpgrade(rate,s.monster,rand);unit+=s.upgrade.amount;s.nextUnit=unit;}}const before=running;running+=game==='dwarf'?s.raw*s.unit:s.raw*c.scale*rate;let next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;

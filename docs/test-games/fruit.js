@@ -49,7 +49,7 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
   const v = VOLATILITY[volatility] || VOLATILITY.normal;
   const unit = rate / BONUS_BUY_MULT;
   const payUnit=unit;
-  const cap=rate*Math.min(50,maxMult),floor=rate*.1;
+  const cap=rate*Math.min(50,maxMult),floor=1;
   const entry=bonusEntry(SIZE,SIZE,3,v.weights,rand);
   entry.initialSpins=FRUIT_AWARDS[entry.scatters];
   entry.win=0;

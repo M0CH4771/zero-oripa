@@ -277,7 +277,7 @@
           hooks.onSpin(k + 1, total);
         }
         if(cfg.spots){await Promise.all(nodes.filter(Boolean).map(n=>st.tween(n,{alpha:.15},240)));await st.banner(['TOTAL WIN',hooks.fmt(r.score)+' C'],{hold:600});}
-        if(r.guarantee){await st.banner(['最低保証', '+'+hooks.fmt(r.guarantee)+' C'],{});await hooks.onRoundWin?.(r.guarantee);}if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);hooks.onMode?.('COMPLETE');
+        if(r.guarantee){await st.banner(['最終配当','1 C'],{hold:350});await hooks.onRoundWin?.(r.guarantee);}if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);hooks.onMode?.('COMPLETE');
       },
     };
   }
@@ -629,9 +629,9 @@
         const f = r.final || { base: r.score, mult: 1, score: r.score };
         if (f.mult > 1 && f.base > 0 && !f.guaranteed) await st.atNormalSpeed(()=>finale(f.base, f.mult, f.score, f));
         else if (f.guaranteed) {
-          // 最低保証（賭けの10%）
+          // 配当ゼロの場合だけ1C
           S('coin');
-          await st.banner(['最低保証', `${hooks.fmt(f.score)} コイン`], {});
+          await st.banner(['最終配当', `${hooks.fmt(f.score)} C`], {hold:350});
         }
         await hooks.onRoundWin?.(Math.max(0,r.score-state.base));
         hooks.onScore(r.score); setSpinWin(r.score);hooks.onFeatureMetric?.('最終倍率','×'+hooks.fmt(f.mult));

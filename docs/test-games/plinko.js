@@ -23,5 +23,5 @@ export function play({rate,rand=secureRandom,count=1,rows=12,risk='medium'}){
    const slot=path.reduce((a,b)=>a+b,0),mult=cfg.multipliers[slot];
    return {path,slot,mult,win:Math.round(rate*cfg.cents[slot]/100)};
  });
- return {score:spins.reduce((a,s)=>a+s.win,0),played:count,spins,multipliers:cfg.multipliers,rows:cfg.rows,risk:cfg.risk};
+ const paid=spins.reduce((a,s)=>a+s.win,0);return {score:Math.max(1,paid),guarantee:paid===0?1:0,played:count,spins,multipliers:cfg.multipliers,rows:cfg.rows,risk:cfg.risk};
 }
