@@ -234,12 +234,23 @@
       const img=new Image();
       this.winArt=await new Promise(resolve=>{img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src=url;});
     }
+    async loadCinematic(game) {
+      const index=['rush','fruit','mine','plinko','gods','dogs','train','dwarf'].indexOf(game);if(index<0)return;
+      const image=new Image();this.cinematicArt=await new Promise(resolve=>{image.onload=()=>resolve({image,row:index%4});image.onerror=()=>resolve(null);image.src='./assets/anime/cinematic-'+(index<4?'a':'b')+'.webp';});
+    }
+    async cinematic(caption='') {
+      const art=this.cinematicArt;if(!art||this.skip||this.dead||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
+      const n=this.add({x:this.w/2,y:this.h*.47,z:60,frame:0,alpha:1});
+      n.draw=(ctx,o)=>{const {image,row}=art,sw=image.width/6,sh=image.height/4,d=Math.min(this.w*.96,this.h*.65),h=d*sh/sw;const f=Math.min(5,Math.floor(o.frame));ctx.fillStyle='#0a0a13dc';ctx.fillRect(-this.w,-this.h,this.w*2,this.h*2);ctx.drawImage(image,f*sw,row*sh,sw,sh,-d/2,-h/2,d,h);if(caption&&f===5)ZG.scene.text3d(ctx,caption,0,h*.34,Math.min(30,d/10),{});};
+      try{await this.tween(n,{frame:5.99},780,Ease.linear);await this.wait(100);}finally{this.remove(n);}
+    }
     async transition(name,caption='',reverse=false) {
+      if(this.cinematicArt&&['torii','gift'].includes(name)&&!reverse&&!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return this.cinematic(caption);
       const image=this.scenes?.[name];if(!image||this.skip||this.dead)return;
       const frames=this.theme==='dwarf'&&['gate','knockout'].includes(name)?8:4;
       const sprite=this.add({x:this.w/2,y:this.h*.47,z:48,frame:0});
       sprite.draw=ctx=>{
-        const sw=image.width/frames,sh=image.height,w=Math.min(this.w*.98,this.h*.48*sw/sh),h=w*sh/sw;
+        const sw=image.width/frames,sh=image.height,w=Math.min(this.w*.98,this.h*.64*sw/sh),h=w*sh/sw;
         const frame=Math.min(frames-1,Math.floor(sprite.frame));
         ctx.drawImage(image,(reverse?frames-1-frame:frame)*sw,0,sw,sh,-w/2,-h/2,w,h);
         if(caption&&frame===frames-1)ZG.scene.text3d(ctx,caption,0,0,Math.min(32,w/9),{});

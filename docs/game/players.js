@@ -695,9 +695,9 @@ return {st,configure(c){risk=c.risk;rows=c.rows;mult=c.multipliers;cents=c.cents
     return {
       idle: () => g.idle(),
       configure: (c) => g.configure?.(c),
-      warm: async (cb) => {const art={fruit:'fruit/bg.webp',mine:'mine/bg.webp',gods:'gods/bg.webp',dogs:'dogs/park.webp',train:'train/bg.webp',dwarf:'dwarf/hero.webp'}[opt.game];await Promise.all([g.warm(cb),st.loadWinArt(art?'./assets/anime/'+art:null)]);},
+      warm: async (cb) => {const art={fruit:'fruit/bg.webp',mine:'mine/bg.webp',gods:'gods/bg.webp',dogs:'dogs/park.webp',train:'train/bg.webp',dwarf:'dwarf/hero.webp'}[opt.game];await Promise.all([g.warm(cb),st.loadWinArt(art?'./assets/anime/'+art:null),st.loadCinematic(opt.game)]);},
       prepareDogs: (entry) => g.prepareDogs?.(entry),
-      async play(r) { st.setSkip(false); await g.play(r); st.setSkip(false); },
+      async play(r) { st.setSkip(false); if(!['rush','fruit'].includes(opt.game))await st.cinematic();await g.play(r); st.setSkip(false); },
       async bigWin(level, amount) { await st.atNormalSpeed(()=>st.bigWin(level, amount, hooks.fmt)); },
       setSpeed(v) { st.speed = v; },
       skip() { st.setSkip(true); },
