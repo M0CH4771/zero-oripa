@@ -257,9 +257,17 @@
         const state = { score: r.entry?.win || 0,unit:r.unit };
         let total = r.entry?.initialSpins || 10;
         if(r.entry){
-          hooks.onSpin(0,total);
+          hooks.onMode?.('ENTRY');hooks.onSpin(0,total);
           setSpots(new Array(cols*rows).fill(0),false);
-          setSpinWin(state.score);hooks.onScore(state.score);
+          await dropIn(r.entry.grid);
+          await pulse(nodes.filter(n=>n&&n.id==='S'),'#ffe1a0');
+          setSpinWin(state.score);await hooks.onRoundWin?.(state.score);hooks.onScore(state.score);
+          S('free');
+          if(!st.skip){
+            const start=document.createElement('button');start.className='rush-entry-start';start.textContent=total+' FREE SPINS　タップで開始';
+            canvas.parentElement.append(start);start.focus();
+            try{await new Promise(resolve=>{const done=()=>{clearInterval(timer);resolve();};const timer=setInterval(()=>{if(st.skip||st.dead||!start.isConnected)done();},100);start.onclick=done;});}finally{start.remove();}
+          }
         }
         for (let k = 0; k < r.script.length; k++) {
           hooks.onMode?.('BONUS');
@@ -590,7 +598,7 @@
         const hp = r.board.map((col) => col.map((b) => HP[b]));
         const state = { base: 0 };
         setSpinWin(0);
-        hooks.onSpin(0,5);hooks.onMode?.('BONUS');
+        hooks.onMode?.('ENTRY');hooks.onSpin(0,5);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{hold:400});hooks.onMode?.('BONUS');
         for (let k = 0; k < r.script.length; k++) {
           const sp = r.script[k];
           const previousBase=state.base,previousValue=Math.min(r.score,Math.floor(state.base*mult));
