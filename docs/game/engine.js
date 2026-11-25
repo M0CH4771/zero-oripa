@@ -3,6 +3,7 @@
 // ・speed（1=通常 / 0.45=高速）と skip（タップで最後まで飛ばす）に対応
 (function () {
   const ZG = (window.ZG = window.ZG || {});
+  ZG.SPIN_TIMING=Object.freeze({reel:1100,pause:200,normal:1,quick:.5,turbo:.25});
 
   // Generated emblem atlas: six game themes, three frames per theme.
   const multiplierArt=new Image();let multiplierArtReady=false;
@@ -116,7 +117,7 @@
     clear() { this.nodes = []; this.parts = []; this.rings=[];this.overlays = []; this.tweens = []; }
     // ---- 時間 ----
     roundPause() {
-      return this.wait(this.speed >= 1 ? 750 : 500);
+      return this.wait(ZG.SPIN_TIMING.pause);
     }
     async atNormalSpeed(action) {
       const previous=this.presentationSpeed;

@@ -512,7 +512,7 @@ async function viewGame(id, demo, daily=false) {
   if(daily)rushRate=1000;
   document.body.classList.add('gamemode');
   const theme = ZG.THEME_OF[p.game] || 'gems';
-  const normalSpeed = p.game==='dwarf'?1.15:1;
+  const normalSpeed = ZG.SPIN_TIMING.normal;
   rushSpeed = normalSpeed;
   gameCtx = { p, demo,daily, count:1,risk:'medium',rows:12,credits: demo ? (p.game==='plinko'?100000:10000000) : ME.user.coins, busy: false, win: 0 };
   $('#view').innerHTML = `
@@ -564,7 +564,7 @@ async function viewGame(id, demo, daily=false) {
   hud();
   $('#gmBack').onclick = () => { if (gameCtx?.busy) return; location.hash = daily?'#bonus':'#pack-' + p.id; };
   $('#gmSound').onclick = () => { const on = ZG.sfx.toggle(); $('#gmSound').textContent = on ? '🔊' : '🔇'; if (on) { ZG.sfx.unlock(); ZG.sfx.bgm(theme); } else ZG.sfx.stopBgm(); };
-  $('#gmTurbo').onclick = () => { rushSpeed = rushSpeed===normalSpeed?.45:rushSpeed===.45?.2:normalSpeed; $('#gmTurbo').classList.toggle('on', rushSpeed !== normalSpeed);$('#gmTurbo small').textContent=rushSpeed===normalSpeed?'NORMAL':rushSpeed===.45?'QUICK':'TURBO';game && game.setSpeed(rushSpeed); ZG.sfx.play('click'); };
+  $('#gmTurbo').onclick = () => { const {quick,turbo}=ZG.SPIN_TIMING;rushSpeed = rushSpeed===normalSpeed?quick:rushSpeed===quick?turbo:normalSpeed; $('#gmTurbo').classList.toggle('on', rushSpeed !== normalSpeed);$('#gmTurbo small').textContent=rushSpeed===normalSpeed?'NORMAL':rushSpeed===quick?'QUICK':'TURBO';game && game.setSpeed(rushSpeed); ZG.sfx.play('click'); };
   $('#gmInfo').onclick = () => {
     const s=sheet(`<h3>${esc(p.name)} の遊び方</h3>${gameInfoHtml(p.game,rushRate,p.volatility)}${p.game==='plinko'?'<h3>着地枠の配当表</h3>'+plinkoInfo(gameCtx.rows,gameCtx.risk):''}<div class="btns"><button class="btn ghost" id="infoClose">閉じる</button></div>`);
     $('#infoClose',s).onclick=closeSheet;
