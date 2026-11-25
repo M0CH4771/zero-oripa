@@ -7,7 +7,7 @@ globalThis.window=globalThis;
 globalThis.ResizeObserver=class{observe(){} disconnect(){}};
 globalThis.requestAnimationFrame=()=>0;
 globalThis.Image=class{width=900;height=900;set src(v){queueMicrotask(()=>this.onload?.())}};
-let lastStage,draws=0,errors=[],capturedLabels=null;
+let lastStage,draws=0,errors=[],capturedLabels=null,dogExpand=false,dogShrink=false,dogIntermediate=false;
 const gradient={addColorStop(){}};
 const numeric=new Set(['arc','ellipse','translate','scale','rotate','moveTo','lineTo','rect','fillRect','strokeRect','clearRect','setTransform','drawImage','createLinearGradient','createRadialGradient']);
 const ctx=new Proxy({}, {get(t,k){if(k in t)return t[k];return (...args)=>{if(numeric.has(k)){for(const v of args)if(typeof v==='number')assert.ok(Number.isFinite(v),`${String(k)}: nonfinite ${v}`);draws++;}if(k==='fillText'&&capturedLabels)capturedLabels.push(args[0]);if(String(k).includes('Gradient'))return gradient;if(k==='measureText')return {width:40};};}});
@@ -35,7 +35,7 @@ ZG.art={sprite:(theme,id)=>{if(theme==='mine'&&id.startsWith('chest-open-'))open
 ZG.shade=x=>x;ZG.sfx={play(){}};
 await import('../docs/game/feature-player.js');await import('../docs/game/players.js');
 const origError=console.error;console.error=(...a)=>{errors.push(a);origError(...a)};
-async function pump(p){let done=false,err;p.then(()=>done=true,e=>{done=true;err=e});for(let k=0;k<18000&&!done;k++){lastStage.update(50);lastStage.draw();await new Promise(setImmediate);}assert.ok(done,'animation stalled');if(err)throw err;assert.equal(errors.length,0,'node rendering errors');}
+async function pump(p){let done=false,err;p.then(()=>done=true,e=>{done=true;err=e});for(let k=0;k<18000&&!done;k++){lastStage.update(50);for(const t of lastStage.tweens){if(!t.to||!('heightSlots' in t.to))continue;const a=t.from.heightSlots,b=t.to.heightSlots,v=t.obj.heightSlots;if(b>a)dogExpand=true;if(a>b)dogShrink=true;if(v>Math.min(a,b)&&v<Math.max(a,b))dogIntermediate=true;}lastStage.draw();await new Promise(setImmediate);}assert.ok(done,'animation stalled');if(err)throw err;assert.equal(errors.length,0,'node rendering errors');}
 for(const game of ['rush','fruit','mine','plinko','gods','dogs','train','dwarf']){
  let seed=640;const rand=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/2**32);const r=playGame(game,{rate:1000,rand,rows:12,risk:'medium',count:10,strategy:'sticky'});
  const times=[];
@@ -50,6 +50,7 @@ for(const game of ['rush','fruit','mine','plinko','gods','dogs','train','dwarf']
  assert.ok(times[0]>times[1]&&times[1]>times[2],game+' speed order');console.log(game,'normal / quick / turbo, score & remaining passed',times.map(v=>Math.round(v/100)/10+'s').join(' / '));
 }
 assert.ok(draws>10000);
+assert.ok(dogExpand&&dogShrink&&dogIntermediate,'DOGS expands and shrinks through intermediate reel sizes');
 assert.ok(openChestDraws>0,'MINE opened chest sprites rendered');
 assert.equal(mineEmblemDraws,0,'MINE chest art never receives a closed-chest emblem overlay');
 viewport={w:320,h:600};
