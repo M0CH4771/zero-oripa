@@ -127,7 +127,8 @@ export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1
 // Exact basis-point weights in roulette display order. Weighted encounter
 // distribution keeps expected added spins below ten per battle.
 export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
-export const DWARF_WEIGHTS={Goblin:[2764,2764,2236,2236],Troll:[2764,2764,2236,2236],Dragon:[2764,2764,2236,2236]};
+export const DWARF_WEIGHTS={Goblin:[3185,3185,1815,1815],Troll:[3103,3103,1897,1897],Dragon:[2790,2790,2210,2210]};
+export const DWARF_CHEST_WEIGHTS={3:4450,5:2500,8:1200,10:1220,15:300,20:100,30:70,50:100,100:50,300:10};
 export const DWARF_INITIAL_SCALE=.001;
 export const DWARF_UPGRADE_SCALES=[.00005,.0001,.0002,.00025,.000287];
 export const DWARF_UPGRADE_WEIGHTS=[1950,2000,2000,2000,2050];
@@ -137,10 +138,11 @@ function dwarf(r){
  const spins=[];
  const pick=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:1,s9:.9},r);
  const pickMonster=picker(DWARF_ENCOUNTER_WEIGHTS,r);
+ const pickChest=picker(DWARF_CHEST_WEIGHTS,r);
  const pays={s0:20,s2:7,s3:5,s1:3,s4:.5,s5:.4,s6:.3,s7:.2};
  let remaining=10,freePlayed=0;
  function battle(){
-  const monster=pickMonster(),m=DWARF_MONSTERS[monster];
+  const monster=freePlayed===10?'Goblin':pickMonster(),m=DWARF_MONSTERS[monster];
   const choices=DWARF_ROULETTE[monster],weights=DWARF_WEIGHTS[monster],actions=[];
   let hp=4,enemy=m.hp;
   while(hp>0&&enemy>0){
@@ -157,7 +159,7 @@ function dwarf(r){
  }
  while(remaining>0){remaining--;freePlayed++;const g=grid(9,pick);let raw=0,hits=[],chests=[];
   for(const line of [[0,1,2],[3,4,5],[6,7,8],[0,4,8],[2,4,6]])if(pays[g[line[0]]]&&line.every(j=>g[j]===g[line[0]])){raw+=pays[g[line[0]]];hits.push(...line);}
-  for(let j=0;j<g.length;j++)if(g[j]==='s8'||g[j]==='s9'){const value=lottery(r,[3,3,5,5,8,10,15,20,30,50,100,300]);raw+=value;chests.push({pos:j,value});hits.push(j);}
+  for(let j=0;j<g.length;j++)if(g[j]==='s8'||g[j]==='s9'){const value=Number(pickChest());raw+=value;chests.push({pos:j,value});hits.push(j);}
   spins.push({grid:g,raw,cols:3,rows:3,hits:[...new Set(hits)],chests,freePlayed,remaining,note:'次のバトルまで '+(10-(freePlayed-1)%10)+' 回',total:freePlayed+remaining});
   if(freePlayed%10===0)battle();
  }
