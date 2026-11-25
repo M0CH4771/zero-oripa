@@ -258,10 +258,10 @@
     // ビッグウィン：level 1=BIG 2=MEGA 3=EPIC。金額をカウントアップしながらコインを降らせる
     async celebrateWin(amount, reference, fmt, thresholds = [5,15,30,40]) {
       if (!(reference > 0)) return;
-      // Per-spin reference is 1/100 of the bonus purchase. Reserve the full
+      // Reference is the actual round cost, not the internal payout unit. Reserve the full
       // screen celebration for the final result and label actual spin value.
-      const ratio=amount/reference/100;
-      if(ratio>=1)await this.featureCue('ROUND WIN',fmt(amount)+' C · '+ratio.toFixed(2)+'× BONUS',{color:'#ffe19a',hold:ratio>=5?900:520,sound:ratio>=5?'featureWin':'win'});
+      const ratio=amount/reference;
+      if(ratio>=1)await this.featureCue('ROUND WIN',fmt(amount)+' C · '+ratio.toFixed(2)+'倍（消費C比）',{color:'#ffe19a',hold:ratio>=5?650:280,sound:ratio>=5?'featureWin':'win'});
     }
     async bigWin(level, amount, fmt, title) {
       if (this.skip||this.dead) return;

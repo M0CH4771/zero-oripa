@@ -55,7 +55,7 @@
     const layout = (w, h) => {
       const R = opt.region ? opt.region(w, h) : { x: 0, y: 0, w, h };
       const compact=R.w<=640;
-      const pad = theme==='fruit'||compact?Math.max(13,Math.min(R.w,R.h)*.035):Math.max(12, Math.min(R.w, R.h) * 0.04);
+      const pad = theme==='fruit'||compact?Math.max(4,Math.min(R.w,R.h)*.012):Math.max(12, Math.min(R.w, R.h) * 0.04);
       L.cell = Math.max(8,Math.floor(Math.min((R.w - pad * 2) / cols, (R.h - pad * 2 - (theme==='fruit'||compact?0:28)) / rows)));
       L.ox = Math.round(R.x + (R.w - L.cell * cols) / 2); L.oy = Math.round(R.y + (R.h - L.cell * rows) / 2);
       // キャラを盤面の上に置くときは、盤面を下に寄せて上にスペースを作る
@@ -68,7 +68,7 @@
     st.clipRect = { x: L.ox - 4, y: L.oy - 4, w: L.cell * cols + 8, h: L.cell * rows + 8 };
     let nodes = new Array(cols * rows).fill(null);
     // Shorten routine NORMAL motions only; preserve bonus/cutin presentation timing.
-    const routineTime = ms => st.speed >= 1 ? Math.round(ms * .74) : ms;
+    const routineTime = ms => st.speed >= 1 ? Math.round(ms * .58) : ms;
     let spotNodes = [];
     const swin = spinWinNode(st, () => ({ x: L.ox + (L.cell * cols) / 2, y: L.oy - Math.min(34, L.cell * 0.55) }), hooks.fmt);
     swin.label='TUMBLE WIN';
@@ -105,7 +105,7 @@
           const p = pos(i);
           n = spotNodes[i] = st.add({ x: p.x, y: p.y, z: 2, v: 0 });
           n.badge=st.add({x:p.x,y:p.y,z:7,v:0,clip:true});
-          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell;ctx.font='900 '+Math.max(9,s*.25)+'px system-ui';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.lineJoin='round';ctx.lineWidth=Math.max(2,s*.055);ctx.strokeStyle='#482039';ctx.strokeText('×'+nd.v,s*.44,s*.45,s*.72);ctx.fillStyle='#fff';ctx.fillText('×'+nd.v,s*.44,s*.45,s*.72);};
+          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell;ctx.font='900 '+Math.max(11,s*.29)+'px system-ui';ctx.textAlign='right';ctx.textBaseline='bottom';ctx.lineJoin='round';ctx.lineWidth=Math.max(2,s*.055);ctx.strokeStyle='#482039';ctx.strokeText('×'+nd.v,s*.44,s*.45,s*.72);ctx.fillStyle='#fff';ctx.fillText('×'+nd.v,s*.44,s*.45,s*.80);};
           n.draw = (ctx, nd) => {
             if (!nd.v) return;
             const s = L.cell - 3;
@@ -171,7 +171,7 @@
       setSpinWin(0);
       setSpots(sp.spots || new Array(cols * rows).fill(0), false);
       await dropIn(sp.first,true);
-      await st.wait(routineTime(theme==='gems'?650:450));
+      await st.wait(routineTime(theme==='gems'?400:320));
       if (sp.add) { S('free'); }
       let base = 0, stepNo = 0;
       for (const step of sp.steps) {
@@ -192,7 +192,7 @@
               if(j%cols===0||!members.has(j-1)){ctx.moveTo(x,y);ctx.lineTo(x,y+d);}
               if(j%cols===cols-1||!members.has(j+1)){ctx.moveTo(x+d,y);ctx.lineTo(x+d,y+d);}
             }
-            ctx.strokeStyle='#fff2ce';ctx.lineWidth=3;ctx.shadowColor='#ff77aa';ctx.shadowBlur=7;ctx.stroke();
+            ctx.strokeStyle='#fffbe4';ctx.lineWidth=4;ctx.shadowColor='#ff77aa';ctx.shadowBlur=7;ctx.stroke();
           };
           outlines.push(outline);
         }
@@ -220,7 +220,7 @@
       const normalMultiplier = theme === 'gems' && !!sp.bombs?.length;
       if (normalMultiplier) st.presentationSpeed = st.speed;
       try {
-      if (sp.bombs && sp.bombs.length) {
+      if (base>0 && sp.bombs && sp.bombs.length) {
         const bn = sp.bombs.map((b) => nodes[b.pos]).filter(Boolean);
         S('mult');
         if(sp.mult>=10)await st.featureCue('MULTIPLIER ×'+sp.mult,sp.bombs.length+' 個の倍率シンボル',{color:'#ffd765',hold:620,sound:'featureWin'});
@@ -241,7 +241,7 @@
       setSpinWin(sp.win);
       await hooks.onRoundWin?.(sp.win, normalMultiplier ? st.speed : undefined);
       state.score=spinStart+sp.win;hooks.onScore(state.score, normalMultiplier ? st.speed : undefined);
-      await st.celebrateWin(sp.win,state.unit,hooks.fmt,cfg.spots?[20,40,50,100]:[20,30,50,80]);
+      await st.celebrateWin(sp.win,opt.getRate?.(),hooks.fmt);
       } finally {
         if (normalMultiplier) st.presentationSpeed = undefined;
       }
@@ -355,6 +355,7 @@
           const lvl = Math.min(3, Math.ceil((dmg / max) * 3));
           const cr = ZG.art.sprite('mine', 'crack' + lvl, s, (nd.seed % 5) + 1); const f2 = s + cr.pad * 2; ctx.drawImage(cr, -f2 / 2, -f2 / 2, f2, f2);
         }
+        ctx.save();ctx.font='800 '+Math.max(10,s*.24)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#201811db';ZG.rr(ctx,-s*.27,s*.22,s*.54,s*.25,4);ctx.fill();ctx.fillStyle='#fff';ctx.fillText(nd.hp+'/'+max,0,s*.35,s*.5);ctx.restore();
       };
       return n;
     }
@@ -412,6 +413,7 @@
           const k = 0.5 + 0.5 * Math.sin((t || 0) / 140 + nd.t0);
           ctx.save(); ctx.globalAlpha = 0.4 + 0.5 * k; ctx.strokeStyle = '#fff36a'; ctx.lineWidth = 3; ZG.rr(ctx, -L.cell / 2 + 2, -L.cell / 2 + 2, L.cell - 4, L.cell - 4, 8); ctx.stroke(); ctx.restore();
         }
+        if(!nd.open){const remaining=ROWS-(dug[nd.c]?.filter(Boolean).length||0);ctx.save();ctx.font='800 '+Math.max(9,L.cell*.20)+'px system-ui';ctx.textAlign='center';ctx.fillStyle='#231a14';ZG.rr(ctx,-L.cell*.37,L.cell*.28,L.cell*.74,L.cell*.24,4);ctx.fill();ctx.fillStyle='#fff';ctx.fillText('残 '+remaining+' 個',0,L.cell*.45);ctx.restore();}
       };
       return n;
     }
@@ -508,7 +510,7 @@
       st.remove(b); dug[ev.c][ev.r] = true;
       if (ev.pay > 0) {
         state.base += ev.pay;
-        if (ev.pay >= 1 || ev.b === 'Q') st.popText(b.x, b.y, (ev.b === 'Q' ? '?→' : '+') + hooks.fmt(Math.round(ev.pay * 100) / 100), { size: Math.max(13, L.cell * (ev.b === 'Q' ? 0.42 : 0.34)), hold: ev.b === 'Q' ? 420 : 200 });
+        if (ev.pay >= 1 || ev.b === 'Q') st.popText(b.x, b.y, (ev.b === 'Q' ? '?→' : '+') + hooks.fmt(Math.round(ev.pay * 100) / 100)+' C', { size: Math.max(13, L.cell * (ev.b === 'Q' ? 0.42 : 0.34)), hold: ev.b === 'Q' ? 420 : 200 });
       }
       // つるはしを次のブロックへ
       if (curPick && curPick.c === ev.c && curPick.power > 0) {
@@ -569,13 +571,13 @@
       };
       await st.tween(shade, { a: 0.55 }, 200);
       line.sub = '鉱石の合計'; line.txt = hooks.fmt(base);
-      await st.tween(line, { a: 1 }, 220); await st.wait(520);
+      await st.tween(line, { a: 1 }, 220); await st.wait(300);
       line.sub = '宝箱の倍率'; line.txt = `${hooks.fmt(base)} × ${m}`; S('mult');
-      await st.wait(800);
+      await st.wait(460);
       line.sub = f && f.capped ? 'MAX 50倍' : 'TOTAL'; line.txt = hooks.fmt(score); line.sx = line.sy = 1.4; S('coin'); st.coinRain(18);
       setSpinWin(score);
       await st.tween(line, { sx: 1, sy: 1 }, 320, E().outBack);
-      await st.wait(800);
+      await st.wait(460);
       await Promise.all([st.tween(line, { a: 0 }, 220), st.tween(shade, { a: 0 }, 220)]);
       st.remove(line); st.remove(shade);
     }
@@ -596,7 +598,7 @@
         const hp = r.board.map((col) => col.map((b) => HP[b]));
         const state = { base: 0 };
         setSpinWin(0);
-        hooks.onMode?.('ENTRY');hooks.onSpin(0,5);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{});hooks.onMode?.('BONUS');
+        hooks.onMode?.('ENTRY');hooks.onSpin(0,5);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{hold:400});hooks.onMode?.('BONUS');
         for (let k = 0; k < r.script.length; k++) {
           const sp = r.script[k];
           const previousBase=state.base;

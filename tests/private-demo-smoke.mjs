@@ -28,6 +28,11 @@ for(const [i,id] of ids.entries()){
  const normal=await call('/api/packs/'+id+'/rush',{rate:1000,count:id===11?10:1});
  assert.equal(normal.status,200);assert.equal(normal.data.coins,initial+20-normal.data.cost);
  assert.equal(normal.data.cost,id===11?10000:1000);
+ assert.equal((await call('/api/me')).data.stats.today_spent,normal.data.cost);
+ await call('/api/me',{daily_limit:normal.data.cost});
+ assert.equal((await call('/api/packs/'+id+'/rush',{rate:1000,count:1})).status,400,'daily spending limit enforced');
+ assert.equal((await call('/api/me')).data.user.coins,normal.data.coins);
+ await call('/api/me',{daily_limit:0});
  const d0=await call('/api/daily');assert.equal(d0.data.available,true);
  const free=await call('/api/packs/'+id+'/daily',{rate:3000,count:100});
  assert.equal(free.status,200);assert.equal(free.data.cost,0);assert.equal(free.data.rate,1000);assert.equal(free.data.coins,normal.data.coins);

@@ -401,7 +401,7 @@ async function viewHome() {
   const rest = featureOn ? shown.filter((p) => !rushes.includes(p)) : shown;
   $('#view').innerHTML = `
     ${ME.user ? '' : `<div class="notice">🎁 新規登録で ${num(CFG.signup_bonus)}コインプレゼント！ 完全無料</div>`}
-    <section class="lobby-hero"><div class="hero-copy"><span class="hero-kicker">ZERO ORIPA / GAME LOBBY</span><h1>ゼロ円から、<br>新しい冒険へ。</h1><p>8つのゲームとオリパを、無料のテストコインで体験。</p><span class="hero-note">TEST EDITION · 実物景品なし</span></div><div class="hero-art" aria-hidden="true"></div></section>
+    <section class="lobby-hero"><div class="hero-copy"><span class="hero-kicker">ZERO ORIPA / GAME LOBBY</span><h1>ゼロ円から、<br>新しい冒険へ。</h1><p>8つのゲーム・オリパを無料で体験。</p><span class="hero-note">TEST EDITION · 実物景品なし</span></div><div class="hero-art" aria-hidden="true"></div></section>
     ${earnStrip()}
     <div class="stickybar">
       <div class="cats">${CATS.map((c) => `<button data-c="${c.key}" class="${c.key === homeCat ? 'on' : ''}">${c.label}</button>`).join('')}</div>
@@ -512,7 +512,7 @@ async function viewGame(id, demo, daily=false) {
   if(daily)rushRate=1000;
   document.body.classList.add('gamemode');
   const theme = ZG.THEME_OF[p.game] || 'gems';
-  const normalSpeed = 1.2;
+  const normalSpeed = 1;
   rushSpeed = normalSpeed;
   gameCtx = { p, demo,daily, count:1,risk:'medium',rows:12,credits: demo ? (p.game==='plinko'?100000:10000000) : ME.user.coins, busy: false, win: 0 };
   $('#view').innerHTML = `
@@ -523,7 +523,7 @@ async function viewGame(id, demo, daily=false) {
         <div class="gm-logo">${titleHtml(p.game, 58)}</div>
         <button class="gm-icon" id="gmSound" aria-label="音">${ZG.sfx.on ? '🔊' : '🔇'}</button>
       </div>
-      <div class="gm-tier" id="rTier"></div>
+      <div class="gm-tier" id="rTier" aria-label="現在のカードランク"></div>
       <div class="gm-mode" id="gmMode">${p.game==='mine'?'採掘チャレンジ':p.game==='plinko'?'1球あたりの獲得コイン':p.game==='train'?'貨車リスピン':'フリースピン'}</div>
       <div class="gm-demo">${daily?'DAILY BONUS · 消費0 C':demo ? 'DEMO · 記録なし' : 'FREE PLAY · テストコイン専用'}</div>
       <div class="gm-round-win" id="gmRoundWin" aria-live="polite">${p.game==='plinko'?'<div class="plinko-result-mult"><span>直近1球</span><strong id="plinkoLastCoin">—</strong></div><div class="plinko-result-pay"><span>今回の合計</span><b id="gmRoundAmount">0 C</b></div>':'<div class="round-readout"><span id="gmRoundLabel">'+(p.game==='mine'?'今回の採掘':'今回の配当')+'</span><b id="gmRoundAmount">0 C</b></div>'+(['rush','mine','gods','dogs','train','dwarf'].includes(p.game)?'<div class="round-metric" id="gmMetric" hidden><span id="gmMetricLabel"></span><strong id="gmRoundMultiplier"></strong></div>':'')}</div>
@@ -535,11 +535,11 @@ async function viewGame(id, demo, daily=false) {
           <div class="gm-box win"><span>${p.game==='mine'?'獲得見込':'累計獲得'}</span><b id="rScore">0</b></div>
           <div class="gm-box"><span>${p.game==='plinko'?'残り球数':p.game==='train'?'残りリスピン':'残りスピン'}</span><b id="rSpin">${p.game==='mine'?5:p.game==='plinko'?1:FEATURE_CONFIG[p.game]?.initial??10}</b></div>
         </div>
-        ${p.game==='plinko'? `<div class="plinko-options"><div class="plinko-settings"><label>荒さ<select id="plinkoRisk"><option value="low">LOW</option><option value="medium" selected>MEDIUM</option><option value="high">HIGH</option></select></label><label>段数<select id="plinkoRows"><option>8</option><option selected>12</option><option>16</option></select></label><label class="plinko-rtp">理論RTP<b>90%</b></label></div><div class="plinko-label">落とす球数</div><div class="plinko-counts"><button data-count="1" class="selected">1</button><button data-count="10">10</button><button data-count="100">100</button><button data-count="custom">自由入力</button></div><input id="plinkoCustom" type="number" min="1" max="1000" value="1" inputmode="numeric" aria-label="球数" hidden><div class="plinko-cost">合計消費 <b id="plinkoCost">0 C</b></div></div>` : ''}
+        ${p.game==='plinko'? `<div class="plinko-options"><div class="plinko-settings"><label>荒さ<select id="plinkoRisk"><option value="low">LOW・低変動</option><option value="medium" selected>MEDIUM・中変動</option><option value="high">HIGH・高変動</option></select></label><label>段数<select id="plinkoRows"><option>8</option><option selected>12</option><option>16</option></select></label><label class="plinko-rtp">理論RTP<b>90%</b></label></div><div class="plinko-label">落とす球数</div><div class="plinko-counts"><button data-count="1" class="selected">1</button><button data-count="10">10</button><button data-count="100">100</button><button data-count="custom">自由入力</button></div><input id="plinkoCustom" type="number" min="1" max="1000" value="1" inputmode="numeric" aria-label="球数" hidden><div class="plinko-cost">合計消費 <b id="plinkoCost">0 C</b></div></div>` : ''}
         <div class="gm-ctl">
           <button class="gm-icon sm" id="gmInfo" aria-label="${p.game==='plinko'?'配当一覧・遊び方':'遊び方'}"><b>ⓘ</b><small>${p.game==='plinko'?'配当表':'遊び方'}</small></button>
           <div class="gm-bet"><button class="gm-pm" id="betMinus">−</button>
-            <button type="button" id="betSelect" class="gm-betv" aria-label="ベット額を選択"><span>${p.game==='plinko'?'1球の消費 C':'1回の消費 C'}</span><b id="hBet">${num(rushRate)}</b>${['rush','fruit'].includes(p.game)?'<small id="hUnit" style="display:block;font-size:10px;color:#fff">計算基準 '+num(rushRate/100)+' C</small>':''}</button>
+            <button type="button" id="betSelect" class="gm-betv" aria-label="ベット額を選択"><span>${p.game==='plinko'?'1球の消費 C':'1回の消費 C'}</span><b id="hBet">${num(rushRate)}</b>${['rush','fruit'].includes(p.game)?'<small id="hUnit" style="display:block;font-size:10px;color:#fff">配当計算単位 '+num(rushRate/100)+' C</small>':''}</button>
             <button class="gm-pm" id="betPlus">＋</button></div>
           <button class="gm-spin" id="rPlay" aria-label="${p.game==='plinko'?'落とす':'ボーナス開始'}">${p.game==='plinko'?'<b>落とす</b><small>DROP</small>':SPIN_SVG+'<small>BONUS</small>'}</button>
           <button class="gm-icon sm" id="gmTurbo" aria-label="速度切替"><b>⚡</b><small>NORMAL</small></button>
@@ -553,7 +553,7 @@ async function viewGame(id, demo, daily=false) {
       </div>
     </div>`;
   const setLoad = (k, txt) => { const b = $('#gmBar'); if (b) b.style.width = Math.round(k * 100) + '%'; const t = $('#gmLoadTxt'); if (t) t.textContent = `${txt || '読み込み中…'} ${Math.round(k * 100)}%`; };
-  const hud = () => { $('#hCoin').textContent = num(gameCtx.credits); $('#hBet').textContent = num(rushRate); if($('#hUnit'))$('#hUnit').textContent='計算基準 '+num(rushRate/100)+' C';if($('#plinkoCost'))$('#plinkoCost').textContent=num(daily?0:rushRate*gameCtx.count)+' C'; };
+  const hud = () => { $('#hCoin').textContent = num(gameCtx.credits); $('#hBet').textContent = num(rushRate); if($('#hUnit'))$('#hUnit').textContent='配当計算単位 '+num(rushRate/100)+' C';if($('#plinkoCost'))$('#plinkoCost').textContent=num(daily?0:rushRate*gameCtx.count)+' C'; };
   if(p.game==='plinko'){
     const selectors=[...document.querySelectorAll('.plinko-counts button')],input=$('#plinkoCustom');
     const setCount=v=>{gameCtx.count=Math.max(1,Math.min(1000,Math.floor(Number(v)||1)));hud();$('#rSpin').textContent=gameCtx.count;};
@@ -570,13 +570,13 @@ async function viewGame(id, demo, daily=false) {
       const {PAYS}=await import(p.game==='rush'?'./test-games/rush.js':'./test-games/fruit.js');
       const rows=Object.entries(PAYS).reverse().map(([id,values])=>{const icon=ZG.art.sprite(theme,id,40).toDataURL();return `<tr><td><img width="38" height="38" src="${icon}" alt="${id}"></td>${values.map(v=>'<td>×'+v+'</td>').join('')}</tr>`;}).join('');
       const head=p.game==='rush'?['8〜9','10〜11','12+']:Array.from({length:11},(_,i)=>i===10?'15+':String(i+5));
-      paytable='<h3>シンボル配当表</h3><p>倍率は基準ベット（ボーナス価格の1/100）に適用</p><div style="overflow-x:auto"><table><thead><tr><th>絵柄</th>'+head.map(v=>'<th>'+v+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+      paytable='<h3>シンボル配当表</h3><p>倍率は配当計算単位（1回の消費Cの1/100）に適用。実際の消費額とは異なります。</p><div style="overflow-x:auto"><table><thead><tr><th>絵柄</th>'+head.map(v=>'<th>'+v+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
     }
     if(p.game==='gods'){const {GODS_PAYS}=await import('./test-games/features.js');const names=['王冠','砂時計','指輪','聖杯','赤宝石','紫宝石','黄宝石','緑宝石','青宝石'];paytable='<h3>シンボル配当表</h3><p>基準ベット倍率</p><table><thead><tr><th>絵柄</th><th>8〜9</th><th>10〜11</th><th>12+</th></tr></thead><tbody>'+Object.values(GODS_PAYS).map((v,i)=>'<tr><td>'+names[i]+'</td>'+v.map(n=>'<td>×'+n+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
     if(p.game==='dogs'){const {DOGS_PAYS}=await import('./test-games/features.js?v=dogs');const names=['ロットワイラー','シーズー','パグ','ビーグル','首輪','骨','A','K','Q','J','10'];paytable='<h3>シンボル配当表</h3><p>基準ベット倍率 × WAYS</p><table><thead><tr><th>絵柄</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody>'+Object.values(DOGS_PAYS).map((v,i)=>'<tr><td>'+names[i]+'</td>'+v.map(n=>'<td>×'+n+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
     const s = sheet(`<h3>${esc(p.name)} の遊び方</h3><ul class="rules">${RULES[p.game || 'rush'].map((x) => `<li>${x}</li>`).join('')}</ul>
       ${paytable}<h3 style="margin-top:14px;font-size:15px">スコアと景品（ベット ${num(rushRate)}）</h3>${p.game==='plinko'?plinkoInfo(gameCtx.rows,gameCtx.risk):tiersTable(p, rushRate)}
-      <p class="muted" style="margin-top:8px">テスト専用の独自抽選です。${p.actual_rtp !== null ? `・実績 ${(p.actual_rtp * 100).toFixed(1)}%` : ''}</p>
+      <p class="muted" style="margin-top:8px">テスト専用の独自抽選です。理論RTP ${p.game==='plinko'?90:97}%（長期平均）。${p.actual_rtp !== null ? `・この端末の実測 ${(p.actual_rtp * 100).toFixed(1)}%` : ''}</p>
       <div class="btns"><button class="btn ghost" id="infoClose">閉じる</button></div>`);
     $('#infoClose', s).onclick = closeSheet;
   };
@@ -589,7 +589,7 @@ async function viewGame(id, demo, daily=false) {
   // ---- 読み込み ----
   setLoad(0.02, 'フォント');
   if (document.fonts && document.fonts.load) {
-    await Promise.race([Promise.all([document.fonts.load('40px "Luckiest Guy"'), document.fonts.load('40px "Dela Gothic One"', 'あ')]).catch(() => {}), sleep(2500)]);
+    await Promise.race([Promise.all([document.fonts.load('40px "Luckiest Guy"'), document.fonts.load('40px "Dela Gothic One"', 'あ')]).catch(() => {}), sleep(750)]);
   }
   if (!gameCtx || gameCtx.p !== p) return;
   setLoad(0.12, '画像');
@@ -610,12 +610,12 @@ async function viewGame(id, demo, daily=false) {
   game = ZG.createGame($('#gcanvas'), { game: p.game, plinko:p.game==='plinko'?window.plinkoConfig(gameCtx.rows,gameCtx.risk):null, region: gameRegion, getRate:()=>rushRate }, {
     fmt: (v) => num(v),
     onScore: (v, speed) => { rushCountTo(v, speed); setRushTier(p, v); },
-    onRoundWin: async (v, speed = rushSpeed) => {const el=$('#gmRoundWin');if(!el)return;const total=$('#rScore')?.closest('.gm-box');if(p.game!=='plinko')$('#gmRoundAmount').textContent=num(Math.round(v*100)/100)+' C';el.classList.add('settled');await sleep(650*speed);el.classList.remove('settled');total?.classList.add('settled');setTimeout(()=>total?.classList.remove('settled'),350);},
+    onRoundWin: async (v, speed = rushSpeed) => {const el=$('#gmRoundWin');if(!el)return;const total=$('#rScore')?.closest('.gm-box');if(p.game!=='plinko')$('#gmRoundAmount').textContent=num(Math.round(v*100)/100)+' C';el.classList.add('settled');await sleep((v>0?320:70)*speed);el.classList.remove('settled');total?.classList.add('settled');setTimeout(()=>total?.classList.remove('settled'),350);},
     onBallLand:(v)=>{gameCtx.ballTotal=(gameCtx.ballTotal||0)+v;const el=$('#gmRoundAmount');if(el)el.textContent=num(gameCtx.ballTotal)+' C';const latest=$('#plinkoLastCoin');if(latest&&Number.isFinite(v))latest.textContent=num(v)+' C';},
-    onMultiplier:(base,mult)=>{if(p.game==='rush'){roundLabel('倍率適用前');$('#gmRoundAmount').textContent=num(base)+' C';showMetric('適用倍率','×'+num(mult));}},
+    onMultiplier:(base,mult)=>{if(p.game==='rush'){roundLabel(base?'倍率適用前':'配当なし');$('#gmRoundAmount').textContent=num(base)+' C';showMetric('適用倍率','×'+num(mult));}},
     onFeatureMetric:(label,value)=>showMetric(label,value),
     onSpinWin: (v) => { const el = $('#gmRoundAmount');if(el)el.textContent=num(v)+' C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当'); },
-    onTumble:(groups)=>{const el=$('#fruitDetailItems');if(!el)return;for(const g of groups){const row=document.createElement('span');row.textContent=g.cells.length+'個 · '+num(g.base)+(g.mult>1?' ×'+g.mult:'')+' = '+num(g.pay)+' C';if(p.game==='gods'){const i=Number(g.sym.slice(1)),icon=document.createElement('i');icon.style.cssText='width:24px;height:24px;background-image:url(./assets/anime/gods/atlas-v2.webp);background-size:400% 300%;background-position:'+(i%4*100/3)+'% '+(Math.floor(i/4)*50)+'%';row.prepend(icon);}else{const icon=document.createElement('img');icon.src=ZG.art.sprite('fruit',g.sym,24).toDataURL();row.prepend(icon);}el.append(row);}el.scrollLeft=el.scrollWidth;},
+    onTumble:(groups)=>{const el=$('#fruitDetailItems');if(!el)return;for(const g of groups){const row=document.createElement('span');row.textContent=g.cells.length+'個 · '+num(g.base??g.pay)+(g.mult>1?' ×'+g.mult:'')+' = '+num(g.pay)+' C';if(p.game==='gods'){const i=Number(g.sym.slice(1)),icon=document.createElement('i');icon.style.cssText='width:24px;height:24px;background-image:url(./assets/anime/gods/atlas-v2.webp);background-size:400% 300%;background-position:'+(i%4*100/3)+'% '+(Math.floor(i/4)*50)+'%';row.prepend(icon);}else{const icon=document.createElement('img');icon.src=ZG.art.sprite('fruit',g.sym,24).toDataURL();row.prepend(icon);}el.append(row);}el.scrollLeft=el.scrollWidth;},
     onSpin: (n, total) => { if(p.game==='plinko'){if(n===0){gameCtx.ballTotal=0;$('#gmRoundAmount').textContent='0 C';$('#plinkoLastCoin').textContent='—';}}else if(gameCtx.spinIndex!==n){if($('#gmRoundAmount'))$('#gmRoundAmount').textContent='0 C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当');if(p.game==='rush'&&$('#gmMetric'))$('#gmMetric').hidden=true;if($('#fruitDetailItems'))$('#fruitDetailItems').replaceChildren();} gameCtx.spinIndex=n; $('#rSpin').textContent = String(Math.max(0,total-n)); const el=$('#gmStatus'); if(el) el.textContent=p.game==='plinko'?`着地 ${n} / ${total} 球`:p.game==='train'?`リスピン ${n} 回目`:`スピン ${n} / ${total}`; },
     onRemaining: remaining => {$('#rSpin').textContent=String(Math.max(0,remaining));},
     onMode: (mode) => {const el=$('#gmMode'); if(el)el.textContent=mode==='ENTRY'?'ボーナス開始':mode==='COMPLETE'?'プレイ終了':p.game==='train'?'貨車リスピン':p.game==='mine'?'採掘チャレンジ':'フリースピン'; if(mode==='ENTRY'&&$('#gmMetric'))$('#gmMetric').hidden=true;if(mode==='COMPLETE'){$('#rSpin').textContent='0';if(p.game==='mine')roundLabel('確定獲得');} $('#gm')?.classList.toggle('bonus-mode',mode==='BONUS');},
@@ -627,7 +627,7 @@ async function viewGame(id, demo, daily=false) {
   game.idle();
   setRushTier(p, 0);
   setLoad(1, '完了');
-  await sleep(250);
+  await sleep(80);
   // ---- スタート画面 ----
   const feats = FEATURES[p.game || 'rush'];
   const featIcon = (id) => { if(isFeature(theme)){const i=Number(id.slice(1)),g=theme==='gods',cols=g?4:3;return `<i class="feature-sprite" style="width:64px;height:64px;background-image:url('./assets/anime/${theme}/${g||theme==='dogs'?'atlas-v2':'atlas'}.webp');background-size:${cols*100}% 300%;background-position:${i%cols*100/(cols-1)}% ${Math.floor(i/cols)*50}%"></i>`;}const th = id === 'bomb'||theme==='plinko' ? 'gems' : theme; const c = ZG.art.sprite(th, id, 64); return `<img src="${c.toDataURL()}" style="width:${64 + c.pad * 2}px;margin:-${c.pad}px" alt="">`; };
@@ -644,9 +644,11 @@ async function viewGame(id, demo, daily=false) {
   $('#gmStart').onclick = () => {
     ZG.sfx.unlock(); ZG.sfx.play('click');
     if (ZG.sfx.on) ZG.sfx.bgm(theme);
-    $('#gmLoad').classList.add('hide');
-    setTimeout(() => $('#gmLoad') && $('#gmLoad').remove(), 400);
+    try{sessionStorage.setItem('zero-intro-'+theme,'1')}catch{}
+    const panel=$('#gmLoad');panel?.classList.add('hide');
+    setTimeout(() => panel?.remove(), 180);
   };
+  try{if(sessionStorage.getItem('zero-intro-'+theme)==='1')$('#gmLoad')?.remove()}catch{}
   $('#rPlay').onclick = () => {
     if (!gameCtx.busy) return gameSpin();
   };
@@ -755,7 +757,7 @@ function rushCountTo(to, speed = rushSpeed) {
   el.dataset.v = to;
   const show = (v) => (to < 100 && to % 1 ? (Math.round(v * 100) / 100).toFixed(2) : num(Math.round(v)));
   cancelAnimationFrame(scoreAnim);
-  const t0 = performance.now(), dur = 380 * speed;
+  const t0 = performance.now(), dur = (Math.abs(to-from)<100?100:210) * speed;
   const box=el.closest('.gm-box');if(to>from){box?.classList.add('counting');clearTimeout(box?._winTimer);if(box)box._winTimer=setTimeout(()=>box.classList.remove('counting'),Math.max(280,dur+100));}
   const step = (t) => { const k = Math.min(1, (t - t0) / dur),v=from+(to-from)*(1-Math.pow(1-k,3));el.dataset.displayed=String(v);el.textContent=show(v);if(k<1)scoreAnim=requestAnimationFrame(step); };
   scoreAnim = requestAnimationFrame(step);
@@ -767,7 +769,8 @@ function showRushResult(p, r, demo) {
   const big = c && ['S', 'A'].includes(c.rank);
   const s = sheet(`<h3>${demo ? 'お試し結果' : `${gameName(gameCtx && gameCtx.p && gameCtx.p.game)} 結果`}</h3>
     <div class="result-score"><div class="muted">獲得コイン（確定）</div><div class="sc">${num(r.score)} <small style="font-size:14px">C</small></div>
-      <div class="muted">レートの ${ratio.toFixed(2)} 倍・${r.freePlayed??r.played}${p.game==='plinko'?'球':p.game==='dwarf'?'フリースピン':'スピン'}</div></div>
+      <div class="muted">基準消費Cの ${ratio.toFixed(2)} 倍・${r.freePlayed??r.played}${p.game==='plinko'?'球':p.game==='dwarf'?'フリースピン':'スピン'}</div></div>
+    ${r.guarantee?`<p class="muted">最低保証により +${num(r.guarantee)} C を補填しました。</p>`:''}${r.capped?'<p class="muted">最大配当の上限に到達したため終了しました。</p>':''}
     <div class="result-breakdown"><div><span>消費</span><b>${num(r.cost)} C</b></div><div><span>獲得</span><b>${num(r.score)} C</b></div><div><span>差引</span><b class="${r.score-r.cost<0?'negative':''}">${r.score-r.cost>0?'+':''}${num(r.score-r.cost)} C</b></div></div>
     ${c ? `<div class="result-card"><div class="cardart" style="border-color:${col};background:${['S'].includes(c.rank) ? 'conic-gradient(#ff4fd8,#ffd54a,#4aa8ff,#4ee0a0,#ff4fd8)' : col}">${c.rank}</div>
       <div><div style="font-weight:900">${esc(c.name)}</div><div class="muted">カードの値段 ${num(c.value)}C</div></div></div>` : '<p class="muted" style="text-align:center">スコア0のため、カードはありません</p>'}
@@ -1273,7 +1276,7 @@ async function viewCards() {
     ${cardTab === 'held' && cards.length ? `<div class="selbar"><span>${cards.length}枚・タップで選択</span><button class="btn ghost" style="width:auto;padding:6px 12px;font-size:12px" id="selAll">すべて選択</button></div>` : ''}
     ${cards.length ? `<div class="cards-grid"><div class="grid">${cards.map((c) => `<div class="tile collection-tile" data-id="${c.id}" style="--card-accent:${RANK_COLOR[c.rank]}">
       ${cardTab === 'held' ? '<span class="chk">◻️</span>' : ''}<div class="collection-art"><span class="card-rarity">${esc(c.rank)}</span></div><span class="rk rk-${c.rank}">${c.rank}</span>
-      <div class="nm">${esc(c.name)}</div><div class="v">${brandIcon('coin')} ${num(c.value)}C</div></div>`).join('')}</div></div>` : `<div class="empty brand-empty">${brandIcon('nav-cards')}<p>カードはありません</p></div>`}
+      <div class="nm">${esc(c.name)}</div><div class="v">${brandIcon('coin')} ${num(c.value)}C</div></div>`).join('')}</div></div>` : `<div class="empty brand-empty">${brandIcon('nav-cards')}<p>${cardTab==='held'?'獲得したカードがここに表示されます。':cardTab==='shipped'?'発送済みのカードはまだありません。':'交換済みのカードはまだありません。'}</p>${cardTab==='held'?'<a class="btn ghost" href="#home">ゲーム一覧を見る</a>':''}</div>`}
     ${cardTab === 'held' && cards.length ? `<div class="actionbar">
       <button class="btn gold" id="cv" disabled>コイン交換</button><button class="btn blue" id="sh" disabled>発送する</button></div>` : ''}`;
   document.querySelectorAll('.tabs button').forEach((b) => (b.onclick = () => { cardTab = b.dataset.t; viewCards(); }));
@@ -1322,7 +1325,7 @@ async function viewRanking() {
   const podium=leaders.length?`<div class="ranking-podium" aria-label="上位3位">${leaders.map(x=>`<div class="podium-place podium-${x.rank}">${brandIcon('trophy')}<strong>${x.rank}位</strong><b>${esc(x.nickname)}</b><small>${num(x.points)} pt</small></div>`).join('')}</div>`:'';
   const monthPoints=r.mine?.points||0;
   const milestones=[1000,5000,10000,50000].map((n,i)=>`<div class="milestone-row ${monthPoints>=n?'achieved':''}"><span>${num(n)} pt · 達成バッジ ${i+1}</span><b>${monthPoints>=n?'達成済み':'あと '+num(n-monthPoints)+' pt'}</b><div class="milestone-progress" role="progressbar" aria-label="達成バッジ ${i+1}" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${Math.min(n,monthPoints)}"><i style="width:${Math.min(100,monthPoints/n*100)}%"></i></div></div>`).join('');
-  $('#view').innerHTML = `${brandMasthead('LEADERBOARD','ランキング','発送ポイントの月間ランキング', 'trophy')}<div class="card-box"><h2>月間発送ポイント達成報酬（テスト）</h2><p class="muted">サンプル条件・達成バッジのみ。実物景品はありません。</p>${milestones}</div>${rewards}${podium}${mine}<div class="card-box"><h2>発送ポイントランキング（このブラウザのみ）</h2>${rows}</div>${siteFooter()}`;
+  $('#view').innerHTML = `${brandMasthead('LEADERBOARD','ランキング',`${esc(r.month.replace('-','年'))}月・日本時間の月間発送ポイント`, 'trophy')}<div class="card-box"><h2>月間発送ポイント達成報酬（テスト）</h2><p class="muted">サンプル条件・達成バッジのみ。実物景品はありません。</p>${milestones}</div>${rewards}${podium}${mine}<div class="card-box"><h2>発送ポイントランキング（このブラウザのみ）</h2>${rows}</div>${siteFooter()}`;
 }
 
 // ===== 画面：マイページ =====

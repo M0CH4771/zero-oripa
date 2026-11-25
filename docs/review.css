@@ -1,0 +1,36 @@
+/* Shared compact cabinet: leave the game board the largest uninterrupted area. */
+.gm .gm-round-win {min-height:36px;padding:3px 8px;box-sizing:border-box}
+.gm .round-readout {flex-direction:row;justify-content:center;gap:8px}
+.gm .round-readout b,.gm .round-metric #gmRoundMultiplier {font-variant-numeric:tabular-nums;overflow-wrap:anywhere;white-space:normal}
+.gm .round-readout b {font-size:clamp(19px,5.4vw,29px)}
+.gm .round-metric {min-width:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px}
+.gm .round-metric[hidden] {display:none}
+.gm .round-metric #gmRoundMultiplier {font-size:clamp(14px,4.5vw,24px)}
+.gm .gm-box {min-width:0;overflow:hidden}
+.gm .gm-box b,.gm .gm-betv b {font-variant-numeric:tabular-nums;overflow-wrap:anywhere;white-space:normal}
+.gm .fruit-detail {overflow:hidden}
+.gm .fruit-detail>div {overflow-x:auto;scrollbar-width:thin}
+.gm .fruit-detail>div span {flex:none;color:#fff;font-weight:750}
+.gm .gm-round-win.settled {border-color:#ffefbc}
+.lobby-hero {min-height:150px!important}
+.lobby-hero .hero-copy {padding:16px 20px}
+.lobby-hero .hero-copy h1 {font-size:clamp(25px,5vw,38px)}
+.lobby-hero .hero-copy p {margin:6px 0}
+.game-card .custom-game-logo {object-fit:contain;max-width:100%}
+.empty {padding:28px 16px;text-align:center;line-height:1.6}
+@media(max-width:640px){
+ .gm .gm-top {padding-top:calc(2px + env(safe-area-inset-top));gap:4px}
+ .gm .gm-logo {height:39px}.gm .gm-logo img.custom-game-logo {max-height:39px!important}
+ .gm:not(.theme-plinko) .gm-tier,.gm:not(.theme-plinko) .gm-mode {top:calc(44px + env(safe-area-inset-top));font-size:10px}
+ .gm:not(.theme-plinko) .gm-demo {top:calc(65px + env(safe-area-inset-top));font-size:9px}
+ .gm:not(.theme-plinko) .gm-round-win,.gm.theme-mine .gm-round-win {top:calc(80px + env(safe-area-inset-top));min-height:32px;padding:2px 6px;width:calc(100% - 12px)}
+ .gm.theme-fruit:not(.theme-plinko) .gm-round-win {top:calc(80px + env(safe-area-inset-top));min-height:30px}
+ .gm.theme-fruit .gm-round-win+.fruit-detail,.gm.theme-gods .gm-round-win+.fruit-detail {top:calc(119px + env(safe-area-inset-top));height:26px}
+ .gm .gm-hud {padding-inline:5px}
+ .gm .gm-row {gap:3px}.gm .gm-row .gm-box {padding:3px 1px}
+ .gm .gm-bet #betSelect #hUnit {font-size:9px!important}
+ .gm.theme-plinko .gm-demo {top:calc(44px + env(safe-area-inset-top))}
+ .gm.theme-plinko .gm-round-win {top:calc(58px + env(safe-area-inset-top));min-height:32px}
+ .gm.theme-plinko .plinko-settings select {font-size:10px}
+ .lobby-hero {margin:9px;min-height:145px!important}.lobby-hero .hero-copy {padding:14px}
+}

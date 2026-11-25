@@ -15,6 +15,7 @@ s.earn??=createEarnState();
 s.monthly??={};
 const dailyDate=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Tokyo'});
 const monthKey=()=>dailyDate().slice(0,7),monthPoints=()=>s.monthly[monthKey()]||0;
+function resetDailyCounters(){const today=dailyDate();if(s.counterDate===today)return;s.counterDate=today;s.todaySpent=0;s.ad=0;for(const p of s.packs)p.playedToday=0;}
 const DAILY_RATE=1000;
 const SLOT_RATES=[500,1000,2000,3000,4000,5000,10000,20000,30000,50000,100000,200000,300000,400000,500000,1000000];
 const dailyAvailable=()=>{try{return s.dailyPlayed!==dailyDate()&&localStorage.getItem(key+'-daily')!==dailyDate();}catch{return s.dailyPlayed!==dailyDate();}};
@@ -28,14 +29,16 @@ function preparePacks(){
  for(const [game,c] of Object.entries(FEATURE_CONFIG))if(!s.packs.some(p=>p.game===game))s.packs.push({...structuredClone(base),id:c.id,name:c.title,game,theme:game,tag:'rush',badge:c.badge,rates:[100,300,1000,3000,10000],max_mult:c.max,plays:0,bet:0,won:0,actual_rtp:null,best:0});
 }
 preparePacks();
+resetDailyCounters();
 const save = () => { try { localStorage.setItem(key, JSON.stringify(s)); } catch {} };
 const tx = (amount,reason) => { s.coins += amount; s.history.unshift({amount,reason,created_at:Date.now()}); };
 const tier = () => { const t = [...config.tiers].reverse().find(t=>s.spent>=t.min) || config.tiers[0]; const level=config.tiers.indexOf(t), next=config.tiers[level+1]; return {...t,level,next_min:next?.min,next_name:next?.name}; };
-const me = () => ({user:{id:1,nickname:s.nickname,nickname_set:true,coins:s.coins,ship_points_total:s.points,month_points:monthPoints(),streak:s.bonus?1:0,bonus_available:!s.bonus,daily_limit:s.limit,ad_today:s.ad,ad_max:config.ad_daily_max,ad_reward:config.ad_reward,total_spent:s.spent,tier:tier(),bonus_amount:Math.round(config.login_bonus*(1+tier().bonus))},invite:{code:'TESTONLY',invited:0,rewarded:0,used:false,can_enter:false},stats:{spent:s.spent,today_spent:s.spent,got:s.cards.reduce((a,c)=>a+c.value,0),draws:s.cards.length,held:s.cards.filter(c=>c.status==='held').length},claims:[]});
+const me = () => ({user:{id:1,nickname:s.nickname,nickname_set:true,coins:s.coins,ship_points_total:s.points,month_points:monthPoints(),streak:s.bonus?1:0,bonus_available:!s.bonus,daily_limit:s.limit,ad_today:s.ad,ad_max:config.ad_daily_max,ad_reward:config.ad_reward,total_spent:s.spent,tier:tier(),bonus_amount:Math.round(config.login_bonus*(1+tier().bonus))},invite:{code:'TESTONLY',invited:0,rewarded:0,used:false,can_enter:false},stats:{spent:s.spent,today_spent:s.todaySpent||0,got:s.cards.reduce((a,c)=>a+c.value,0),draws:s.cards.length,held:s.cards.filter(c=>c.status==='held').length},claims:[]});
 const card = (p,c) => { const x={id:++s.seq,card_id:s.seq,pack_id:p.id,rank:c.rank,name:c.name,value:c.value,image:c.image||null,status:'held',created_at:Date.now()}; s.cards.push(x); return x; };
-const pay = n => { if(s.coins<n) throw new Error('コインが足りません。テスト補充をお試しください'); tx(-n,'draw'); s.spent+=n; };
+const pay = n => { if(s.limit>0&&(s.todaySpent||0)+n>s.limit)throw new Error('本日の消費上限です');if(s.coins<n) throw new Error('コインが足りません。テスト補充をお試しください'); tx(-n,'draw'); s.spent+=n;s.todaySpent=(s.todaySpent||0)+n; };
 function packView(p){const badges={rush:'6×5・どこでも8個',fruit:'7×7・つながる5個',mine:'5列の採掘チャレンジ',plinko:'3段階の荒さ・RTP 90%',dogs:'6リール・最大117,649 WAYS'}; const rates=p.kind==='rush'&&p.game!=='plinko'?SLOT_RATES:p.rates; return {...p,rates,max_mult:p.game==='plinko'?null:FEATURE_CONFIG[p.game]?.max??50,min_mult:p.game==='plinko'?0:FEATURE_CONFIG[p.game]?.min??.1,badge:badges[p.game]||p.badge,locked:null, today_left:p.per_user_daily?Math.max(0,p.per_user_daily-(p.playedToday||0)):null}; }
 async function api(path,b){
+ resetDailyCounters();
  const u=new URL(path,location.origin), pth=u.pathname; let m;
  if(pth==='/api/config') return config;
  if(pth==='/api/earn')return {...earnView(s.earn),coins:s.coins};
@@ -52,7 +55,7 @@ async function api(path,b){
      for(let i=0;i<n;i++){let r=Math.floor(Math.random()*p.remaining);const x=p.prizes.find(x=>(r-=x.remaining)<0);if(!x)break;x.remaining--;p.remaining--;p.draw_count++;results.push(card(p,x));if(p.kiriban&&p.draw_count%p.kiriban.every===0)kiriban.push(card(p,{...p.kiriban,rank:'KB'}));}
      p.playedToday=(p.playedToday||0)+n; const last=p.draw_count;
      if(!p.remaining){if(p.last_one)last_one=card(p,{...p.last_one,rank:'LO'});p.prizes.forEach(x=>x.remaining=x.total);p.remaining=p.total;p.draw_count=0;p.round++;}
-     return {results,kiriban,last_one,cost:n*p.price,coins:s.coins,draw_no:[first,last],today_spent:s.spent,daily_limit:s.limit};
+     return {results,kiriban,last_one,cost:n*p.price,coins:s.coins,draw_no:[first,last],today_spent:s.todaySpent||0,daily_limit:s.limit};
    }
    const daily=m[2]==='daily', demo=m[2]==='rush-demo';
    if(daily&&(p.kind!=='rush'||!dailyAvailable()))throw Error('本日の無料プレイは利用済みです');
@@ -69,7 +72,7 @@ async function api(path,b){
    if(!demo&&!daily)pay(cost);
    if(daily){s.dailyPlayed=dailyDate();try{localStorage.setItem(key+'-daily',s.dailyPlayed)}catch{}}
    if(!demo&&!daily){p.plays=(p.plays||0)+count;p.bet=(p.bet||0)+cost;p.won=(p.won||0)+r.score;p.actual_rtp=p.won/p.bet;p.best=Math.max(p.best||0,r.score);}
-   return {script:r.spins,entry:r.entry,unit:r.unit,board:r.board,chests:r.chests,final:r.final,guarantee:r.guarantee,capped:r.capped,multipliers:r.multipliers,rows:r.rows,risk:r.risk,score:r.score,rate:cost,played:r.played,freePlayed:r.freePlayed,game:p.game,card:r.score?(demo?c:card(p,c)):null,cost:daily?0:cost,coins:s.coins,today_spent:s.spent,daily_limit:s.limit,demo,daily};
+   return {script:r.spins,entry:r.entry,unit:r.unit,board:r.board,chests:r.chests,final:r.final,guarantee:r.guarantee,capped:r.capped,multipliers:r.multipliers,rows:r.rows,risk:r.risk,score:r.score,rate:cost,played:r.played,freePlayed:r.freePlayed,game:p.game,card:r.score?(demo?c:card(p,c)):null,cost:daily?0:cost,coins:s.coins,today_spent:s.todaySpent||0,daily_limit:s.limit,demo,daily};
  }
  if(pth==='/api/cards')return {cards:s.cards.filter(c=>c.status===(u.searchParams.get('status')||'held')).sort((a,b)=>b.value-a.value),ship_rate:config.ship_rate};
  if(pth==='/api/cards/convert'||pth==='/api/cards/ship'){let coins=0,points=0,count=0;for(const c of s.cards){if(c.status!=='held'||!b.ids.includes(c.id))continue;count++;if(pth.endsWith('convert')){c.status='converted';coins+=c.value;}else{c.status='shipped';points+=Math.floor(c.value*config.ship_rate);}}if(coins)tx(coins,'convert');s.points+=points;s.monthly??={};s.monthly[monthKey()]=monthPoints()+points;return {ok:true,count,coins,points};}
@@ -86,4 +89,4 @@ const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
 window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=ui55');
+await import('./app.js?v=review63');
