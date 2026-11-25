@@ -1,5 +1,5 @@
-import { playGame, tierFor } from './test-games/index.js?v=quest73';
-import { plinkoConfig } from './test-games/plinko.js?v=min70';
+import { playGame, tierFor } from './test-games/index.js?v=plinko78';
+import { plinkoConfig } from './test-games/plinko.js?v=plinko78';
 import {FEATURE_CONFIG} from './test-games/features.js?v=quest73';
 import {createEarnState,earnView,earnAction} from './earn.js?v=earn52';
 window.plinkoConfig=plinkoConfig;
@@ -23,7 +23,7 @@ function preparePacks(){
  s.packs=s.packs.filter(p=>!['daily','new'].includes(p.tag));
  if(!s.packs.some(p=>p.game==='plinko')){
   const base=data.packs.find(p=>p.game==='rush');
-  s.packs.push({...structuredClone(base),id:11,name:'ZERO PLINKO',game:'plinko',theme:'plinko',tag:'rush',badge:'8・12・16段のピンボード',plays:0,actual_rtp:null,best:0});
+  s.packs.push({...structuredClone(base),id:11,name:'ZERO PLINKO',game:'plinko',theme:'plinko',tag:'rush',badge:'12段のピンボード',plays:0,actual_rtp:null,best:0});
  }
  const base=data.packs.find(p=>p.game==='rush');
  for(const [game,c] of Object.entries(FEATURE_CONFIG))if(!s.packs.some(p=>p.game===game))s.packs.push({...structuredClone(base),id:c.id,name:c.title,game,theme:game,tag:'rush',badge:c.badge,rates:[100,300,1000,3000,10000],max_mult:c.max,plays:0,bet:0,won:0,actual_rtp:null,best:0});
@@ -89,4 +89,4 @@ const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
 window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=info77');
+await import('./app.js?v=plinko78');

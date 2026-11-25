@@ -1,5 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml} from './game-info.js?v=info77';
+import {gameInfoHtml} from './game-info.js?v=plinko78';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -258,7 +258,7 @@ const GAME_NOTE = {
   rush: (p) => ['最初から10回のフリースピン', `6×5・8個以上で連鎖・RTP目標97%・最低1C・最高50倍`],
   fruit: (p) => ['スキャッター3〜7個で10〜30回のフリースピン', `7×7・5個以上のクラスター・倍率スポット最大128倍・RTP目標97%・最低1C・最高50倍`],
   mine: (p) => ['最初の採掘＋4スピンの合計で、もらえるカードが決まる', `荒さ ${esc(p.volatility_label)}・還元率 約97%・最低1C・最高 ベットの${p.max_mult}倍`],
-  plinko:()=>['8・12・16段のピンを通るボールの行き先でスコアが決まる','球数を選択・配当表RTP約90%・配当上限なし'],
+  plinko:()=>['12段のピンを通るボールの行き先でスコアが決まる','球数を選択・配当表RTP約90%・配当上限なし'],
 };
 
 // ===== 画面：ホーム（オリパ一覧） =====
@@ -441,7 +441,7 @@ const RULES = {
   dogs:['6リール・各2〜7段。左から3リール以上の連続一致。最大117,649 WAYS。','3〜6個の肉球でSTICKY（7/12/15/20回）かRAINING（15/18/25/30回）を選択。','ワイルドは2〜5リールのみ。×1〜3の倍率は組み合わせごとに乗算。再トリガーなし。',featureBounds('dogs')],
   train:['5×3、3リスピンから開始。空きマスに新しいコインが着地すると回数がリセット。','通常コイン×1〜10、GOLDEN×20〜200（基準ベット倍率）。','PAYER・COLLECTOR・COLLECTOR/PAYER・SNIPER・NECROMANCER・RESET PLUSが発動。P付きは毎回発動します。','最大7列へ拡張。全マス完成で合計×2。TOTAL×基準ベットが最終配当です。',featureBounds('train')],
   dwarf:['最初のフリースピンは10回。基準Cは消費Cの1%。宝箱の倍率に基準Cを掛けて配当を計算。','10回でゴブリン、20回でトロール、40回でドラゴン。勝利で順に＋10／20／30回。ドラゴン撃破後は最終宝箱ラッシュ。','勝率はゴブリン80%・トロール60%・ドラゴン30%。敗北で終了。','勝利時は基準C強化宝箱も獲得。10,000C消費時、ゴブリン＋10／20／50／70／100C、トロール＋50／60／80／110／200C、ドラゴン＋100／150／200／250／300C（各20%）。以降のスピンのみ適用。宝箱倍率：×1:9.8%、×2:10%、×3:13.6%、×5:25%、×8:12%、×10:11.8%、×15:12.1%、×20:3.9%、×50:1%、×100:0.8%。',featureBounds('dwarf')],
-  plinko:['ボールが8・12・16段のピンを左右に通過します。','最下段に表示されたコイン数を1球ごとに獲得します。BETに応じて表示が変わります。','全9設定で配当表還元率約90%。0 Cの着地枠もあり、全ボール合計が0Cの場合のみ1Cになります。配当上限なし。'],
+  plinko:['ボールが12段のピンを左右に通過します。','最下段に表示されたコイン数を1球ごとに獲得します。BETに応じて表示が変わります。','全3設定で配当表還元率約90%。0 Cの着地枠もあり、全ボール合計が0Cの場合のみ1Cになります。配当上限なし。'],
   rush: ['テストコインのレートを選び、BONUSで10回のフリースピンを開始します', '6×5の盤面のどこでも、同じ宝石が8個以上あれば配当。消えたあと上から落ちてきて連鎖します',
     '魔法のオーブ（×2〜×100）が出現し、勝った連鎖の合計に倍率を適用します', '魔法の杖が3個以上で5回追加。4／5／6個以上の杖には3／5／100倍の配当（テスト版の最大120回）','1回のボーナス全体の配当は最低1C・最高50倍。還元率目標97%。'],
   fruit: ['BONUSでスキャッター3〜7個が確定し、10／12／15／20／30回のフリースピンを開始します。追加時も同じ回数です', '7×7の盤面で、同じお菓子が縦横に5個以上つながると配当。消えて落ちてきて連鎖します',
@@ -460,7 +460,7 @@ const FEATURES = {
   dogs:[['s0','MEGAWAYS','6リール・最大117,649通り'],['s6','2種類のワイルド','STICKY / RAINING']],
   train:[['s0','コインをホールド','追加ごとに3回へ戻る'],['s6','特殊キャラクター','貨車拡張と集金']],
   dwarf:[['s0','ドワーフのバトル','勝利でスピン追加'],['s5','宝箱の収集','コイン配当']],
-  plinko:[['l1','8・12・16段のピンボード','ボールの落下を見届けよう'],['h4','着地で獲得コイン確定','テストコインのスコアに反映']],
+  plinko:[['l1','12段のピンボード','ボールの落下を見届けよう'],['h4','着地で獲得コイン確定','テストコインのスコアに反映']],
   rush: [['h4', '8個そろえば消えて連鎖', '盤面のどこでもOK'], ['bomb', 'ボムで最大 ×100', '出たボムの合計が掛かる']],
   fruit: [['f7', '5個つながると消える', '縦横につながったら配当'], ['S', '倍率スポット ×128', '同じマスで消えるほど育つ']],
   mine: [['pick', 'つるはしで真下を掘る', '数字の回数だけ削れる'], ['H', '掘り切ると宝箱', '倍率は掛け算（×2×4＝×8）']],
@@ -536,7 +536,7 @@ async function viewGame(id, demo, daily=false) {
           <div class="gm-box win"><span>${p.game==='mine'?'獲得見込':'累計獲得'}</span><b id="rScore">0</b></div>
           <div class="gm-box"><span>${p.game==='plinko'?'残り球数':p.game==='train'?'残りリスピン':'残りスピン'}</span><b id="rSpin">${p.game==='mine'?5:p.game==='plinko'?1:FEATURE_CONFIG[p.game]?.initial??10}</b></div>
         </div>
-        ${p.game==='plinko'? `<div class="plinko-options"><div class="plinko-settings"><label>荒さ<select id="plinkoRisk"><option value="low">LOW・低変動</option><option value="medium" selected>MEDIUM・中変動</option><option value="high">HIGH・高変動</option></select></label><label>段数<select id="plinkoRows"><option>8</option><option selected>12</option><option>16</option></select></label><label class="plinko-rtp">配当表RTP<b>約90%</b></label></div><div class="plinko-label">落とす球数</div><div class="plinko-counts"><button data-count="1" class="selected">1</button><button data-count="10">10</button><button data-count="100">100</button><button data-count="custom">自由入力</button></div><input id="plinkoCustom" type="number" min="1" max="1000" value="1" inputmode="numeric" aria-label="球数" hidden><div class="plinko-cost">合計消費 <b id="plinkoCost">0 C</b></div></div>` : ''}
+        ${p.game==='plinko'? `<div class="plinko-options"><div class="plinko-settings"><label>荒さ<select id="plinkoRisk"><option value="low">LOW・低変動</option><option value="medium" selected>MEDIUM・中変動</option><option value="high">HIGH・高変動</option></select></label><label class="plinko-rtp">配当表RTP<b>約90%</b></label></div><div class="plinko-label">落とす球数</div><div class="plinko-counts"><button data-count="1" class="selected">1</button><button data-count="10">10</button><button data-count="100">100</button><button data-count="custom">自由入力</button></div><input id="plinkoCustom" type="number" min="1" max="1000" value="1" inputmode="numeric" aria-label="球数" hidden><div class="plinko-cost">合計消費 <b id="plinkoCost">0 C</b></div></div>` : ''}
         <div class="gm-ctl">
           <button class="gm-icon sm" id="gmInfo" aria-label="${p.game==='plinko'?'配当一覧・遊び方':'遊び方'}"><b>ⓘ</b><small>${p.game==='plinko'?'配当表':'遊び方'}</small></button>
           <div class="gm-bet"><button class="gm-pm" id="betMinus">−</button>
@@ -559,7 +559,7 @@ async function viewGame(id, demo, daily=false) {
     const selectors=[...document.querySelectorAll('.plinko-counts button')],input=$('#plinkoCustom');
     const setCount=v=>{gameCtx.count=Math.max(1,Math.min(1000,Math.floor(Number(v)||1)));hud();$('#rSpin').textContent=gameCtx.count;};
     selectors.forEach(b=>{b.disabled=daily;b.onclick=()=>{if(gameCtx.busy||daily)return;selectors.forEach(x=>x.classList.toggle('selected',x===b));input.hidden=b.dataset.count!=='custom';setCount(input.hidden?b.dataset.count:input.value);game?.resize();};});
-    const updateBoard=()=>{if(gameCtx.busy)return;gameCtx.risk=$('#plinkoRisk').value;gameCtx.rows=Number($('#plinkoRows').value);$('#plinkoLastCoin').textContent='—';$('#gmRoundAmount').textContent='0 C';game?.configure(window.plinkoConfig(gameCtx.rows,gameCtx.risk));};$('#plinkoRisk').onchange=$('#plinkoRows').onchange=updateBoard;input.oninput=()=>setCount(input.value);input.onchange=()=>{input.value=gameCtx.count;};
+    const updateBoard=()=>{if(gameCtx.busy)return;gameCtx.risk=$('#plinkoRisk').value;gameCtx.rows=12;$('#plinkoLastCoin').textContent='—';$('#gmRoundAmount').textContent='0 C';game?.configure(window.plinkoConfig(gameCtx.rows,gameCtx.risk));};$('#plinkoRisk').onchange=updateBoard;input.oninput=()=>setCount(input.value);input.onchange=()=>{input.value=gameCtx.count;};
   }
   hud();
   $('#gmBack').onclick = () => { if (gameCtx?.busy) return; location.hash = daily?'#bonus':'#pack-' + p.id; };

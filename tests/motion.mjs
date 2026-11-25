@@ -53,8 +53,8 @@ assert.ok(draws>10000);
 assert.ok(openChestDraws>0,'MINE opened chest sprites rendered');
 assert.equal(mineEmblemDraws,0,'MINE chest art never receives a closed-chest emblem overlay');
 viewport={w:320,h:600};
-for(const rows of [8,12,16])for(const risk of ['low','medium','high']){
+for(const rows of [12])for(const risk of ['low','medium','high']){
  let rate=100;const config=plinkoConfig(rows,risk),g=ZG.createGame(canvas(),{game:'plinko',region:()=>({x:0,y:110,w:320,h:265}),plinko:config,getRate:()=>rate},{fmt:String,onScore(){},onSpin(){}});await g.warm();g.idle();
  for(rate of [100,300,1000,3000]){capturedLabels=[];lastStage.draw();assert.deepEqual(capturedLabels.filter(s=>String(s).endsWith('C')),config.cents.map(c=>String(Math.round(rate*c/100))+'C'));}capturedLabels=null;g.destroy();
 }
-console.log('PLINKO: all 9 mobile configurations render every exact coin payout across four bets');
+console.log('PLINKO: all 3 mobile configurations render every exact coin payout across four bets');

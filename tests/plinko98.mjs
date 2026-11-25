@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {plinkoConfig,play} from '../docs/test-games/plinko.js';
-for(const rows of [8,12,16]){
+for(const rows of [12]){
  let previousVariance=0;
  for(const risk of ['low','medium','high']){
   const c=plinkoConfig(rows,risk);
@@ -23,7 +23,9 @@ for(const rows of [8,12,16]){
  }
 }
 assert.throws(()=>play({rate:100,rows:10,risk:'high'}));
-assert.throws(()=>play({rate:100,rows:16,risk:'other'}));
-assert.ok(play({rate:1000,rows:16,risk:'high',rand:()=>0,maxMult:50}).score>50*1000);
+assert.throws(()=>play({rate:100,rows:8,risk:'high'}));
+assert.throws(()=>play({rate:100,rows:16,risk:'high'}));
+assert.throws(()=>play({rate:100,rows:12,risk:'other'}));
+assert.ok(play({rate:1000,rows:12,risk:'high',rand:()=>0,maxMult:50}).score>50*1000);
 let i=0;
-assert.equal(play({rate:100,rows:16,risk:'high',rand:()=>i++<8?.25:.75}).score,1);
+assert.equal(play({rate:100,rows:12,risk:'high',rand:()=>i++<6?.25:.75}).score,1);
