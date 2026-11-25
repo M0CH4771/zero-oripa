@@ -128,7 +128,7 @@ export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1
 // distribution keeps expected added spins below ten per battle.
 export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
 export const DWARF_WEIGHTS={Goblin:[3185,3185,1815,1815],Troll:[3103,3103,1897,1897],Dragon:[2790,2790,2210,2210]};
-export const DWARF_CHEST_WEIGHTS={3:4450,5:2500,8:1200,10:1220,15:300,20:100,30:70,50:100,100:50,300:10};
+export const DWARF_CHEST_WEIGHTS={3:4490,5:2500,8:1200,10:1180,15:300,20:100,30:70,50:100,100:50,300:10};
 export const DWARF_INITIAL_SCALE=.001;
 export const DWARF_UPGRADE_SCALES=[.00005,.0001,.0002,.00025,.000287];
 export const DWARF_UPGRADE_WEIGHTS=[1950,2000,2000,2000,2050];
