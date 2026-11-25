@@ -106,19 +106,23 @@
    ZG.sfx?.play('free');st.flash(color,.15);st.impact(st.w/2,st.h/2,Math.min(st.w*.32,145),color,2);await st.banner([title,subtitle],{rainbow:false});
   }
   async function baseReel(draw){
-   if(!draw?.values?.length)return;
+   if(!draw?.values?.length||draw.values[draw.selected]!==currentUnit)throw new Error('基準Cの抽選データがありません。ページを更新してください。');
    const values=draw.values,n=values.length,selected=draw.selected;
-   const reel=st.add({x:st.w/2,y:st.h*.46,z:65,offset:0});
+   const reel=st.add({x:st.w/2,y:st.h*.46,z:65,offset:0,locked:false});
    reel.draw=(ctx,o)=>{
-    const w=Math.min(st.w*.84,360),row=48,h=row*3,format=v=>v.toLocaleString('ja-JP',{maximumFractionDigits:6})+' C';
-    ZG.rr(ctx,-w/2,-h/2-43,w,h+77,12);ctx.fillStyle='#14251e';ctx.fill();ctx.strokeStyle='#d8bd76';ctx.lineWidth=3;ctx.stroke();
-    text(ctx,'宝箱計算基準 抽選',0,-h/2-22,17,'#ffe4a1',w-18);
-    ctx.save();ZG.rr(ctx,-w/2+9,-h/2,w-18,h,8);ctx.clip();ctx.fillStyle='#292d20';ctx.fillRect(-w/2,-h/2,w,h);
+    const w=Math.min(st.w*.91,400),row=54,h=row*3,format=v=>v.toLocaleString('ja-JP',{maximumFractionDigits:6})+' C';
+    ctx.fillStyle='#080a0bb8';ctx.fillRect(-st.w,-st.h,st.w*2,st.h*2);
+    const gold=ctx.createLinearGradient(0,-h/2-88,0,h/2+65);gold.addColorStop(0,'#fff0bb');gold.addColorStop(.22,'#9b592b');gold.addColorStop(.47,'#f6cd70');gold.addColorStop(.85,'#704019');gold.addColorStop(1,'#ffe6a2');
+    ctx.shadowColor='#f8c96b';ctx.shadowBlur=o.locked?24:10;ZG.rr(ctx,-w/2,-h/2-87,w,h+150,22);ctx.fillStyle=gold;ctx.fill();ctx.shadowBlur=0;
+    ZG.rr(ctx,-w/2+7,-h/2-80,w-14,h+136,15);ctx.fillStyle='#151e18';ctx.fill();ctx.strokeStyle='#c08c40';ctx.lineWidth=2;ctx.stroke();
+    if(trophies){const sw=trophies.width/5,sh=trophies.height/2;ctx.drawImage(trophies,4*sw,0,sw,sh,-w/2+15,-h/2-77,63,63);ctx.drawImage(trophies,4*sw,sh,sw,sh,w/2-78,-h/2-77,63,63);}
+    text(ctx,'TREASURE REEL',0,-h/2-60,21,'#ffdf89',w-110);text(ctx,o.locked?'基準コイン確定':'宝箱基準コイン抽選',0,-h/2-30,16,'#fff0c7',w-24);
+    ctx.save();ZG.rr(ctx,-w/2+17,-h/2,w-34,h,8);ctx.clip();ctx.fillStyle='#080e0a';ctx.fillRect(-w/2,-h/2,w,h);
     const k=Math.floor(o.offset),frac=o.offset-k;
-    for(let i=-2;i<=2;i++){const idx=((k+i)%n+n)%n,y=(i-frac)*row;ctx.fillStyle=i===0?'#715127':'#26352a';ctx.fillRect(-w/2+10,y-row/2+2,w-20,row-4);text(ctx,format(values[idx]),0,y,26,'#fff5d4',w-34);}
-    ctx.restore();ctx.strokeStyle='#ffdc79';ctx.lineWidth=2;ctx.strokeRect(-w/2+9,-row/2,w-18,row);text(ctx,'中央に停止した値が今回の基準C',0,h/2+17,12,'#ffe7bc',w-14);
+    for(let i=-2;i<=2;i++){const idx=((k+i)%n+n)%n,y=(i-frac)*row;const g=ctx.createLinearGradient(0,y-row/2,0,y+row/2);g.addColorStop(0,'#57421d');g.addColorStop(.5,'#182e24');g.addColorStop(1,'#46301a');ctx.fillStyle=g;ctx.fillRect(-w/2+18,y-row/2+2,w-36,row-4);text(ctx,format(values[idx]),0,y,o.locked&&i===0?34:27,i===0?'#fff5d4':'#c2baa6',w-48);}
+    ctx.restore();ctx.strokeStyle=o.locked?'#fff4bd':'#ffdc79';ctx.lineWidth=3;ctx.strokeRect(-w/2+14,-row/2,w-28,row);text(ctx,'▶',-w/2+18,0,17,'#ffdf89');text(ctx,'◀',w/2-18,0,17,'#ffdf89');text(ctx,o.locked?'今回の宝箱 × '+format(values[selected]):'中央に停止した値で配当を計算',0,h/2+27,14,'#ffe7bc',w-22);
    };
-   try{ZG.sfx?.play('spin');await st.tween(reel,{offset:n*4+selected},1700,ZG.Ease.outCubic);ZG.sfx?.play('rouletteLock');await st.wait(650);}finally{st.remove(reel);}
+   try{ZG.sfx?.play('spin');await st.tween(reel,{offset:n*5+selected},2300,ZG.Ease.outCubic);reel.locked=true;ZG.sfx?.play('rouletteLock');st.flash('#ffd980',.15);st.impact(reel.x,reel.y,90,'#ffe3a0',1.5);await st.wait(1100);}finally{st.remove(reel);}
   }
   async function attackRoulette(choices,selected,weights){
    const panel=document.createElement('div');panel.className='attack-roulette';

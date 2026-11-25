@@ -512,7 +512,7 @@ async function viewGame(id, demo, daily=false) {
   if(daily)rushRate=1000;
   document.body.classList.add('gamemode');
   const theme = ZG.THEME_OF[p.game] || 'gems';
-  const normalSpeed = 1;
+  const normalSpeed = p.game==='dwarf'?1.15:1;
   rushSpeed = normalSpeed;
   gameCtx = { p, demo,daily, count:1,risk:'medium',rows:12,credits: demo ? (p.game==='plinko'?100000:10000000) : ME.user.coins, busy: false, win: 0 };
   $('#view').innerHTML = `
