@@ -3,7 +3,7 @@ import * as rush from './rush.js?v=rtp97';
 import * as fruit from './fruit.js?v=rtp97';
 import * as mine from './mine.js?v=rtp97';
 import * as plinko from './plinko.js?v=rtp97';
-import {FEATURE_CONFIG,featureModule} from './features.js?v=reel67';
+import {FEATURE_CONFIG,featureModule} from './features.js?v=upgrade68';
 
 import {hasFeature} from './bonus-round.js';
 import {secureRandom} from './common.js';

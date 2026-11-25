@@ -225,7 +225,8 @@
       const img=new Image();
       this.scenes[name]=await new Promise(resolve=>{
         img.onload=()=>resolve(img);img.onerror=()=>resolve(null);
-        img.src='./assets/anime/'+this.theme+'/'+name+'.webp';
+        const enhanced=this.theme==='dwarf'&&['gate','knockout'].includes(name);
+        img.src='./assets/anime/'+this.theme+'/'+name+(enhanced?'-v2':'')+'.webp';
       });
     }
     async loadWinArt(url) {
@@ -235,14 +236,15 @@
     }
     async transition(name,caption='',reverse=false) {
       const image=this.scenes?.[name];if(!image||this.skip||this.dead)return;
+      const frames=this.theme==='dwarf'&&['gate','knockout'].includes(name)?8:4;
       const sprite=this.add({x:this.w/2,y:this.h*.47,z:48,frame:0});
       sprite.draw=ctx=>{
-        const sw=image.width/4,sh=image.height,w=Math.min(this.w*.98,this.h*.48*sw/sh),h=w*sh/sw;
-        const frame=Math.min(3,Math.floor(sprite.frame));
-        ctx.drawImage(image,(reverse?3-frame:frame)*sw,0,sw,sh,-w/2,-h/2,w,h);
-        if(caption&&frame===3)ZG.scene.text3d(ctx,caption,0,0,Math.min(32,w/9),{});
+        const sw=image.width/frames,sh=image.height,w=Math.min(this.w*.98,this.h*.48*sw/sh),h=w*sh/sw;
+        const frame=Math.min(frames-1,Math.floor(sprite.frame));
+        ctx.drawImage(image,(reverse?frames-1-frame:frame)*sw,0,sw,sh,-w/2,-h/2,w,h);
+        if(caption&&frame===frames-1)ZG.scene.text3d(ctx,caption,0,0,Math.min(32,w/9),{});
       };
-      try{await this.tween(sprite,{frame:3.99},560,Ease.linear);await this.wait(caption?380:100);}finally{this.remove(sprite);}
+      try{await this.tween(sprite,{frame:frames-.01},frames===8?1000:560,Ease.linear);await this.wait(caption?380:100);}finally{this.remove(sprite);}
     }
     banner(lines, style = {}) {
       if (this.skip||this.dead) return Promise.resolve();

@@ -1,6 +1,6 @@
-import { playGame, tierFor } from './test-games/index.js?v=reel67';
+import { playGame, tierFor } from './test-games/index.js?v=upgrade68';
 import { plinkoConfig } from './test-games/plinko.js?v=rtp97';
-import {FEATURE_CONFIG} from './test-games/features.js?v=reel67';
+import {FEATURE_CONFIG} from './test-games/features.js?v=upgrade68';
 import {createEarnState,earnView,earnAction} from './earn.js?v=earn52';
 window.plinkoConfig=plinkoConfig;
 window.FEATURE_CONFIG=FEATURE_CONFIG;
@@ -72,7 +72,7 @@ async function api(path,b){
    if(!demo&&!daily)pay(cost);
    if(daily){s.dailyPlayed=dailyDate();try{localStorage.setItem(key+'-daily',s.dailyPlayed)}catch{}}
    if(!demo&&!daily){p.plays=(p.plays||0)+count;p.bet=(p.bet||0)+cost;p.won=(p.won||0)+r.score;p.actual_rtp=p.won/p.bet;p.best=Math.max(p.best||0,r.score);}
-   return {script:r.spins,entry:r.entry,unit:r.unit,baseDraw:r.baseDraw,board:r.board,chests:r.chests,final:r.final,guarantee:r.guarantee,capped:r.capped,multipliers:r.multipliers,rows:r.rows,risk:r.risk,score:r.score,rate:cost,played:r.played,freePlayed:r.freePlayed,game:p.game,card:r.score?(demo?c:card(p,c)):null,cost:daily?0:cost,coins:s.coins,today_spent:s.todaySpent||0,daily_limit:s.limit,demo,daily};
+   return {script:r.spins,entry:r.entry,unit:r.unit,finalUnit:r.finalUnit,board:r.board,chests:r.chests,final:r.final,guarantee:r.guarantee,capped:r.capped,multipliers:r.multipliers,rows:r.rows,risk:r.risk,score:r.score,rate:cost,played:r.played,freePlayed:r.freePlayed,game:p.game,card:r.score?(demo?c:card(p,c)):null,cost:daily?0:cost,coins:s.coins,today_spent:s.todaySpent||0,daily_limit:s.limit,demo,daily};
  }
  if(pth==='/api/cards')return {cards:s.cards.filter(c=>c.status===(u.searchParams.get('status')||'held')).sort((a,b)=>b.value-a.value),ship_rate:config.ship_rate};
  if(pth==='/api/cards/convert'||pth==='/api/cards/ship'){let coins=0,points=0,count=0;for(const c of s.cards){if(c.status!=='held'||!b.ids.includes(c.id))continue;count++;if(pth.endsWith('convert')){c.status='converted';coins+=c.value;}else{c.status='shipped';points+=Math.floor(c.value*config.ship_rate);}}if(coins)tx(coins,'convert');s.points+=points;s.monthly??={};s.monthly[monthKey()]=monthPoints()+points;return {ok:true,count,coins,points};}
@@ -89,4 +89,4 @@ const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
 window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=reel67');
+await import('./app.js?v=upgrade68');
