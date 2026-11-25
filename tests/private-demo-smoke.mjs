@@ -24,13 +24,13 @@ for(const [i,id] of ids.entries()){
  const demo=await call('/api/packs/'+id+'/rush-demo',{rate:1000,count:id===11?10:1});
  assert.equal(demo.status,200);assert.equal(demo.data.script.length,demo.data.played);
  assert.ok(demo.data.score>=1);assert.ok((demo.data.guarantee||0)<=1);
- if(id===15){assert.equal(demo.data.unit,1);assert.ok(demo.data.finalUnit>=1);for(const s of demo.data.script.filter(s=>s.battle&&s.won))assert.equal(s.upgrade.amount,s.upgrade.values[s.upgrade.selected]);}
+ if(id===15){assert.equal(demo.data.unit,10);assert.ok(demo.data.finalUnit>=10);for(const s of demo.data.script.filter(s=>s.battle&&s.won))assert.equal(s.upgrade.amount,s.upgrade.values[s.upgrade.selected]);}
  if(id!==11){for(const rate of slotRates){const r=await call('/api/packs/'+id+'/rush-demo',{rate,count:1});assert.equal(r.status,200);assert.equal(r.data.cost,rate);assert.ok(Number.isFinite(r.data.score));}assert.equal((await call('/api/packs/'+id+'/rush-demo',{rate:100})).status,400);}
  else assert.equal((await call('/api/packs/'+id+'/rush-demo',{rate:1000000})).status,400);
  assert.equal((await call('/api/me')).data.user.coins,initial+20);
  const normal=await call('/api/packs/'+id+'/rush',{rate:1000,count:id===11?10:1});
  assert.equal(normal.status,200);assert.equal(normal.data.coins,initial+20-normal.data.cost);
- if(id===15)assert.equal(normal.data.unit,1);
+ if(id===15)assert.equal(normal.data.unit,10);
  assert.equal(normal.data.cost,id===11?10000:1000);
  assert.equal((await call('/api/me')).data.stats.today_spent,normal.data.cost);
  await call('/api/me',{daily_limit:normal.data.cost});
@@ -40,7 +40,7 @@ for(const [i,id] of ids.entries()){
  const d0=await call('/api/daily');assert.equal(d0.data.available,true);
  const free=await call('/api/packs/'+id+'/daily',{rate:3000,count:100});
  assert.equal(free.status,200);assert.equal(free.data.cost,0);assert.equal(free.data.rate,1000);assert.equal(free.data.coins,normal.data.coins);
- if(id===15)assert.equal(free.data.unit,1);
+ if(id===15)assert.equal(free.data.unit,10);
  if(id===11)assert.equal(free.data.played,1);
  assert.equal((await call('/api/daily')).data.available,false);
  assert.equal((await call('/api/me')).data.user.bonus_available,false);
