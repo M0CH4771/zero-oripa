@@ -1,4 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
+import {gameInfoHtml} from './game-info.js?v=info75';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -487,8 +488,7 @@ function rushPage(p) {
     </div>
     <div class="card-box"><h2>スコアと景品（ベット ${num(rushRate)} のとき）</h2>${p.game==='plinko'?plinkoInfo(12,'medium'):tiersTable(p, rushRate)}
       <p class="muted" style="margin-top:8px">景品のカードの値段＝スコアです。コインに交換するとスコア分のコイン、発送するとスコアの${Math.round(CFG.ship_rate * 100)}%が発送ポイントになります。</p></div>
-    <div class="card-box"><h2>遊び方</h2><ul class="rules">${RULES[p.game || 'rush'].map((x) => `<li>${x}</li>`).join('')}
-      <li>スコアが上がるほど、もらえるカードのレア度が上がっていきます</li></ul></div>
+    <div class="card-box"><h2>遊び方</h2>${gameInfoHtml(p.game,rushRate,p.volatility)}</div>
     ${siteFooter()}`;
   $('#gReg') && ($('#gReg').onclick = openLogin);
 }
@@ -565,21 +565,9 @@ async function viewGame(id, demo, daily=false) {
   $('#gmBack').onclick = () => { if (gameCtx?.busy) return; location.hash = daily?'#bonus':'#pack-' + p.id; };
   $('#gmSound').onclick = () => { const on = ZG.sfx.toggle(); $('#gmSound').textContent = on ? '🔊' : '🔇'; if (on) { ZG.sfx.unlock(); ZG.sfx.bgm(theme); } else ZG.sfx.stopBgm(); };
   $('#gmTurbo').onclick = () => { rushSpeed = rushSpeed===normalSpeed?.45:rushSpeed===.45?.2:normalSpeed; $('#gmTurbo').classList.toggle('on', rushSpeed !== normalSpeed);$('#gmTurbo small').textContent=rushSpeed===normalSpeed?'NORMAL':rushSpeed===.45?'QUICK':'TURBO';game && game.setSpeed(rushSpeed); ZG.sfx.play('click'); };
-  $('#gmInfo').onclick = async () => {
-    let paytable='';
-    if(['rush','fruit'].includes(p.game)){
-      const {PAYS}=await import(p.game==='rush'?'./test-games/rush.js':'./test-games/fruit.js');
-      const rows=Object.entries(PAYS).reverse().map(([id,values])=>{const icon=ZG.art.sprite(theme,id,40).toDataURL();return `<tr><td><img width="38" height="38" src="${icon}" alt="${id}"></td>${values.map(v=>'<td>×'+v+'</td>').join('')}</tr>`;}).join('');
-      const head=p.game==='rush'?['8〜9','10〜11','12+']:Array.from({length:11},(_,i)=>i===10?'15+':String(i+5));
-      paytable='<h3>シンボル配当表</h3><p>倍率は配当計算単位（1回の消費Cの1/100）に適用。実際の消費額とは異なります。</p><div style="overflow-x:auto"><table><thead><tr><th>絵柄</th>'+head.map(v=>'<th>'+v+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
-    }
-    if(p.game==='gods'){const {GODS_PAYS}=await import('./test-games/features.js');const names=['王冠','砂時計','指輪','聖杯','赤宝石','紫宝石','黄宝石','緑宝石','青宝石'];paytable='<h3>シンボル配当表</h3><p>基準ベット倍率</p><table><thead><tr><th>絵柄</th><th>8〜9</th><th>10〜11</th><th>12+</th></tr></thead><tbody>'+Object.values(GODS_PAYS).map((v,i)=>'<tr><td>'+names[i]+'</td>'+v.map(n=>'<td>×'+n+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
-    if(p.game==='dogs'){const {DOGS_PAYS}=await import('./test-games/features.js?v=dogs');const names=['ロットワイラー','シーズー','パグ','ビーグル','首輪','骨','A','K','Q','J','10'];paytable='<h3>シンボル配当表</h3><p>基準ベット倍率 × WAYS</p><table><thead><tr><th>絵柄</th><th>3</th><th>4</th><th>5</th><th>6</th></tr></thead><tbody>'+Object.values(DOGS_PAYS).map((v,i)=>'<tr><td>'+names[i]+'</td>'+v.map(n=>'<td>×'+n+'</td>').join('')+'</tr>').join('')+'</tbody></table>';}
-    const s = sheet(`<h3>${esc(p.name)} の遊び方</h3><ul class="rules">${RULES[p.game || 'rush'].map((x) => `<li>${x}</li>`).join('')}</ul>
-      ${paytable}<h3 style="margin-top:14px;font-size:15px">スコアと景品（ベット ${num(rushRate)}）</h3>${p.game==='plinko'?plinkoInfo(gameCtx.rows,gameCtx.risk):tiersTable(p, rushRate)}
-      <p class="muted" style="margin-top:8px">テスト専用の独自抽選です。RTP目標 ${p.game==='plinko'?90:97}%（長期平均）。${p.actual_rtp !== null ? `・この端末の実測 ${(p.actual_rtp * 100).toFixed(1)}%` : ''}</p>
-      <div class="btns"><button class="btn ghost" id="infoClose">閉じる</button></div>`);
-    $('#infoClose', s).onclick = closeSheet;
+  $('#gmInfo').onclick = () => {
+    const s=sheet(`<h3>${esc(p.name)} の遊び方</h3>${gameInfoHtml(p.game,rushRate,p.volatility)}${p.game==='plinko'?'<h3>着地枠の配当表</h3>'+plinkoInfo(gameCtx.rows,gameCtx.risk):''}<div class="btns"><button class="btn ghost" id="infoClose">閉じる</button></div>`);
+    $('#infoClose',s).onclick=closeSheet;
   };
   const stepBet = (d) => { if (gameCtx.busy||daily) return; const i = p.rates.indexOf(rushRate); rushRate = p.rates[Math.max(0, Math.min(p.rates.length - 1, i + d))]; hud(); ZG.sfx.play('click'); setRushTier(p, 0); };
   $('#betMinus').onclick = () => stepBet(-1);
