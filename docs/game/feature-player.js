@@ -168,12 +168,12 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
   async function monsterArrival(monster,hp,reward){
    const row={Goblin:0,Troll:1,Dragon:2}[monster],region=opt.region(st.w,st.h),size=Math.min(st.w*.94,region.h*.92,430);
    const n=st.add({x:st.w/2,y:region.y+region.h*.5,z:60,frame:0});
-   n.draw=(ctx,s)=>{const f=Math.min(11,Math.floor(s.frame));const draw=(i,alpha)=>{const image=i%2===1&&arrivalAlt?arrivalAlt:arrivalArt;if(!image)return;const sw=image.width/6,sh=image.height/3,col=Math.floor(i/2);ctx.save();ctx.globalAlpha*=alpha;ctx.drawImage(image,col*sw,row*sh,sw,sh,-size/2,-size/2,size,size);ctx.restore();};draw(f,1);if(f<11)draw(f+1,Math.min(1,s.frame-f));ctx.fillStyle='#090c0be9';ZG.rr(ctx,-size/2,-size/2,size,45,8);ctx.fill();text(ctx,foeNames[monster]+' 出現',0,-size/2+22,23,'#ffe6a1',size-20);ctx.fillStyle='#090c0be9';ZG.rr(ctx,-size/2,size/2-46,size,46,8);ctx.fill();text(ctx,'HP '+hp+' · 勝利で ＋'+reward+' スピン',0,size/2-23,15,'#fff5d7',size-16);};
-   try{ZG.sfx?.play('enemyArrival');await st.tween(n,{frame:11.99},1600,ZG.Ease.linear);await st.wait(450);}finally{st.remove(n);}
+   n.draw=(ctx,s)=>{const image=arrivalAlt||arrivalArt;if(image){const sw=image.width/6,sh=image.height/3,col=Math.min(5,Math.floor(s.frame));ctx.drawImage(image,col*sw,row*sh,sw,sh,-size/2,-size/2,size,size);}ctx.fillStyle='#090c0be9';ZG.rr(ctx,-size/2,-size/2,size,45,8);ctx.fill();text(ctx,foeNames[monster]+' 出現',0,-size/2+22,23,'#ffe6a1',size-20);ctx.fillStyle='#090c0be9';ZG.rr(ctx,-size/2,size/2-46,size,46,8);ctx.fill();text(ctx,'HP '+hp+' · 勝利で ＋'+reward+' スピン',0,size/2-23,15,'#fff5d7',size-16);};
+   try{ZG.sfx?.play('enemyArrival');await st.tween(n,{frame:5.99},1600,ZG.Ease.linear);await st.wait(450);}finally{st.remove(n);}
   }
   function drawCombat(ctx,row,frame,size){
-   if(!combatArt&&!combatAlt)return false;const f=Math.max(0,Math.min(15,Math.floor(frame))),blend=Math.max(0,Math.min(1,frame-f));
-   const draw=(i,a)=>{const alt=(i%2===1&&combatAlt)||!combatArt,image=alt?combatAlt:combatArt;if(!image)return;const sw=image.width/8,sh=image.height/4;ctx.save();ctx.globalAlpha*=a;if(!alt)ctx.globalCompositeOperation='screen';ctx.drawImage(image,Math.floor(i/2)*sw,row*sh,sw,sh,-size/2,-size/2,size,size);ctx.restore();};draw(f,1-blend);if(f<15&&blend>0)draw(f+1,blend);return true;
+   if(!combatAlt)return false;
+   const i=Math.max(0,Math.min(7,Math.floor(frame/2))),sw=combatAlt.width/8,sh=combatAlt.height/4;ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';ctx.drawImage(combatAlt,i*sw,row*sh,sw,sh,-size/2,-size/2,size,size);ctx.restore();return true;
   }
   async function attachCart(){
    ZG.sfx?.play('whistle');ZG.sfx?.play('rails');
