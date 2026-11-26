@@ -263,12 +263,12 @@
           S('free');
           await hooks.onBonusIntro?.({spins:total});
         }else await hooks.onBonusIntro?.({spins:total});
-        for (let k = 0; k < r.script.length; k++) {
+        let k=0;for await (const sp of r.spinStream()) {
           hooks.onMode?.('BONUS');
           hooks.onSpin(k + 1, total);
-          await playSpin(r.script[k], state);
-          total += r.script[k].add || 0;
-          hooks.onSpin(k + 1, total);
+          await playSpin(sp, state);
+          total += sp.add || 0;
+          hooks.onSpin(k + 1, total);k++;
         }
         if(cfg.spots){await Promise.all(nodes.filter(Boolean).map(n=>st.tween(n,{alpha:.15},240)));await st.banner(['TOTAL WIN',hooks.fmt(r.score)+' C'],{hold:600});}
         if(r.guarantee){await st.banner(['最終配当','1 C'],{hold:350});await hooks.onRoundWin?.(r.guarantee);}if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);hooks.onMode?.('COMPLETE');
@@ -590,9 +590,8 @@
         const state = { base: 0 };
         setSpinWin(0);
         hooks.onMode?.('ENTRY');hooks.onSpin(0,5);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{hold:400});await hooks.onBonusIntro?.({spins:5});hooks.onMode?.('BONUS');
-        for (let k = 0; k < r.script.length; k++) {
-          const sp = r.script[k];
-          const previousBase=state.base,previousValue=Math.min(r.score,Math.floor(state.base*mult));
+        let k=0;for await (const sp of r.spinStream()) {
+          const previousBase=state.base,previousValue=Math.min(r.cap,Math.floor(state.base*mult));
           setSpinWin(0);
           hooks.onSpin(k + 1, Math.max(sp.total - (sp.add || 0), k + 1));
           await spinReel(sp.reel);
@@ -604,7 +603,7 @@
             else if (ev.t === 'pickEnd') await onPickEnd();
             else if (ev.t === 'tnt') await onTnt(ev);
             else if (ev.t === 'boom') await onBoom(ev);
-            else if (ev.t === 'open') await onOpen(ev,state,r.score);
+            else if (ev.t === 'open') await onOpen(ev,state,r.cap);
           }
           await onPickEnd();
           // スタークリスタル：スピン追加
@@ -613,9 +612,9 @@
             S('free');
             for(const n of stars){st.sparkle(n.x,n.y,L.rc*.5,8);await st.popText(n.x,n.y,'+1 SPIN',{size:Math.max(12,L.rc*.32),color:'#ffe9a0',stroke:'#6a1000',hold:200});await st.tween(n,{sx:1.35,sy:1.35},180);await st.tween(n,{sx:1,sy:1},160);}
           }
-          state.base = sp.base; const roundWin=Math.max(0,sp.base-previousBase);setSpinWin(roundWin);hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(sp.mult));await hooks.onRoundWin?.(roundWin);hooks.onScore(Math.min(r.score,Math.floor(sp.base*sp.mult)));await st.celebrateWin(Math.max(0,Math.min(r.score,Math.floor(sp.base*sp.mult))-previousValue),r.rate||opt.getRate?.(),hooks.fmt);
+          state.base = sp.base; const roundWin=Math.max(0,sp.base-previousBase);setSpinWin(roundWin);hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(sp.mult));await hooks.onRoundWin?.(roundWin);hooks.onScore(Math.min(r.cap,Math.floor(sp.base*sp.mult)));await st.celebrateWin(Math.max(0,Math.min(r.cap,Math.floor(sp.base*sp.mult))-previousValue),r.rate||opt.getRate?.(),hooks.fmt);
           hooks.onSpin(k + 1, sp.total);
-          await Promise.all([st.roundPause(),...reel.map((n) => st.tween(n, { alpha: 0 }, 160))]);
+          await Promise.all([st.roundPause(),...reel.map((n) => st.tween(n, { alpha: 0 }, 160))]);k++;
         }
         const f = r.final || { base: r.score, mult: 1, score: r.score };
         if (f.mult > 1 && f.base > 0 && !f.guaranteed) await st.atNormalSpeed(()=>finale(f.base, f.mult, f.score, f));
@@ -668,7 +667,7 @@
         const radius=Math.max(2,Math.min(d*.19,g.rise*.36));ctx.save();if(goal<=100&&l>=rows-2&&Math.abs(x-g.x)>d*rows*.32){ctx.globalAlpha=.32;ctx.strokeStyle=Math.abs(x-g.x)>d*rows*.32?'#ff916d':'#ffdd85';ctx.lineWidth=radius*.75;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-(z.x-a.x)*.14,y-d*.23);ctx.stroke();ctx.globalAlpha=1;}ctx.shadowColor='#0008';ctx.shadowBlur=radius;ctx.shadowOffsetY=2;const metal=ctx.createRadialGradient(x-radius*.42,y-radius*.45,0,x,y,radius);metal.addColorStop(0,'#fff9df');metal.addColorStop(.32,'#ffdd85');metal.addColorStop(.7,Math.abs(x-g.x)>d*rows*.32?'#d88669':'#92adc3');metal.addColorStop(1,'#68451b');ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=metal;ctx.fill();if(plinkoArt){const sw=plinkoArt.width/3,sh=plinkoArt.height/2;ctx.save();ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.clip();ctx.drawImage(plinkoArt,sw*.19,sh*.19,sw*.62,sh*.64,x-radius,y-radius,radius*2,radius*2);ctx.restore();}ctx.restore();
       }
     }});st.theme='plinko';
-return {st,configure(c){risk=c.risk;rows=c.rows;mult=c.multipliers;cents=c.cents;balls=[];hits=Array(rows+1).fill(0);slotGlow.clear();pegGlow.clear();st.resize()},async warm(cb){plinkoArt=await ZG.loadSymbolAtlas('plinko');cb?.(1)},idle(){balls=[];hits.fill(0)},async play(r){hits.fill(0);slotGlow.clear();pegGlow.clear();landed=0;score=0;goal=r.script.length;const n=goal,group=n>100?100:n>10?25:n;hooks.onSpin(0,n);await hooks.onBonusIntro?.({spins:n});for(let i=0;i<n;i+=group){const batch=r.script.slice(i,i+group),before=score;balls=batch.map((b,j)=>({...b,delay:j*.018,duration:1,arc:Math.random()*.10,row:-1,done:false,prefix:b.path.reduce((a,v)=>(a.push(a.at(-1)+v),a),[0])}));clock.v=0;lastSound=-Infinity;const end=Math.max(...balls.map(b=>b.delay+b.duration));await st.tween(clock,{v:end},end*ZG.SPIN_TIMING.reel,E().linear);for(const b of balls)settle(b);const bestBall=batch.reduce((a,b)=>a.mult>=b.mult?a:b);await st.celebrateWin(bestBall.win,opt.getRate?.(),hooks.fmt);balls=[];await hooks.onRoundWin?.(score-before);hooks.onScore(score);await st.roundPause();}hooks.onScore(r.score);
+return {st,configure(c){risk=c.risk;rows=c.rows;mult=c.multipliers;cents=c.cents;balls=[];hits=Array(rows+1).fill(0);slotGlow.clear();pegGlow.clear();st.resize()},async warm(cb){plinkoArt=await ZG.loadSymbolAtlas('plinko');cb?.(1)},idle(){balls=[];hits.fill(0)},async play(r){hits.fill(0);slotGlow.clear();pegGlow.clear();landed=0;score=0;goal=r.played;const n=goal,group=n>100?100:n>10?25:n;hooks.onSpin(0,n);await hooks.onBonusIntro?.({spins:n});for(let i=0;i<n;i+=group){const batch=[];for(let j=0;j<Math.min(group,n-i);j++)batch.push(await r.nextSpin());const before=score;balls=batch.map((b,j)=>({...b,delay:j*.018,duration:1,arc:Math.random()*.10,row:-1,done:false,prefix:b.path.reduce((a,v)=>(a.push(a.at(-1)+v),a),[0])}));clock.v=0;lastSound=-Infinity;const end=Math.max(...balls.map(b=>b.delay+b.duration));await st.tween(clock,{v:end},end*ZG.SPIN_TIMING.reel,E().linear);for(const b of balls)settle(b);const bestBall=batch.reduce((a,b)=>a.mult>=b.mult?a:b);await st.celebrateWin(bestBall.win,opt.getRate?.(),hooks.fmt);balls=[];await hooks.onRoundWin?.(score-before);hooks.onScore(score);await st.roundPause();}await r.nextSpin();hooks.onScore(r.score);
     const best=Math.max(...r.script.map(b=>b.win));
     const count=r.script.filter(b=>b.win===best).length;
     await st.banner(['TOTAL WIN '+hooks.fmt(r.score)+' C','最高 '+hooks.fmt(best)+' C · '+count+'球'],{});

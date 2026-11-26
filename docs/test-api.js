@@ -1,6 +1,6 @@
-import { playGame, tierFor } from './test-games/index.js?v=plinko89';
-import { plinkoConfig } from './test-games/plinko.js?v=plinko89';
-import {FEATURE_CONFIG} from './test-games/features.js?v=wagon82';
+import { streamGame, tierFor, GAME_VOLATILITY } from './test-games/index.js?v=live111';
+import { plinkoConfig } from './test-games/plinko.js?v=live111';
+import {FEATURE_CONFIG} from './test-games/features.js?v=live111';
 import {createEarnState,earnView,earnAction} from './earn.js?v=earn52';
 window.plinkoConfig=plinkoConfig;
 window.FEATURE_CONFIG=FEATURE_CONFIG;
@@ -36,7 +36,13 @@ const tier = () => { const t = [...config.tiers].reverse().find(t=>s.spent>=t.mi
 const me = () => ({user:{id:1,nickname:s.nickname,nickname_set:true,coins:s.coins,ship_points_total:s.points,month_points:monthPoints(),streak:s.bonus?1:0,bonus_available:!s.bonus,daily_limit:s.limit,ad_today:s.ad,ad_max:config.ad_daily_max,ad_reward:config.ad_reward,total_spent:s.spent,tier:tier(),bonus_amount:Math.round(config.login_bonus*(1+tier().bonus))},invite:{code:'TESTONLY',invited:0,rewarded:0,used:false,can_enter:false},stats:{spent:s.spent,today_spent:s.todaySpent||0,got:s.cards.reduce((a,c)=>a+c.value,0),draws:s.cards.length,held:s.cards.filter(c=>c.status==='held').length},claims:[]});
 const card = (p,c) => { const x={id:++s.seq,card_id:s.seq,pack_id:p.id,rank:c.rank,name:c.name,value:c.value,image:c.image||null,status:'held',created_at:Date.now()}; s.cards.push(x); return x; };
 const pay = n => { if(s.limit>0&&(s.todaySpent||0)+n>s.limit)throw new Error('本日の消費上限です');if(s.coins<n) throw new Error('コインが足りません。テスト補充をお試しください'); tx(-n,'draw'); s.spent+=n;s.todaySpent=(s.todaySpent||0)+n; };
-function packView(p){const badges={train:'NEW · 6列の鉱山＆回収宝箱',rush:'6×5・どこでも8個',fruit:'7×7・つながる5個',mine:'5列の採掘チャレンジ',plinko:'3段階の荒さ・RTP 約90%',dogs:'6リール・最大117,649 WAYS'}; const rates=p.kind==='rush'&&p.game!=='plinko'?SLOT_RATES:p.rates; return {...p,rates,max_mult:p.game==='plinko'?null:FEATURE_CONFIG[p.game]?.max??50,min_mult:p.kind==='rush'?0:p.min_mult,min_coins:p.kind==='rush'?1:undefined,badge:badges[p.game]||p.badge,locked:null, today_left:p.per_user_daily?Math.max(0,p.per_user_daily-(p.playedToday||0)):null}; }
+// An interrupted test session cannot be resumed from localStorage. Refund its
+// unused test credits instead of drawing the remaining spins in the background.
+function refundPending(token){const pending=s.pendingRound;if(!pending||token&&pending.token!==token)return;tx(pending.cost,'interrupted-round-refund');s.spent=Math.max(0,s.spent-pending.cost);if(pending.date===dailyDate())s.todaySpent=Math.max(0,(s.todaySpent||0)-pending.cost);delete s.pendingRound;save();}
+refundPending();
+// One in-memory simulation session. No future spins are generated until requested.
+const sessions=new Map();
+function packView(p){const badges={train:'NEW · 6列の鉱山＆回収宝箱',rush:'6×5・どこでも8個',fruit:'7×7・つながる5個',mine:'5列の採掘チャレンジ',plinko:'3段階の荒さ・RTP 約97%',dogs:'6リール・最大117,649 WAYS'}; const rates=p.kind==='rush'&&p.game!=='plinko'?SLOT_RATES:p.rates;const v=GAME_VOLATILITY[p.game]; return {...p,rates,volatility_label:v?v+'/5':p.game==='plinko'?'選択式':p.volatility_label,volatility_level:v,max_mult:p.game==='plinko'?null:FEATURE_CONFIG[p.game]?.max??50,min_mult:p.kind==='rush'?0:p.min_mult,min_coins:p.kind==='rush'?1:undefined,badge:badges[p.game]||p.badge,locked:null, today_left:p.per_user_daily?Math.max(0,p.per_user_daily-(p.playedToday||0)):null}; }
 async function api(path,b){
  resetDailyCounters();
  const u=new URL(path,location.origin), pth=u.pathname; let m;
@@ -46,6 +52,17 @@ async function api(path,b){
  if(pth==='/api/me'){if(b){if(b.nickname)s.nickname=String(b.nickname).slice(0,12);if(b.daily_limit!==undefined)s.limit=+b.daily_limit||0;return {ok:true};}const profile=me();profile.user.bonus_available=dailyAvailable();profile.user.bonus_amount=0;return profile;}
  if(pth==='/api/packs')return {packs:s.packs.filter(p=>p.game!=='train'&&p.id!==14).map(packView)};
  if(pth==='/api/daily')return {available:dailyAvailable(),rate:DAILY_RATE,date:dailyDate()};
+ if(pth==='/api/game-step'){
+   const session=sessions.get(b?.token);if(!session)throw Error('プレイ情報がありません');
+   const next=session.it.next();
+   if(!next.done)return {done:false,spin:next.value};
+   sessions.delete(b.token);
+   if(s.pendingRound?.token===b.token)delete s.pendingRound;
+   const {p,cost,demo,daily,count}=session,r=next.value,t=tierFor(p.tiers,r.score,cost),c={...t,value:r.score};
+   if(!demo&&!daily){p.plays=(p.plays||0)+count;p.bet=(p.bet||0)+cost;p.won=(p.won||0)+r.score;p.actual_rtp=p.won/p.bet;p.best=Math.max(p.best||0,r.score);}
+   return {done:true,result:{...r,card:r.score?(demo?c:card(p,c)):null,coins:s.coins,today_spent:s.todaySpent||0,daily_limit:s.limit}};
+ }
+ if(pth==='/api/game-cancel'){if(b?.token&&sessions.has(b.token)){sessions.delete(b.token);refundPending(b.token);}return {coins:s.coins};}
  if(m=pth.match(/^\/api\/packs\/(\d+)(?:\/(draw|rush|rush-demo|daily))?$/)){
    if(+m[1]===14)throw Error('ZERO TRAINはサービス終了しました');
    const p=s.packs.find(x=>x.id===+m[1]); if(!p||p.game==='train')throw Error('パックが見つかりません');
@@ -69,11 +86,12 @@ async function api(path,b){
    const cost=rate*count;
 
    const strategy=p.game==='train'&&['train2','train3','train4'].includes(b.strategy)?b.strategy:p.game==='dogs'?(b.strategy==='raining'?'raining':'sticky'):b.strategy==='run'?'run':'battle';
-   const r=playGame(p.game,{rate,volatility:p.volatility,maxMult:50,count,risk,rows,strategy,encounter:b.encounter,dogEntry:p.game==='dogs'?b.dogEntry:null}), t=tierFor(p.tiers,r.score,cost), c={...t,value:r.score};
-   if(!demo&&!daily)pay(cost);
+   const it=streamGame(p.game,{rate,volatility:p.volatility,maxMult:50,count,risk,rows,strategy,encounter:b.encounter,dogEntry:p.game==='dogs'?b.dogEntry:null}),r=it.next().value;
+   if(!demo&&!daily){if(s.pendingRound)throw Error('前のゲームが進行中です');pay(cost);}
    if(daily){s.dailyPlayed=dailyDate();try{localStorage.setItem(key+'-daily',s.dailyPlayed)}catch{}}
-   if(!demo&&!daily){p.plays=(p.plays||0)+count;p.bet=(p.bet||0)+cost;p.won=(p.won||0)+r.score;p.actual_rtp=p.won/p.bet;p.best=Math.max(p.best||0,r.score);}
-   return {script:r.spins,entry:r.entry,unit:r.unit,finalUnit:r.finalUnit,board:r.board,chests:r.chests,final:r.final,guarantee:r.guarantee,capped:r.capped,multipliers:r.multipliers,rows:r.rows,risk:r.risk,score:r.score,rate:cost,played:r.played,freePlayed:r.freePlayed,game:p.game,card:r.score?(demo?c:card(p,c)):null,cost:daily?0:cost,coins:s.coins,today_spent:s.todaySpent||0,daily_limit:s.limit,demo,daily};
+   const token=crypto.randomUUID();sessions.set(token,{it,p,cost,demo,daily,count});
+   if(!demo&&!daily)s.pendingRound={token,cost,date:dailyDate()};
+   return {...r,token,rate:cost,game:p.game,cost:daily?0:cost,coins:s.coins,today_spent:s.todaySpent||0,daily_limit:s.limit,demo,daily};
  }
  if(pth==='/api/cards')return {cards:s.cards.filter(c=>c.status===(u.searchParams.get('status')||'held')).sort((a,b)=>b.value-a.value),ship_rate:config.ship_rate};
  if(pth==='/api/cards/convert'||pth==='/api/cards/ship'){let coins=0,points=0,count=0;for(const c of s.cards){if(c.status!=='held'||!b.ids.includes(c.id))continue;count++;if(pth.endsWith('convert')){c.status='converted';coins+=c.value;}else{c.status='shipped';points+=Math.floor(c.value*config.ship_rate);}}if(coins)tx(coins,'convert');s.points+=points;s.monthly??={};s.monthly[monthKey()]=monthPoints()+points;return {ok:true,count,coins,points};}
@@ -90,4 +108,4 @@ const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
 window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=unified109');
+await import('./app.js?v=live111');

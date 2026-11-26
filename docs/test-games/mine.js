@@ -23,12 +23,12 @@ export const BLOCKS = {
   I: { name: '鉄', hp: 4, v: 0.015 },
   G: { name: '金', hp: 5, v: 0.04 },
   X: { name: 'ダイヤ', hp: 6, v: 0.08 },
-  R: { name: '虹鉱石', hp: 7, v: 0.35 },
+  R: { name: '虹鉱石', hp: 7, v: 0.16 },
   E: { name: '爆発鉱石', hp: 2, v: 0.005 },
   Q: { name: 'ハテナ', hp: 4, v: 0 },
 };
 // ハテナの中身（賭けに対する倍率）
-const Q_PAY = { 0.01: 40, 0.03: 28, 0.08: 18, 0.2: 10, 0.6: 3.5, 2: 0.5 };
+const Q_PAY = { 0.02: 35, 0.04: 30, 0.06: 20, 0.1: 12, 0.16: 3 };
 
 // 段ごとの出やすさ（上 → 下）
 const ROW_ORES = [
@@ -45,8 +45,8 @@ const ROW_ORES = [
 export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
-    cells: { 0: 70, p1: 12, p2: 7, p3: 3.4, p5: 1.1, p7: 0.3, b: 1.2, g: 0.12, n: 1.8, s: 1.2 },
-    chests: { 2: 46, 3: 26, 4: 14, 5: 8, 6: 3.5, 8: 1.8, 10: 0.7 }, scale: 0.1227,
+    cells: { 0: 28, p1: 34, p2: 23, p3: 8, p5: 1, p7: 0.05, b: 0.25, g: 0.02, n: 0.3, s: 0.1 },
+    chests: { 2: 97, 3: 3 }, scale: 0.133,
   },
   normal: {
     label: '通常', bolt: 3,
@@ -61,7 +61,7 @@ export const VOLATILITY = {
 };
 const POWER = { p1: 1, p2: 2, p3: 3, p5: 5, p7: 7 };
 
-export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureRandom, withScript = true }) {
+export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secureRandom, withScript = true }) {
   const v = VOLATILITY[volatility] || VOLATILITY.normal;
   const unit = rate * v.scale * .994;
   const pickCell = picker(v.cells, rand);
@@ -101,6 +101,7 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
 
   const spins = [];
   let total = FIRST_SPINS;
+  yield {board,chests,unit,cap:rate*Math.min(50,maxMult)};
   for (let s = 0; s < total; s++) {
     // スロット枠：reel[c][段]
     const reel = Array.from({ length: COLS }, () => Array.from({ length: REEL_ROWS }, () => pickCell()));
@@ -134,7 +135,7 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
       }
     }
     if (add) total = Math.min(MAX_SPINS, total + add);
-    if (withScript) spins.push({ reel, events: ev, add, total, base: r2(base), mult });
+    yield { reel, events: ev, add, total, base: r2(base), mult };
   }
   const sum = base * mult;
   const floor = MIN_PAY, cap = rate * Math.min(50,maxMult);
@@ -146,3 +147,5 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
     opened,
   };
 }
+
+export function play(opts){const it=stream(opts),start=it.next().value,spins=[];let n;while(!(n=it.next()).done){if(opts.withScript!==false)spins.push(n.value)}return {...start,...n.value,spins}}

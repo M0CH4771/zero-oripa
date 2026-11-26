@@ -5,6 +5,7 @@
 import { picker, secureRandom, MAX_SPINS, BONUS_BUY_MULT, bonusEntry, FRUIT_AWARDS } from './common.js';
 
 export const SIZE = 7, CELLS = SIZE * SIZE;
+export const PAY_UNIT_FACTOR=.08214;
 export const PAYS = { // 5〜15+個、基準ベット倍率
   f1: [.2,.25,.3,.4,.5,1,1.5,2.5,5,10,20],
   f2: [.25,.3,.4,.5,.75,1.25,2,3,6,12,25],
@@ -45,9 +46,9 @@ function clustersOf(grid) {
   return out;
 }
 
-export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureRandom, withScript = true }) {
+export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secureRandom, withScript = true }) {
   const v = VOLATILITY[volatility] || VOLATILITY.normal;
-  const unit = rate / BONUS_BUY_MULT;
+  const unit = rate * PAY_UNIT_FACTOR;
   const payUnit=unit;
   const cap=rate*Math.min(50,maxMult),floor=1;
   const entry=bonusEntry(SIZE,SIZE,3,v.weights,rand);
@@ -59,6 +60,7 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
   let spots = new Array(CELLS).fill(0); // 0=なし 1=印 2以上=倍率
   const spins = [];
   let total = 0, paid=0, left = entry.initialSpins, played = 0;
+  yield {entry,unit,cap};
   while (left > 0 && played < MAX_SPINS && paid < cap) {
     left--; played++;
     const scatterColumns=new Array(SIZE).fill(false);
@@ -102,8 +104,10 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
     const win = raw * payUnit;
     total += win;
     const settled=Math.min(cap,Math.floor(total))-paid;paid+=settled;
-    if (withScript) spins.push({ first, spots: startSpots, steps, win: settled, add, bonus:true, trigger:false, scatters:scat });
+    yield { first, spots: startSpots, steps, win: settled, add, bonus:true, trigger:false, scatters:scat };
   }
   const score = Math.max(floor,paid);
   return { score, capped: total >= cap, guaranteed:paid<floor, guarantee:score-paid, spins, played, entry, unit };
 }
+
+export function play(opts){const it=stream(opts),start=it.next().value,spins=[];let n;while(!(n=it.next()).done){if(opts.withScript!==false)spins.push(n.value)}return {...start,...n.value,spins}}

@@ -2,11 +2,12 @@
 // ボーナス専用。10フリースピンから開始、6×5、どこでも8個以上で連鎖。
 // 倍率オーブが出現し、3個以上のスキャッターで5回追加。
 // テストコイン専用の独立抽選。
-// 抽選はすべてサーバーで行い、クライアントには結果の台本（script）を渡して再生させる。
+// テスト版では次のスピンを要求された時だけ抽選する。
 
 import { picker, secureRandom, MAX_SPINS, BONUS_BUY_MULT, bonusEntry } from './common.js';
 
 export const COLS = 6, ROWS = 5, CELLS = COLS * ROWS;
+export const PAY_UNIT_FACTOR=.00974;
 const PAY_SYMS = ['l1', 'l2', 'l3', 'l4', 'l5', 'h1', 'h2', 'h3', 'h4'];
 
 // 配当表（1スピンあたりの賭け＝レート÷10 の何倍か）。[8〜9個, 10〜11個, 12個以上]
@@ -15,7 +16,7 @@ export const PAYS = {
   l5: [1, 1.5, 10], h1: [1.5, 2, 12], h2: [2, 5, 15], h3: [2.5, 10, 25], h4: [10, 25, 50],
 };
 
-// 荒さ（ボラティリティ）ごとの設定。scale はシミュレーションで還元率がほぼ 90% になるよう合わせた値
+// 荒さ（ボラティリティ）ごとの設定。
 export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
@@ -26,7 +27,7 @@ export const VOLATILITY = {
   normal: {
     label: '通常', bolt: 3,
     weights: { l1: 22, l2: 20, l3: 18, l4: 16, h1: 11, h2: 8, h3: 6, h4: 3, S: 1.6 },
-    bombP: 0.004, bombs: [[2, 30], [3, 25], [4, 15], [5, 12], [10, 8], [15, 4], [20, 3], [25, 2], [50, 0.8], [100, 0.2]],
+    featureBombP: .035, bombP: 0.004, bombs: [[2, 30], [3, 25], [4, 15], [5, 12], [10, 8], [15, 4], [20, 3], [25, 2], [50, 0.8], [100, 0.2]],
     scale: 0.444,
   },
   extreme: {
@@ -43,7 +44,7 @@ function makeCellGen(v, rand, bonus = false) {
   const pick = picker({...v.weights,l5:v.weights.h1*.85}, rand);
   const {S:_, ...ordinary}=v.weights;
   const pickOrdinary=picker({...ordinary,l5:v.weights.h1*.85},rand);
-  const bombPick = picker({2:30,3:25,4:15,5:12,6:8,8:6,10:5,12:4,15:3,20:2,25:1.5,50:.8,100:.2}, rand);
+  const bombPick = picker({2:30,3:25,4:15,5:12,6:8,8:6,10:5,12:4,15:3,20:2,25:1.5,50:1.6,100:.6}, rand);
   return (allowScatter=true,above=null) => {
     if(PAYS[above] && rand() < (v.stackP??.315))return above;
     return bonus && rand() < (v.featureBombP??.045) ? 'B' + bombPick() : (allowScatter?pick():pickOrdinary());
@@ -95,9 +96,9 @@ function runSpin(cellGen) {
 }
 
 // 1プレイ（10スピン＋追加）。rate は1プレイの値段（コイン）
-export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureRandom, withScript = true }) {
+export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secureRandom, withScript = true }) {
   const v = VOLATILITY[volatility] || VOLATILITY.normal;
-  const unit = rate / BONUS_BUY_MULT;
+  const unit = rate * PAY_UNIT_FACTOR;
   const payUnit = unit;
   const cap=rate*Math.min(50,maxMult), floor=1;
   const entry=bonusEntry(COLS,ROWS,4,{...v.weights,l5:v.weights.h1*.85},rand,4);
@@ -105,6 +106,7 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
   entry.win=Math.min(cap,Math.round(unit*(entry.scatters>=6?100:entry.scatters===5?5:3)));
   const spins = [];
   let total = entry.win, paid=entry.win, left = entry.initialSpins, played = 0;
+  yield {entry,unit,cap};
   while (left > 0 && played < MAX_SPINS) {
     left--; played++;
     const s = runSpin(makeCellGen(v,rand,true));
@@ -114,8 +116,8 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
     const win = s.raw * payUnit + scatterPay;
     total += win;
     const settled=Math.min(cap,Math.floor(total))-paid;paid+=settled;
-    if (withScript) {
-      spins.push({
+    {
+      yield {
         first: s.first,
         steps: s.steps.map((x) => ({ hits: x.hits, syms: x.syms, pay: Number((x.pay * payUnit).toFixed(4)), wins:x.wins.map(g=>({...g,pay:Number((g.pay*payUnit).toFixed(4)),base:Number((g.pay*payUnit).toFixed(4))})), grid: x.grid, cols: x.cols })),
         bombs: s.mult > 1 ? s.bombs : [],
@@ -123,10 +125,12 @@ export function play({ rate, volatility = 'normal', maxMult = 50, rand = secureR
         win: settled,
         add: Math.max(0, add),
         bonus:true, trigger:false, scatters:s.scatters, scatterPay:Math.min(settled,Math.round(scatterPay)),
-      });
+      };
     }
   }
   const score = Math.max(floor,paid);
   return { score, capped: total > cap, guaranteed:paid<floor, guarantee:score-paid, spins, played, entry, unit };
 }
 
+
+export function play(opts){const it=stream(opts),start=it.next().value,spins=[];let n;while(!(n=it.next()).done){if(opts.withScript!==false)spins.push(n.value)}return {...start,...n.value,spins}}
