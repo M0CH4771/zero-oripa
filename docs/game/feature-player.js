@@ -34,7 +34,7 @@
    ZG.multiplierLabel(ctx,value,cx,cy+size*.10,size*.94,size*.45);
    return true;
   }
-  let duel=null,arena=null,escapeArt=null,upgradeArt=null,arrivalArt=null,arrivalAlt=null,combatArt=null,combatAlt=null;
+  let duel=null,arena=null,escapeArt=null,upgradeArt=null,arrivalArt=null,arrivalAlt=null,animeArrival=null,animeArrivalClose=null,animeGate=null,combatArt=null,combatAlt=null;
   const chestReveals=new Map(),spinChestValues=new Map();
   const chestTypes=['normal','rare','gold','legend','mythic'],chestColors=['#ffe6a1','#9fe4ff','#ffe281','#ffb06e','#f2ddff'];
   let spinChestArt=[],battleArt=null,battleFxArt=null;
@@ -244,11 +244,61 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    const w=actions.width/4,h=actions.height/3;
    ctx.drawImage(actions,Math.min(3,Math.floor(frame))*w,row*h,w,h,-size/2,-size/2,size,size);
   }
+  // Full-stage gate: separate the two door leaves from the closed illustration.
+  // Keep the stone arch fixed and animate their edges continuously over the open frame.
+  async function dwarfGate(closing=false){
+   const art=animeGate||st.scenes?.gate;if(!art||st.skip||st.dead)return;
+   const region=opt.region(st.w,st.h),n=st.add({x:0,y:0,z:58,progress:0,alpha:0});
+   n.draw=(ctx,o)=>{
+    const sw=art.width/(animeGate?4:8),sh=art.height/(animeGate?2:1),w=region.w,h=region.h,scale=Math.min(w/sw,h/sh),dw=sw*scale,dh=sh*scale,x=region.x+(w-dw)/2,y=region.y+(h-dh)/2;
+    const p=closing?1-o.progress:o.progress,opening=ZG.Ease.inOutCubic(p),left=.225,right=.775,mid=.5,top=.29,bottom=.81;
+    ctx.save();ctx.beginPath();ctx.rect(region.x,region.y,w,h);ctx.clip();ctx.globalAlpha=o.alpha;
+    ctx.fillStyle='#0a0e0d';ctx.fillRect(region.x,region.y,w,h);
+    if(animeGate){const f=Math.min(7,Math.floor(opening*7.99)),fx=(f%4)*sw,fy=Math.floor(f/4)*sh,z=1+.07*opening;ctx.drawImage(art,fx+2,fy+2,sw-4,sh-4,x-dw*(z-1)/2,y-dh*(z-1)/2,dw*z,dh*z);ctx.restore();return;}
+    ctx.drawImage(art,7*sw,0,sw,sh,x,y,dw,dh);
+    const a=x+dw*left,b=x+dw*mid,c=x+dw*right,yy=y+dh*top,hh=dh*(bottom-top);
+    ctx.save();ctx.beginPath();ctx.rect(a,yy,c-a,hh);ctx.clip();
+    const shift=(b-a)*opening;
+    ctx.drawImage(art,sw*left,sh*top,sw*(mid-left),sh*(bottom-top),a-shift,yy,b-a,hh);
+    ctx.drawImage(art,sw*mid,sh*top,sw*(right-mid),sh*(bottom-top),b+shift,yy,c-b,hh);
+    const light= Math.sin(Math.PI*p)*.48;
+    if(light>0){const g=ctx.createLinearGradient(b-12-shift,0,b+12+shift,0);g.addColorStop(0,'transparent');g.addColorStop(.5,'rgba(255,216,130,'+light+')');g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.fillRect(b-12-shift,yy,24+shift*2,hh);}
+    ctx.restore();
+    // Keep the original complete image at the closed endpoint.
+    if(p<.025)ctx.drawImage(art,0,0,sw,sh,x,y,dw,dh);
+    ctx.restore();
+   };
+   try{await st.tween(n,{alpha:1},220);ZG.sfx?.play('gate');await st.wait(230);
+    const r=opt.region(st.w,st.h),cx=r.x+r.w/2,cy=r.y+r.h*.65;
+    st.burst(cx,cy,{n:16,colors:['#ffe2a1','#b9a082','#d8cdbc'],speed:1.2,life:650,gravity:.015});
+    await st.tween(n,{progress:1},closing?1350:1850,ZG.Ease.linear);
+    if(closing){st.shake(3,170);ZG.sfx?.play('land');}
+    await st.wait(180);await st.tween(n,{alpha:0},240);
+   }finally{st.remove(n);}
+  }
   async function monsterArrival(monster,hp,reward){
-   const row={Goblin:0,Troll:1,Dragon:2}[monster],region=opt.region(st.w,st.h),size=Math.min(st.w*.94,region.h*.92,430);
-   const n=st.add({x:st.w/2,y:region.y+region.h*.5,z:60,frame:0});
-   n.draw=(ctx,s)=>{const image=arrivalAlt||arrivalArt;if(image){const sw=image.width/6,sh=image.height/3,col=Math.min(5,Math.floor(s.frame));ctx.drawImage(image,col*sw,row*sh,sw,sh,-size/2,-size/2,size,size);}ctx.fillStyle='#090c0be9';ZG.rr(ctx,-size/2,-size/2,size,45,8);ctx.fill();text(ctx,foeNames[monster]+' 出現',0,-size/2+22,23,'#ffe6a1',size-20);ctx.fillStyle='#090c0be9';ZG.rr(ctx,-size/2,size/2-46,size,46,8);ctx.fill();text(ctx,'HP '+hp+' · 勝利で ＋'+reward+' スピン',0,size/2-23,15,'#fff5d7',size-16);};
-   try{ZG.sfx?.play('enemyArrival');await st.tween(n,{frame:5.99},1600,ZG.Ease.linear);await st.wait(450);}finally{st.remove(n);}
+   const row={Goblin:0,Troll:1,Dragon:2}[monster],r=opt.region(st.w,st.h),image=animeArrival||arrivalArt||arrivalAlt;
+   if(st.skip||st.dead)return;
+   const n=st.add({x:r.x+r.w/2,y:r.y+r.h/2,z:60,frame:0,zoom:1,alpha:0,caption:0});
+   n.draw=(ctx,o)=>{
+    const w=r.w,h=r.h,sw=image?.width/(animeArrival?4:6),sh=image?.height/3;
+    ctx.save();ctx.beginPath();ctx.rect(-w/2,-h/2,w,h);ctx.clip();ctx.globalAlpha=o.alpha;ctx.fillStyle='#080c10';ctx.fillRect(-w/2,-h/2,w,h);
+    if(image){const side=Math.min(w,h)*o.zoom, frame=Math.floor(o.frame),close=animeArrival&&animeArrivalClose&&frame>=4,art=close?animeArrivalClose:image,cols=animeArrival?4:6,aw=art.width/cols,ah=art.height/3,f=Math.min(cols-1,close?frame-4:frame);ctx.drawImage(art,f*aw+2,row*ah+2,aw-4,ah-4,-side/2,-side/2,side,side);const edge=ctx.createLinearGradient(0,-h/2,0,h/2);edge.addColorStop(0,'#080c10dd');edge.addColorStop(.23,'transparent');edge.addColorStop(.77,'transparent');edge.addColorStop(1,'#080c10ee');ctx.fillStyle=edge;ctx.fillRect(-w/2,-h/2,w,h);}
+    const bar=Math.min(18,h*.05);ctx.fillStyle='#050708';ctx.fillRect(-w/2,-h/2,w,bar);ctx.fillRect(-w/2,h/2-bar,w,bar);
+    if(o.caption>0){ctx.globalAlpha=o.alpha*o.caption;const bw=Math.min(w*.94,460),y=h*.26;ctx.fillStyle='#0b1419e8';ZG.rr(ctx,-bw/2,y-25,bw,58,7);ctx.fill();ctx.strokeStyle='#d1ad63';ctx.lineWidth=1.5;ctx.stroke();text(ctx,foeNames[monster]+' 出現',0,y-8,Math.min(26,w*.065),'#ffe5b0',bw-16);text(ctx,'HP '+hp+'  ·  勝利で ＋'+reward+'G',0,y+16,Math.min(16,w*.045),'#fff8df',bw-16);}
+    ctx.restore();
+   };
+   const times=animeArrival&&animeArrivalClose?(monster==='Goblin'?[275,220,180,240,200,190,220]:monster==='Troll'?[340,300,230,260,220,250,280]:[400,330,260,250,270,250,320]):animeArrival?[380,300,280]:monster==='Goblin'?[350,380,280,260,380]:monster==='Troll'?[420,420,420,300,500]:[480,420,400,340,550];
+   try{
+    await st.tween(n,{alpha:1,zoom:1.04},230);
+    ZG.sfx?.play('enemyArrival');await st.wait(160);
+    for(let k=1;k<=times.length;k++){
+     await st.tween(n,{frame:k,zoom:1.04+k*.016},times[k-1],ZG.Ease.linear);
+     if(k===3){st.shake(row===0?2:row===1?5:7,220);st.burst(r.x+r.w*.5,r.y+r.h*.72,{n:16+row*8,colors:['#d0b28a','#ffe2a3','#8e765b'],speed:2+row,life:450,gravity:.035});}
+     if(k===(animeArrivalClose?6:4)&&row===2)st.flash('#ffad64',.08);
+    }
+    await st.tween(n,{caption:1,zoom:1.19},220);await st.wait(650);await st.tween(n,{alpha:0},240);
+   }finally{st.remove(n);}
   }
   function drawCombat(ctx,row,frame,size){
    if(!combatAlt)return false;
@@ -331,7 +381,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    note='鉱山へ移動';await st.banner(['LUCKY WAGON','3 RESPINS'],{});cols=6;rows=6;
    grid=entry.grid;trainTotal=grid.reduce((s,t)=>s+(t?.value||0),0);hits=[];await st.wait(300);await trainEvents(entry.events);
   }
-  return {st,idle:reset,prepareDogs,async warm(cb){if(mode==='dwarf'){[arena,escapeArt,upgradeArt,arrivalArt,arrivalAlt,combatArt,combatAlt]=await Promise.all(['arena','escape','upgrade-reel-v1','arrival-v3','arrival-v4','combat-v3','combat-v4'].map(n=>im('./assets/anime/dwarf/'+n+'.webp')));[spinChestArt,battleArt,battleFxArt]=await Promise.all([Promise.all(chestTypes.map(n=>im('./assets/anime/dwarf/chest118-'+n+'.webp'))),im('./assets/anime/dwarf/battle124.webp'),im('./assets/anime/dwarf/fx129.webp')]);}await Promise.all(({dwarf:['gate','knockout'],gods:['gate','cast'],dogs:[],train:[]})[mode].map(name=>st.loadScene(name)));[bg,atlas,actions,plates,kennels,monsters,trophies,blanks,glyphs]=await Promise.all([im('./assets/anime/'+mode+'/bg.webp'),mode==='train'?im('./assets/anime/train/wagon-atlas.webp'):ZG.loadSymbolAtlas(mode),['train','dwarf'].includes(mode)?im('./assets/anime/'+mode+'/actions.webp'):null,['train','gods'].includes(mode)?im('./assets/anime/'+mode+'/multipliers.webp'):null,mode==='dogs'?im('./assets/anime/dogs/kennels.webp'):null,...['monsters','trophies'].map(name=>mode==='dwarf'?im('./assets/anime/dwarf/'+name+'.webp'):null),...['blanks','glyphs'].map(name=>mode==='train'?im('./assets/anime/train/'+name+'.webp'):null)]);cb?.(1)},async play(r){
+  return {st,idle:reset,prepareDogs,async warm(cb){if(mode==='dwarf'){[animeArrival,animeArrivalClose,animeGate]=await Promise.all(['arrival-anime132.png','arrival-close132.png','gate-anime132.png'].map(n=>im('./assets/anime/dwarf/'+n)));[arena,escapeArt,upgradeArt,arrivalArt,arrivalAlt,combatArt,combatAlt]=await Promise.all(['arena','escape','upgrade-reel-v1','arrival-v3','arrival-v4','combat-v3','combat-v4'].map(n=>im('./assets/anime/dwarf/'+n+'.webp')));[spinChestArt,battleArt,battleFxArt]=await Promise.all([Promise.all(chestTypes.map(n=>im('./assets/anime/dwarf/chest118-'+n+'.webp'))),im('./assets/anime/dwarf/battle124.webp'),im('./assets/anime/dwarf/fx129.webp')]);}await Promise.all(({dwarf:['gate'],gods:['gate','cast'],dogs:[],train:[]})[mode].map(name=>st.loadScene(name)));[bg,atlas,actions,plates,kennels,monsters,trophies,blanks,glyphs]=await Promise.all([im('./assets/anime/'+mode+'/bg.webp'),mode==='train'?im('./assets/anime/train/wagon-atlas.webp'):ZG.loadSymbolAtlas(mode),['train','dwarf'].includes(mode)?im('./assets/anime/'+mode+'/actions.webp'):null,['train','gods'].includes(mode)?im('./assets/anime/'+mode+'/multipliers.webp'):null,mode==='dogs'?im('./assets/anime/dogs/kennels.webp'):null,...['monsters','trophies'].map(name=>mode==='dwarf'?im('./assets/anime/dwarf/'+name+'.webp'):null),...['blanks','glyphs'].map(name=>mode==='train'?im('./assets/anime/train/'+name+'.webp'):null)]);cb?.(1)},async play(r){
    if(mode==='dogs'){if(!dogPrepared){reset();await showDogs(r.entry);await reveal('BONUS ACTIVE',r.entry.initialSpins+' FREE SPINS');}dogPrepared=false;currentUnit=r.unit||1;let score=0;hooks.onSpin(0,r.entry.initialSpins);await hooks.onBonusIntro?.({spins:r.entry.initialSpins,choice:r.entry.mode});hooks.onMode?.('BONUS');let i=0;for await(const sp of r.spinStream()){note=sp.note;hooks.onSpin(i+1,sp.total);await showDogs(sp,true);dogPay=sp.win;if(sp.win){ZG.sfx?.play('win');for(const g of sp.groups){const p=dogPositions[g.cells[0]];for(const j of g.cells){const q=cellPoint(j);if(q)st.impact(q.x,q.y,Math.min(18,st.w*.035),'#ffe295',.35);}if(p)await st.popText(p.x,p.y,g.ways+' WAYS · +'+hooks.fmt(g.value*currentUnit),{size:Math.min(20,st.w*.05),hold:220});}await st.wait(280);}hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.rate||opt.getRate?.(),hooks.fmt);await st.roundPause();i++;}if(r.guarantee)await st.banner(['最終配当','1 C'],{hold:350});if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);note='FREE SPINS COMPLETED';hooks.onMode?.('COMPLETE');return;}
    reset();currentUnit=r.unit||1;let score=0;hooks.onMode?.('ENTRY');hooks.onSpin(0,r.entry?.initialSpins??10);if(mode==='train'&&r.entry)await trainEntry(r.entry);else if(r.entry){await show(r.entry.grid);hits=r.entry.grid.map((s,i)=>s==='S'?i:-1).filter(i=>i>=0);await st.wait(300);if(r.entry.tickets)await tickets(r.entry.tickets);if(mode==='gods'){score=r.entry.win;godsTumble=hooks.fmt(score)+' C';hooks.onScore(score);}await reveal(cfg.title,r.entry.initialSpins+' FREE SPINS');await hooks.onBonusIntro?.({spins:r.entry.initialSpins});}else if(mode==='dwarf'){hooks.onSpin(0,10);await reveal('宝箱ラッシュ','10フリースピン');currentUnit=r.unit;hooks.onBaseUnit?.(currentUnit);hooks.onDwarfInventory?.(r.inventory);await hooks.onBonusIntro?.({spins:10});}else {await reveal(cfg.title,'BONUS START');await hooks.onBonusIntro?.({spins:10});}hooks.onMode?.('BONUS');
    let i=0;for await(const sp of r.spinStream()){cols=sp.cols;rows=sp.rows;note=sp.battle?'バトル':sp.note;if(mode==='dwarf')hooks.onSpin(sp.freePlayed,Math.max(sp.freePlayed,sp.freePlayed+sp.remaining-(sp.battle?(sp.awarded||0)+(sp.extra||0):0)));else if(mode==='train')hooks.onSpin(i+1,i+1+Math.max(0,trainRemaining-1));else hooks.onSpin(i+1,Math.max(i+1,(sp.total||r.played)-(sp.add||0)));
@@ -345,7 +395,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
     else if(!sp.battle){if(mode==='dwarf'){for(const key of sp.activated||[])await itemActivation(key);hooks.onDwarfInventory?.(sp.inventory);}if(mode==='gods'){godsTumble='0 C';godsMult=sp.previousMult;hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(godsMult));}spinChestValues.clear();for(const chest of sp.chests||[])spinChestValues.set(chest.pos,chest.value);await show(sp.grid,sp.hits||[],[],true);}
     if(sp.battle){
      hooks.onFeatureMetric?.(sp.forced?'最終バトル':'バトル','対 '+foeNames[sp.monster]);
-     await st.transition('gate');for(const key of sp.activated||[])if(key!=='pickaxe')await itemActivation(key);
+     await dwarfGate();for(const key of sp.activated||[])if(key!=='pickaxe')await itemActivation(key);
      await monsterArrival(sp.monster,sp.monsterHP,sp.baseReward);
      duel={monster:sp.monster,hp:sp.heroMax,heroMax:sp.heroMax,enemyHP:sp.monsterHP,max:sp.monsterHP};
      const fighter=(id,x,flip)=>{const region=opt.region(st.w,st.h),d=Math.min(165,st.w*.40,Math.max(36,region.h*.25)),n=st.add({x,y:region.y+Math.max(52+d/2,region.h*.34),z:25,motion:0});n.draw=(ctx)=>{if(drawCombat(ctx,flip===1?0:({Goblin:1,Troll:2,Dragon:3}[sp.monster]),n.motion||0,d))return;if(flip!==1&&sp.monster!=='Goblin'&&monsters){
@@ -358,9 +408,9 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
       await battleMotion(actor,target,action.damage,()=>{duel.hp=action.heroHP;duel.enemyHP=action.enemyHP;st.popText(target.x,target.y-25,damage===0?'BLOCK':'−'+damage+' HP',{size:Math.min(30,17+action.damage*2),hold:380});target.pose=damage===0?0:(attack?action.enemyHP:action.heroHP)<=0?3:2;target.motion=damage===0?0:10;ZG.sfx?.play(attack?'attack':'damage');},attack,damage===0);
       hp=action.heroHP;enemyHP=action.enemyHP;await st.wait(150);
      }}finally{st.remove(hero);st.remove(enemy);}
-     if(sp.revived)await itemActivation('revive');if(sp.won){ZG.sfx?.play('featureWin');await st.transition('knockout');await st.wait(240);}else{ZG.sfx?.play('damage');await st.wait(300);}
+     if(sp.revived)await itemActivation('revive');if(sp.won){ZG.sfx?.play('featureWin');await st.wait(240);}else{ZG.sfx?.play('damage');await st.wait(300);}
      await reveal(sp.won?'勝利！':'敗北',sp.won?'フリースピン ＋'+sp.awarded+'回':(sp.remaining?'追加なし · 残り '+sp.remaining+' 回':'追加なし · ラッシュ終了'));
-     hooks.onFeatureMetric?.('バトル結果',sp.won?'勝利 ＋'+sp.awarded+'回':'敗北');if(sp.awarded)await st.carry({x:st.w*.5,y:st.h*.45},st.anchor('#rSpin',{x:st.w*.85,y:st.h*.84}),'＋'+sp.awarded+'回','#ffe9a2',26);hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining);duel=null;if(sp.won){await rewardReel(sp.reward);if(sp.nextUnit>currentUnit)await itemActivation(sp.reward.key,{before:currentUnit,after:sp.nextUnit});else if(sp.extra)await itemActivation(sp.reward.key,{message:'＋'+sp.extra+' G'});else if(sp.reward.key==='evolution')await itemActivation('evolution',{item:sp.reward,message:'最低宝箱 ×'+sp.inventory.minimum});else if(sp.reward.key==='pickaxe')await itemActivation('pickaxe',{message:'宝箱出現率 ×1.5'});currentUnit=sp.nextUnit;hooks.onBaseUnit?.(currentUnit);}hooks.onDwarfInventory?.(sp.inventory);await st.transition('gate','',true);note=sp.note;
+     hooks.onFeatureMetric?.('バトル結果',sp.won?'勝利 ＋'+sp.awarded+'回':'敗北');if(sp.awarded)await st.carry({x:st.w*.5,y:st.h*.45},st.anchor('#rSpin',{x:st.w*.85,y:st.h*.84}),'＋'+sp.awarded+'回','#ffe9a2',26);hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining);duel=null;if(sp.won){await rewardReel(sp.reward);if(sp.nextUnit>currentUnit)await itemActivation(sp.reward.key,{before:currentUnit,after:sp.nextUnit});else if(sp.extra)await itemActivation(sp.reward.key,{message:'＋'+sp.extra+' G'});else if(sp.reward.key==='evolution')await itemActivation('evolution',{item:sp.reward,message:'最低宝箱 ×'+sp.inventory.minimum});else if(sp.reward.key==='pickaxe')await itemActivation('pickaxe',{message:'宝箱出現率 ×1.5'});currentUnit=sp.nextUnit;hooks.onBaseUnit?.(currentUnit);}hooks.onDwarfInventory?.(sp.inventory);await dwarfGate(true);note=sp.note;
     }
     for(const chest of sp.chests||[]){hits=[chest.pos];const p=cellPoint(chest.pos);if(p&&chest.value){
       const state={active:true},tier=chestTier(chest.value),color=chestColors[tier];chestReveals.set(chest.pos,state);
