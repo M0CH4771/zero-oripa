@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import {round,evaluate,LINES,TIERS,MAX_SPINS,UNIT,CAP} from '../docs/tropical.mjs';
+import {round,evaluate,LINES,TIERS,MAX_SPINS,UNIT,CAP,lampChance} from '../docs/tropical.mjs';
 assert.equal(evaluate(Array(9).fill(3)).length,5);
 assert.equal(evaluate([12,12,12],2).length,1);
 assert.equal(evaluate([12,13,14],2).length,0);
 let seed=781;const rand=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/2**32);
-const n=300000,bet=10000;let sum=0,spins=0,upgrades=[0,0],extras=0;
+const n=300000,bet=10000;let sum=0,spins=0,upgrades=[0,0],extras=0,early=0;const completed=[0,0],success=[0,0];
 for(let i=0;i<n;i++){const r=round(bet,{rand});assert.ok(r.entryLine.every(j=>r.entry[j]===TIERS[r.tier].seven));assert.equal(evaluate(r.entry).filter(w=>w.symbol<3).length,1);if(r.tier!==2){assert.deepEqual([r.entry[0],r.entry[1],r.entry[3],r.entry[4]],[1,1,2,2]);}assert.ok(r.steps.length>=1&&r.steps.length<=MAX_SPINS);assert.equal(r.steps.at(-1).remain,0);assert.equal(r.score,Math.max(1,r.steps.reduce((s,x)=>s+x.win,0)));assert.equal(r.score,Math.max(1,Math.min(CAP*bet,Math.floor(r.raw*UNIT*bet))));sum+=r.score;spins+=r.steps.length;
-for(const s of r.steps){if(s.phase===2){assert.equal(s.grid.length,3);assert.ok(s.grid.every(x=>x>=12&&x<=14));if(s.continuation.extra){assert.equal(s.mode,1);extras++;}}else {assert.equal(s.grid.length,9);if(s.continuation?.upgrade){assert.equal(s.mode,s.phase+1);assert.ok(LINES[0].every(j=>s.grid[j]===TIERS[s.mode].seven));upgrades[s.phase]++;}}}}
-const rtp=sum/n/bet;assert.ok(rtp>=.96&&rtp<=.98);assert.ok(upgrades.every(x=>x>0)&&extras>0);console.log({rtp,meanSpins:spins/n,upgrades,extras});
+let lastSet=0,lit=false;for(const s of r.steps){if(s.set!==lastSet){lit=false;lastSet=s.set;}if(s.phase!==2){if(lit)assert.ok(s.lit);if(s.justLit){assert.ok(!lit&&s.lit);if(!s.continuation)early++;}lit=s.lit;if(s.continuation){assert.equal(s.continuation.success,lit);completed[s.phase]++;if(lit){success[s.phase]++;assert.ok(LINES[0].every(j=>s.grid[j]===TIERS[s.mode].seven));}}}if(s.phase===2){assert.equal(s.grid.length,3);assert.ok(s.grid.every(x=>x>=12&&x<=14));if(s.continuation.extra){assert.equal(s.mode,1);extras++;}}else {assert.equal(s.grid.length,9);if(s.continuation?.upgrade){assert.equal(s.mode,s.phase+1);assert.ok(LINES[0].every(j=>s.grid[j]===TIERS[s.mode].seven));upgrades[s.phase]++;}}}}
+const rtp=sum/n/bet;assert.ok(rtp>=.96&&rtp<=.98);assert.ok(upgrades.every(x=>x>0)&&extras>0);assert.ok(early>0);for(let t=0;t<2;t++){assert.ok(Math.abs(success[t]/completed[t]-TIERS[t].continue)<.005);}console.log({rtp,meanSpins:spins/n,upgrades,extras,early,continuation:success.map((x,i)=>x/completed[i]),lampChance:[lampChance(0),lampChance(1)]});
