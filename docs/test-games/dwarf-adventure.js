@@ -82,9 +82,9 @@ export function* dwarfAdventureStream({rate,rand=secureRandom,chestChance=DWARF_
   const beforeUnit=unit;let awarded=0,reward=null,extra=0;
   if(won){
    awarded=DWARF_BATTLE_REWARDS[m];remaining+=awarded;
-   const tier=pick(DWARF_REWARD_TIERS[m].map((w,j)=>sage&&j<2?0:w),rand);sage=false;
+   const sageUsed=sage,tier=pick(DWARF_REWARD_TIERS[m].map((w,j)=>sage&&j<2?0:w),rand);sage=false;
    const pool=tiers[tier].filter(x=>x.key!=='evolution'||evolution<3);
-   const selected=Math.floor(rand()*pool.length);reward={...pool[selected],pool:pool.map(x=>({...x})),selected};
+   const selected=Math.floor(rand()*pool.length);reward={...pool[selected],pool:pool.map(x=>({...x})),selected,sageUsed};
    switch(reward.key){
     case'shield':shield++;break;
     case'smallClock':extra=2;break;

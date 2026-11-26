@@ -1,7 +1,7 @@
 import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=cap119';
 import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live113';
 import {BLOCKS,VOLATILITY as mineVolatility} from './test-games/mine.js?v=cap119';
-import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,DWARF_ITEMS} from './test-games/features.js?v=adventure128';
+import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,DWARF_ITEMS} from './test-games/features.js?v=adventure129';
 const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:4});
 const coin=n=>fmt(n)+' C';
 const order=['rush','fruit','mine','plinko','gods','dogs','train','dwarf'];
