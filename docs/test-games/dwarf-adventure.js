@@ -1,7 +1,8 @@
 import {secureRandom} from './common.js';
 export const DWARF_CHEST_WEIGHTS={1:400,3:300,5:174,10:100,30:20,50:5,100:1};
-export const DWARF_CHEST_CHANCE=.052;
+export const DWARF_CHEST_CHANCE=.0531;
 export const DWARF_BATTLE_CHANCE=1/12;
+export const DWARF_ENCOUNTER_WEIGHTS=[50,30,20];
 export const DWARF_MAX_SPINS=100;
 export const DWARF_INITIAL_SCALE=.01;
 export const DWARF_REWARD_TIERS=[[70,25,4,1,0],[45,35,15,4,1],[20,30,30,15,5]];
@@ -64,7 +65,7 @@ export function* dwarfAdventureStream({rate,rand=secureRandom,chestChance=DWARF_
   yield {grid:g,raw,win,cols:3,rows:3,hits:[...new Set(hits)],chests,unit,freePlayed,remaining,total:Math.min(DWARF_MAX_SPINS,freePlayed+remaining),battleTriggered,forced,activated:all?['blast']:[],inventory:inventory(),note:battleTriggered?'BATTLE TRIGGER':'宝箱ラッシュ'};
   if(!battleTriggered)continue;
   played++;
-  const m=Math.floor(rand()*3),monster=monsters[m],choices=choicesByMonster[m],weights=DWARF_ATTACK_WEIGHTS[m],monsterHP=Math.max(1,m+3-whetstone),battleItems=[];
+  const m=pick(DWARF_ENCOUNTER_WEIGHTS,rand),monster=monsters[m],choices=choicesByMonster[m],weights=DWARF_ATTACK_WEIGHTS[m],monsterHP=Math.max(1,m+3-whetstone),battleItems=[];
   if(whetstone)battleItems.push('whetstone');if(sword)battleItems.push('sword');if(pickaxe)battleItems.push('pickaxe');
   let hp=4,enemy=monsterHP,boost=sword;
   whetstone=sword=0;pickaxe=false;
