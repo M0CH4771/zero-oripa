@@ -1,4 +1,4 @@
-import {round,SYMBOLS,PAYS,TIERS,UNIT,LINES} from './tropical.mjs?v=hibiscus100';
+import {round,SYMBOLS,PAYS,TIERS,UNIT,LINES,REELS,ULTIMATE_STRIP,reelWindow,reelStop} from './tropical.mjs?v=hibiscus101';
 const $=s=>document.querySelector(s),reels=[...document.querySelectorAll('.reel')],fmt=n=>Math.round(n).toLocaleString('ja-JP');
 let balance=100000,busy=false,speed=1,muted=true,context=null,displayed=0;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms*speed));
@@ -9,14 +9,17 @@ function layout(g){$('#board').classList.toggle('ultimate',g.length===3);}
 function column(g,c){return g.length===3?[g[c]]:[g[c],g[c+3],g[c+6]];}
 function renderCol(g,c){const a=column(g,c);reels[c].replaceChildren(...a.map(symbol));reels[c].dataset.symbols=a.join(',');}
 function render(g){layout(g);for(let c=0;c<3;c++)renderCol(g,c);$('#lines').replaceChildren();}
-async function spin(g,{entry=false}={}){layout(g);$('#lines').replaceChildren();const rows=g.length===3?1:3,rate=speed,normal=rate===1;await Promise.all(reels.map(async(reel,c)=>{
- const cell=(reel.getBoundingClientRect().height-(rows-1)*3)/rows,step=cell+3,final=column(g,c),old=(reel.dataset.symbols||'3,7,9').split(',').map(Number).slice(0,rows);while(old.length<rows)old.push(3);
- const count=(normal?13:9)+c*3,mid=Array.from({length:count},()=>rows===1?12+Math.floor(Math.random()*3):3+Math.floor(Math.random()*9));
- if(entry&&rows===3){for(let i=2;i<count-1;i+=5){mid[i]=1;mid[i+1]=2;}}
- const track=document.createElement('div');track.className='reel-track';for(const i of [...final,...mid,...old]){const el=symbol(i);el.style.height=cell+'px';track.append(el);}reel.classList.add('rolling');reel.replaceChildren(track);
- const duration=normal?900+c*220:(650+c*185)*rate;
- try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)await new Promise(r=>setTimeout(r,duration));else{const a=track.animate([{transform:'translateY('+(-(count+rows)*step)+'px)',filter:'blur(1px)'},{transform:'translateY(0px)',filter:'blur(0px)'}],{duration,easing:'cubic-bezier(.18,.68,.36,1)',fill:'forwards'});await a.finished;}}finally{renderCol(g,c);reel.classList.remove('rolling');tone(350+c*110);}
- }));}
+async function spin(g){layout(g);$('#lines').replaceChildren();const rows=g.length===3?1:3,rate=speed,normal=rate===1;
+ const reach=rows===3?LINES.filter(line=>g[line[0]]<3&&g[line[0]]===g[line[1]]):[];
+ await Promise.all(reels.map(async(reel,c)=>{
+ const strip=rows===1?ULTIMATE_STRIP:REELS[c],final=column(g,c);let old=(reel.dataset.symbols||'').split(',').map(Number),end=reelStop(strip,final),start=old.length===rows?reelStop(strip,old):-1;
+ if(end<0)throw Error('Invalid fixed reel stop');if(start<0)start=0;
+ const cell=(reel.getBoundingClientRect().height-(rows-1)*3)/rows,step=cell+3,loops=normal?2:1,distance=loops*strip.length+(start-end+strip.length)%strip.length;
+ const track=document.createElement('div');track.className='reel-track';for(let i=0;i<distance+rows;i++){const el=symbol(strip[(end+i)%strip.length]);el.style.height=cell+'px';track.append(el);}reel.classList.add('rolling');reel.replaceChildren(track);
+ const duration=normal?1450+c*260+(c===2&&reach.length?550:0):(650+c*185)*rate;
+ try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)await new Promise(r=>setTimeout(r,duration));else{const a=track.animate([{transform:'translateY('+(-distance*step)+'px)',filter:'blur(1px)'},{transform:'translateY(0px)',filter:'blur(0px)'}],{duration,easing:'cubic-bezier(.15,.45,.65,1)',fill:'forwards'});await a.finished;}}finally{renderCol(g,c);reel.classList.remove('rolling');tone(350+c*110);}
+ if(c===1&&reach.length){status(reach.length>1?'ダブルテンパイ':'7 テンパイ');for(const line of reach)for(const j of line.slice(0,2))reels[j%3].children[Math.floor(j/3)]?.classList.add('hit');}
+ }));document.querySelectorAll('.cell.hit').forEach(el=>el.classList.remove('hit'));}
 function highlight(wins,phase=0){for(const w of wins){for(const j of w.cells)reels[j%3].children[phase===2?0:Math.floor(j/3)]?.classList.add('hit');const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.setAttribute('points',w.cells.map(j=>((j%3)*100+50)+','+(phase===2?150:Math.floor(j/3)*100+50)).join(' '));line.setAttribute('fill','none');line.setAttribute('stroke','#ffeb72');line.setAttribute('stroke-width','3');$('#lines').append(line);}}
 const status=s=>$('#status').textContent=s;
 function setMode(i){document.body.dataset.mode=String(i);$('#mode').textContent=TIERS[i].name;}
@@ -33,4 +36,4 @@ for(const w of s.wins){document.querySelectorAll('.cell.hit').forEach(el=>el.cla
 if(s.continuation){const c=s.continuation;status(c.extra?'SUPER RUSHへ移行':c.upgrade?'ラッシュ昇格':c.ultimate?'配当成立 · 継続':c.success?'RETRIGGER · ＋8 SPINS':'ラッシュ終了');await sleep(400);$('#flower').classList.remove('lit');if(c.upgrade||c.extra){setMode(s.mode);$('#flower').classList.remove('lit');await modal(TIERS[s.mode].name,s.mode===2?'<p>専用3×1リール</p>':'<p>8 FREE SPINS</p>','続ける');}}$('#topRemaining').textContent=s.mode===2?'∞':s.remain;}
 balance+=r.score;$('#balance').textContent=fmt(balance);$('#total').textContent=fmt(r.score);$('#remain').textContent='0';$('#topRemaining').textContent='0';$('#flower').classList.remove('lit');status('RUSH COMPLETE');await modal('RUSH COMPLETE','<p style="font-size:30px;font-weight:900;color:#ffe39d">'+fmt(r.score)+' C</p><p>'+r.steps.length+' SPINS</p>','閉じる');
 }finally{busy=false;for(const id of ['buy','bet','refill','info'])$('#'+id).disabled=false;}};
-render([3,7,10,2,1,0,8,11,5]);
+render(Array.from({length:9},(_,j)=>REELS[j%3][Math.floor(j/3)]));
