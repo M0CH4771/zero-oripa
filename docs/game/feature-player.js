@@ -317,7 +317,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
       const trophy=st.add({...p,z:33,sx:1,sy:1,frame:0,reveal:0});
       trophy.draw=(ctx)=>{const d=board.cell;drawSpinChest(ctx,chest.value,trophy.frame,0,0,d);if(trophy.reveal>0)drawChestNumber(ctx,chest.value,0,d*.12,d,trophy.reveal);};
       try{await st.tween(trophy,{sx:1+Math.min(.15,tier*.04),sy:1+Math.min(.15,tier*.04),frame:7.99},400+tier*100,ZG.Ease.linear);ZG.sfx?.play('sparkle');st.impact(p.x,p.y,board.cell*(.55+tier*.07),color,1+tier*.2);st.sparkle(p.x,p.y,board.cell*.35,8+tier*4);await st.tween(trophy,{reveal:1,sx:1,sy:1},180,ZG.Ease.outCubic);await st.wait(200+tier*75);}finally{st.remove(trophy);state.active=false;}
-     }await st.popText(p?.x??st.w/2,p?.y??st.h*.46,chest.add?'+'+chest.add+' FREE SPINS':mode==='dwarf'?'×'+chest.value+' · '+hooks.fmt(chest.win??Math.round(chest.value*currentUnit))+' C':'×'+chest.value,{size:Math.min(24,st.w*.065),hold:280});}
+     }await st.popText(p?.x??st.w/2,p?.y??st.h*.46,chest.add?'+'+chest.add+' FREE SPINS':mode==='dwarf'?hooks.fmt(chest.win??Math.round(chest.value*currentUnit))+' C':'×'+chest.value,{size:Math.min(24,st.w*.065),hold:280});}
     if(mode==='gods'){for(const step of sp.steps||[])await playGodsTumble(step,score);await godsOrbs(sp);if(sp.scatterRaw){hits=grid.flatMap((v,j)=>v==='S'?[j]:[]);await st.popText(st.w/2,st.h*.46,'SCATTER +'+hooks.fmt(sp.scatterRaw*currentUnit),{size:Math.min(30,st.w*.07),hold:300});}godsTumble=hooks.fmt(sp.win)+' C';}
     if(sp.add&&mode==='gods')await st.featureCue('追加スピン','＋'+sp.add+' 回',{hold:350,color:'#ffe6a0'});
     else if(sp.add)await reveal('+'+sp.add+' FREE SPINS','追加フリースピン');
