@@ -17,3 +17,10 @@
 #gm .bonus-intro-count strong{font-family:var(--cab-num)!important}
 #gm .intro-tropical .bonus-intro-art{background-image:url('./assets/anime/tropical/atlas109.webp')!important;background-size:400% 400%!important}
 @media(max-width:360px){#gm .gm-row .gm-box b{font-size:clamp(13px,4vw,17px)!important}#gm .gm-ctl :is(.gm-icon.sm,#rPlay) small{font-size:10px!important}}
+
+/* Tumble details are meaningful only after a matching group has paid. */
+#gm #fruitDetail[hidden]{display:none!important}
+#gm #fruitDetail:not([hidden]){position:absolute!important;left:50%!important;right:auto!important;transform:translateX(-50%)!important;width:min(calc(100% - 24px),600px)!important;max-width:none!important;box-sizing:border-box;display:flex!important;align-items:center;gap:6px;padding:3px 8px!important;height:30px!important;min-height:30px!important;overflow:hidden}
+#gm #fruitDetail>span{flex:none;font-size:10px;white-space:nowrap}
+#gm #fruitDetailItems{display:flex;align-items:center;gap:5px;min-width:0;flex:1;overflow-x:auto;white-space:nowrap}
+#gm #fruitDetailItems>span{display:inline-flex;align-items:center;gap:4px;flex:none;font-size:11px;white-space:nowrap}
