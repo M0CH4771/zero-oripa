@@ -102,13 +102,13 @@ export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1
 export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
 export const DWARF_WEIGHTS={Goblin:[3185,3185,1815,1815],Troll:[3103,3103,1897,1897],Dragon:[2790,2790,2210,2210]};
 export const DWARF_CHEST_WEIGHTS={1:4000,3:3000,5:1000,10:1000,30:800,50:150,100:50};
-export const DWARF_SYMBOL_WEIGHTS={s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:3.715,s9:3.715};
+export const DWARF_SYMBOL_WEIGHTS={s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:3.07,s9:3.07};
 export const DWARF_INITIAL_SCALE=.001;
-export const DWARF_INITIAL_SCALES=Array.from({length:10},(_,i)=>(i+1)/1000);
-export function dwarfInitialTable(rate){return {values:DWARF_INITIAL_SCALES.map(s=>Number((rate*s).toFixed(8))),weights:Array(10).fill(10)};}
-export const DWARF_UPGRADE_MULTIPLIERS=[1.2,1.5,2,3];
-export const DWARF_UPGRADE_WEIGHTS={Goblin:[50,30,15,5],Troll:[30,30,30,10],Dragon:[20,30,30,20]};
-export function dwarfUpgradeTable(rate,monster){return {values:[...DWARF_UPGRADE_MULTIPLIERS],weights:[...DWARF_UPGRADE_WEIGHTS[monster]]};}
+export const DWARF_INITIAL_SCALES=[.001,.003,.005,.01];
+export function dwarfInitialTable(rate){return {values:DWARF_INITIAL_SCALES.map(s=>Number((rate*s).toFixed(8))),weights:Array(4).fill(25)};}
+export const DWARF_UPGRADE_MULTIPLIERS={Goblin:[1.5,2],Troll:[2,3],Dragon:[3,5]};
+export const DWARF_UPGRADE_WEIGHTS={Goblin:[80,20],Troll:[80,20],Dragon:[80,20]};
+export function dwarfUpgradeTable(rate,monster){return {values:[...DWARF_UPGRADE_MULTIPLIERS[monster]],weights:[...DWARF_UPGRADE_WEIGHTS[monster]]};}
 function dwarfInitial(rate,rand){const {values,weights}=dwarfInitialTable(rate),selected=Math.min(values.length-1,Math.floor(rand()*values.length));return {selected,values,weights,amount:values[selected]};}
 function dwarfUpgrade(rate,monster,rand){const {values,weights}=dwarfUpgradeTable(rate,monster);let ticket=rand()*weights.reduce((a,b)=>a+b,0),selected=values.length-1;for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}return {selected,values,weights,amount:values[selected]};}
 function* dwarfStream(r){
