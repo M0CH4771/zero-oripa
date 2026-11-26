@@ -3,7 +3,7 @@ import * as rush from './rush.js?v=live113';
 import * as fruit from './fruit.js?v=live113';
 import * as mine from './mine.js?v=live113';
 import * as plinko from './plinko.js?v=live113';
-import {FEATURE_CONFIG,featureModule} from './features.js?v=live113';
+import {FEATURE_CONFIG,featureModule} from './features.js?v=dwarf117';
 
 
 export const GAMES = {
@@ -15,7 +15,7 @@ export const GAMES = {
 };
 export function gameOf(name) { return GAMES[name] || GAMES.rush; }
 export function volatilityOf(game, vol) { const g = gameOf(game).mod; return g.VOLATILITY[vol] || g.VOLATILITY.normal; }
-export const GAME_VOLATILITY={mine:2,rush:3,gods:4,tropical:3,dogs:4,fruit:5,dwarf:3};
+export const GAME_VOLATILITY={mine:2,rush:3,gods:4,tropical:3,dogs:4,fruit:5,dwarf:5};
 const options=(game,opts)=>({...opts,volatility:game==='mine'?'mild':game==='fruit'?'extreme':'normal'});
 export function playGame(game,opts){return gameOf(game).mod.play(options(game,opts));}
 export function streamGame(game,opts){return gameOf(game).mod.stream(options(game,opts));}

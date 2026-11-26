@@ -1,7 +1,7 @@
 import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=live113';
 import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live113';
 import {BLOCKS,VOLATILITY as mineVolatility} from './test-games/mine.js?v=live113';
-import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,dwarfUpgradeTable} from './test-games/features.js?v=live113';
+import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,dwarfUpgradeTable} from './test-games/features.js?v=dwarf117';
 const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:4});
 const coin=n=>fmt(n)+' C';
 const order=['rush','fruit','mine','plinko','gods','dogs','train','dwarf'];
@@ -33,4 +33,4 @@ export function gameInfoHtml(game,rate,volatility='normal'){const [start,intro]=
  return out+section('配当・遊び方の注意',`<p>各ゲームは無料テストコイン専用。購入・換金・実物景品はありません。スピンごとに抽選し、配当を積み上げます。最終配当は最低1C。RTPは長期平均の目標値（${game==='plinko'?'配当表 約97%':'約97%'}）で、個々の結果を保証するものではありません。荒さは5段階の変動傾向で、勝ちやすさの保証ではありません。</p>`)+`</div>`;
 }
 
-export function volatilityBadge(game){if(game==='dogs')return '<div class="volatility-badge is-selectable" aria-label="荒さ STICKY 4段階 RAINING 5段階"><span>荒さ</span><strong>STICKY ★★★★☆</strong><strong>RAINING ★★★★★</strong></div>';const level=({mine:2,rush:3,gods:4,tropical:3,fruit:5,dwarf:3})[game];return '<div class="volatility-badge'+(level?'':' is-selectable')+'" aria-label="荒さ '+(level?level+'段階（5段階中）':'選択式')+'"><span>荒さ</span><strong>'+(level?'★'.repeat(level)+'☆'.repeat(5-level):'LOW / MEDIUM / HIGH')+'</strong>'+(level?'<small>'+level+'/5</small>':'')+'</div>';}
+export function volatilityBadge(game){if(game==='dogs')return '<div class="volatility-badge is-selectable" aria-label="荒さ STICKY 4段階 RAINING 5段階"><span>荒さ</span><strong>STICKY ★★★★☆</strong><strong>RAINING ★★★★★</strong></div>';const level=({mine:2,rush:3,gods:4,tropical:3,fruit:5,dwarf:5})[game];return '<div class="volatility-badge'+(level?'':' is-selectable')+'" aria-label="荒さ '+(level?level+'段階（5段階中）':'選択式')+'"><span>荒さ</span><strong>'+(level?'★'.repeat(level)+'☆'.repeat(5-level):'LOW / MEDIUM / HIGH')+'</strong>'+(level?'<small>'+level+'/5</small>':'')+'</div>';}

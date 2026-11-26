@@ -101,7 +101,8 @@ export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1
 // distribution keeps expected added spins below ten per battle.
 export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
 export const DWARF_WEIGHTS={Goblin:[3185,3185,1815,1815],Troll:[3103,3103,1897,1897],Dragon:[2790,2790,2210,2210]};
-export const DWARF_CHEST_WEIGHTS={1:1000,2:4000,3:3000,5:1500,8:350,10:100,15:30,20:10,50:5,100:5};
+export const DWARF_CHEST_WEIGHTS={1:9500,2:300,3:100,5:50,8:20,10:10,15:5,20:5,50:10,100:45};
+export const DWARF_SYMBOL_WEIGHTS={s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:5.2,s9:5.2};
 export const DWARF_INITIAL_SCALE=.01;
 export const DWARF_UPGRADE_SCALES={Goblin:[.001,.002,.005,.007,.01],Troll:[.005,.006,.008,.011,.02],Dragon:[.01,.015,.02,.025,.03]};
 export const DWARF_UPGRADE_WEIGHTS=[2000,2000,2000,2000,2000];
@@ -109,10 +110,8 @@ export function dwarfUpgradeTable(rate,monster){const raw=DWARF_UPGRADE_SCALES[m
 function dwarfUpgrade(rate,monster,rand){const {values,weights}=dwarfUpgradeTable(rate,monster);let ticket=rand()*weights.reduce((a,b)=>a+b,0),selected=values.length-1;for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}return {selected,values,weights,amount:values[selected]};}
 function* dwarfStream(r){
  const spins=[];
- const pickEarly=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:23.3,s9:23.3},r);
- const pick=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:.18,s9:.18},r);
+ const pick=picker(DWARF_SYMBOL_WEIGHTS,r);
  const pickChest=picker(DWARF_CHEST_WEIGHTS,r);
- const pickLateChest=picker({1:90,2:8,3:1.5,5:.4,10:.1},r);
  const pays={s0:20,s2:7,s3:5,s1:3,s4:.5,s5:.4,s6:.3,s7:.2};
  let remaining=10,freePlayed=0;
  yield null;
@@ -133,9 +132,9 @@ function* dwarfStream(r){
   const battleGrid=['s0','s7',m.icon,'s4','s7','s5','s6','s7','s8'];
   return {grid:battleGrid,raw:0,cols:3,rows:3,note:won?'勝利':'追加なし',battle:true,monster,monsterHP:m.hp,reward:m.win,choices,weights,actions,won,awarded,freePlayed,remaining,total:freePlayed+remaining};
  }
- while(remaining>0){remaining--;freePlayed++;const g=grid(9,freePlayed<=10?pickEarly:pick);let raw=0,hits=[],chests=[];
+ while(remaining>0){remaining--;freePlayed++;const g=grid(9,pick);let raw=0,hits=[],chests=[];
   for(const line of [[0,1,2],[3,4,5],[6,7,8],[0,4,8],[2,4,6]])if(pays[g[line[0]]]&&line.every(j=>g[j]===g[line[0]])){raw+=pays[g[line[0]]];hits.push(...line);}
-  for(let j=0;j<g.length;j++)if(g[j]==='s8'||g[j]==='s9'){const value=Number((freePlayed<=10?pickChest:pickLateChest)());raw+=value;chests.push({pos:j,value});hits.push(j);}
+  for(let j=0;j<g.length;j++)if(g[j]==='s8'||g[j]==='s9'){const value=Number(pickChest());raw+=value;chests.push({pos:j,value});hits.push(j);}
   const target=freePlayed<=10?10:freePlayed<=20?20:freePlayed<=40?40:null;
   yield {grid:g,raw,cols:3,rows:3,hits:[...new Set(hits)],chests,freePlayed,remaining,note:target===null?'最終宝箱ラッシュ':({10:'ゴブリン',20:'トロール',40:'ドラゴン'}[target])+' まで '+Math.max(0,target-freePlayed)+' 回',total:freePlayed+remaining};
   if(stages[freePlayed])yield battle(stages[freePlayed]);
