@@ -1,0 +1,19 @@
+/* Shared cabinet typography: same hierarchy, individual game palettes. */
+#gm{--cab-title:"Noto Serif JP","Yu Mincho","Hiragino Mincho ProN",serif;--cab-num:"Cinzel",Georgia,"Yu Mincho",serif}
+#gm.theme-tropical{--cab-frame:url('./assets/anime/hud138/panel-5.webp');--hud-dark:#17616d;--hud-deep:#102c39;--hud-metal:#d6b676;--hud-hi:#ffe5a1}
+#gm :is(.gm-status,.gm-box,.gm-round-win,.gm-bet,.gm-ctl,.fruit-detail,.dwarf-base,.plinko-options,.bonus-intro-card){font-family:var(--cab-title)!important}
+#gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay)>span,#gm .gm-row .gm-box>span,#gm .gm-betv span{font-family:var(--cab-title)!important;font-weight:700!important;letter-spacing:.045em!important;color:#e9d8b5!important}
+#gm .gm-round-win :is(b,strong),#gm .gm-row .gm-box b,#gm .gm-bet #hBet,#gm .dwarf-base>strong{font-family:var(--cab-num)!important;font-variant-numeric:lining-nums tabular-nums;font-weight:700!important;letter-spacing:-.035em!important;text-shadow:0 2px 3px #000!important}
+#gm .gm-round-win :is(b,strong){font-size:clamp(19px,5vw,32px)!important}
+#gm .gm-row .gm-box b{font-size:clamp(15px,4.35vw,26px)!important;line-height:1.2!important}
+#gm .gm-bet #hBet{font-size:clamp(15px,4.15vw,23px)!important}
+#gm .gm-status{font-family:var(--cab-title)!important;font-weight:700;letter-spacing:.06em}
+#gm .gm-ctl :is(.gm-icon.sm,#rPlay,.gm-bet){border-radius:5px!important}
+#gm .gm-ctl :is(.gm-icon.sm,#rPlay) small{font-family:var(--cab-title)!important;font-weight:700!important;font-size:11px!important;letter-spacing:.035em!important}
+#gm .gm-ctl #rPlay{border-image:none!important;border:1px solid var(--hud-metal,#d9b879)!important;background:linear-gradient(155deg,var(--hud-hi,#f1d99b),var(--hud-dark,#635337) 46%,var(--hud-deep,#191611))!important;box-shadow:inset 0 0 0 2px #fff3,0 2px 5px #0009!important}
+#gm .gm-ctl .gm-pm{font-family:var(--cab-num)!important}
+#gm .gm-hud{background:linear-gradient(180deg,var(--hud-dark,#25303d),var(--hud-deep,#111722) 75%)!important}
+#gm .bonus-intro-card :is(h2,li,b,button,small){font-family:var(--cab-title)!important}
+#gm .bonus-intro-count strong{font-family:var(--cab-num)!important}
+#gm .intro-tropical .bonus-intro-art{background-image:url('./assets/anime/tropical/atlas109.webp')!important;background-size:400% 400%!important}
+@media(max-width:360px){#gm .gm-row .gm-box b{font-size:clamp(13px,4vw,17px)!important}#gm .gm-ctl :is(.gm-icon.sm,#rPlay) small{font-size:10px!important}}

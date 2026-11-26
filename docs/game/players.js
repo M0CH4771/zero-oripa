@@ -676,7 +676,8 @@ return {st,configure(c){risk=c.risk;rows=c.rows;mult=c.multipliers;cents=c.cents
   ZG.THEME_OF = { rush: 'gems', fruit: 'fruit', mine: 'mine', plinko:'plinko',gods:'gods',dogs:'dogs',train:'train',dwarf:'dwarf' };
   ZG.createGame = function (canvas, opt, hooks) {
     let g;
-    if (['gods','dogs','train','dwarf'].includes(opt.game)) g = ZG.createFeatureGame(canvas,opt,hooks);
+    if(opt.game==='tropical')g=ZG.createTropicalGame(canvas,opt,hooks);
+    else if (['gods','dogs','train','dwarf'].includes(opt.game)) g = ZG.createFeatureGame(canvas,opt,hooks);
     else if (opt.game === 'plinko') g = plinkoGame(canvas,opt,hooks);
     else if (opt.game === 'mine') g = mineGame(canvas, opt, hooks);
     else if (opt.game === 'fruit') g = gridGame(canvas, opt, hooks, { cols: 7, rows: 7, theme: 'fruit', aspect: 1, spots: true, idle: () => Array.from({ length: 49 }, () => pick(FRUIT_IDS)) });

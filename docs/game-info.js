@@ -1,3 +1,4 @@
+import {PAYS as tropicalPays,SYMBOLS as tropicalSymbols,UNIT as tropicalUnit,TIER_PAY_FACTORS as tropicalFactors} from './tropical.mjs?v=cap119';
 import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=cap119';
 import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live113';
 import {BLOCKS,VOLATILITY as mineVolatility} from './test-games/mine.js?v=cap119';
@@ -10,6 +11,7 @@ const table=(headers,rows)=>`<div class="info-scroll"><table class="info-table">
 const section=(title,body)=>`<section class="info-section"><h3>${title}</h3>${body}</section>`;
 const card=(title,description)=>`<div class="info-card"><b>${title}</b><p>${description}</p></div>`;
 const rules={
+ tropical:['青7・赤7は8スピン','3リール5ラインで同じ絵柄が3個揃うと配当。花が点灯すると最終スピンの7揃いが確定。金7は3×1の専用リール。'],
  rush:['10フリースピン','同じ宝石が盤面のどこでも8個以上で配当。消えた後に落ちてくる宝石でも連鎖します。'],
  fruit:['10〜30フリースピン','同じお菓子が縦・横に5個以上つながると配当。消えたマスの倍率が育ちます。'],
  mine:['5回の採掘から開始','つるはしで真下の鉱石を削り、壊した鉱石の配当を獲得。列を掘り切ると宝箱が開きます。'],
@@ -19,7 +21,7 @@ const rules={
  train:['3リスピン','6列の鉱山でコインを固定。開始時は2〜4段が開いており、コインが着地すると残り3回に戻ります。'],
  dwarf:['10スピンから冒険開始','宝箱を集めて冒険。バトルに勝つと5／10／20Gとアイテムを獲得し、基準Cや戦闘力を強化できます。']
 };
-export function gameInfoHtml(game,rate,volatility='normal'){const [start,intro]=rules[game]||rules.rush;const unit=rate*({rush:rushUnit,fruit:fruitUnit,gods:FEATURE_CONFIG.gods.scale,dogs:FEATURE_CONFIG.dogs.scale}[game]??.01);const idx=order.indexOf(game),max=FEATURE_CONFIG[game]?.max??50;
+export function gameInfoHtml(game,rate,volatility='normal'){const [start,intro]=rules[game]||rules.rush;const unit=rate*({rush:rushUnit,fruit:fruitUnit,gods:FEATURE_CONFIG.gods.scale,dogs:FEATURE_CONFIG.dogs.scale}[game]??.01);const idx=Math.max(0,order.indexOf(game)),max=FEATURE_CONFIG[game]?.max??50;
  let out=`<div class="game-info">${volatilityBadge(game)}<div class="info-hero" style="--ix:${idx%4*100/3}%;--iy:${Math.floor(idx/4)*100}%"><span>${start}</span></div>${section('基本ルール',`<p>${intro}</p><p class="info-note">${game==='plinko'?'1球の消費':'1ゲームの消費'}：<b>${coin(rate)}</b>　${game==='plinko'?'':'最大配当：<b>'+coin(max*rate)+'</b>'}</p>`)} `;
  if(['rush','fruit','gods','dogs'].includes(game)){const pays=({rush:rushPays,fruit:fruitPays,gods:GODS_PAYS,dogs:DOGS_PAYS})[game],theme=game==='rush'?'gems':game;const heads=game==='fruit'?Array.from({length:11},(_,i)=>i===10?'15+':i+5):game==='dogs'?[3,4,5,6]:['8〜9','10〜11','12+'];const renderPay=(u,tablePays=pays)=>table(['絵柄 / 成立数',...heads.map(n=>game==='dogs'?n+'リール':n+'個')],Object.entries(tablePays).reverse().map(([id,v])=>[icon(theme,id),...v.map(x=>coin(x*u))]));out+=section('シンボル配当表',`<p>現在のBET（${coin(rate)}）での${game==='dogs'?'1 WAYSあたりの':'倍率適用前の'}配当。最終獲得Cはゲーム内で集計・整数化します。</p>${game==='dogs'?'<h4>STICKY WILDS</h4>'+renderPay(unit,DOGS_STICKY_PAYS)+'<h4>RAINING WILDS</h4>'+renderPay(rate*FEATURE_CONFIG.dogs.rainingScale):renderPay(unit)}`);}
  if(game==='rush')out+=section('特殊シンボル',card('魔法のオーブ ×2〜100','配当が成立したスピンで出たオーブの倍率を合計して、そのスピンの連鎖配当に掛けます。配当がない場合は適用されません。')+card('スキャッター（魔法の杖）','3個以上で＋5回。4／5／6個以上は配当計算単位の3／5／100倍。最大120回。')+card('計算例',`連鎖 ${coin(unit*5)} × オーブ合計10 = ${coin(unit*50)}。`));
@@ -29,6 +31,7 @@ export function gameInfoHtml(game,rate,volatility='normal'){const [start,intro]=
  if(game==='dogs')out+=section('WILDとボーナス',card('STICKY WILDS','7／12／15／20回。出現したワイルドが固定されます。')+card('RAINING WILDS','15／18／25／30回。各スピンでワイルドを追加。')+card('WAYS配当','WILDは2〜5リールに出現し、通常絵柄を代用。組み合わせに含まれる倍率付きWILDは掛け算。再トリガーなし。'));
  if(game==='train')out+=section('上段トロッコの強化', [['COIN','コイン値を1〜100にする'],['MULTI','新しいコインを2〜25倍にする'],['BOMB','岩を1段開け、6段開いた列では回収宝箱を開ける'],['BAG','列のコインを新しいコインの位置にまとめる'],['CHEST','列のコインを回収し、マスを空ける'],['DWARF','登場後は毎スピン、盤面の値を回収する']].map(([a,b])=>card(a,b)).join('')+card('最下段の宝箱','開封後は同じ列のコインを毎スピン回収。終了時にさらに3回分を追加。残り0回または盤面が満杯で終了。'));
  if(game==='dwarf')out+=section('冒険とバトル',card('バトル突入','通常スピンでは1/12で中央3マスにバトルシンボルが揃います。残り1Gも必ず揃います（配当・スピン上限到達を除く）。敵はゴブリン50%、トロール30%、ドラゴン20%で出現。')+card('勝利報酬','ゴブリン＋5G、トロール＋10G、ドラゴン＋20Gとアイテム1個。途中敗北時は残りGがあれば続行。最大100G。')+card('戦闘ルール','ドワーフはHP5。各ターンは攻撃者を均等抽選し、次に1〜5のダメージを抽選。先に相手のHPを0にすると勝利。残り0Gでの最終バトルは通常より強敵になります。'))+section('宝箱と基準C',`<p>初期基準CはBETの1%（${coin(rate*.01)}）。宝箱の倍率を基準Cに掛けます。アイテムで基準Cや最低倍率が成長します。</p>`+table(['宝箱','倍率','初期獲得C'],Object.keys(DWARF_CHEST_WEIGHTS).map(x=>[x>=100?'虹':x>=30?'赤金':x>=10?'金':x>=3?'銀':'木製','×'+fmt(x),coin(rate*.01*x)])))+section('アイテム図鑑','<div class="dwarf-info-items">'+DWARF_ITEMS.map(item=>'<article class="tier-'+item.rarity+'"><i class="dwarf-item-art" style="--ix:'+((item.icon%4)*100/3)+'%;--iy:'+(Math.floor(item.icon/4)*100/3)+'%"></i><div><b>'+item.name+'</b><small>'+(item.key==='evolution'?'★★ → ★★★ → ★★★★★':'★'.repeat(item.rarity))+'</small><p>'+item.description+'</p></div></article>').join('')+'</div>');
+ if(game==='tropical')out+=section('7揃いと点灯',card('青7・赤7','8スピン。花が点灯すると最終7揃いが確定。7揃いで継続または昇格。')+card('金7','配当成立する限り継続。終了後は赤7へ。'))+section('絵柄配当表',table(['絵柄','青7','赤7','金7'],tropicalSymbols.map((name,i)=>[name,...tropicalFactors.map(f=>coin(rate*tropicalUnit*tropicalPays[i]*f))])));
  if(game==='plinko')out+=section('配当の読み方',card('リスクの違い','LOWは小さな配当を受け取りやすく、MEDIUMは中央の配当が小さく、外側ではより大きな配当、HIGHは中央が×0.01の大きな変動です。いずれも配当表RTPは約97%。最大倍率はLOW 30倍、MEDIUM 50倍、HIGH 200倍。')+card('着地枠','枠の数字は倍率ではなく、現在のBET（${coin(rate)}）での獲得コインです。')+card('複数球','全ボールの配当を合計します。合計0Cの場合は1C。配当上限なし。'));
  return out+section('配当・遊び方の注意',`<p>各ゲームは無料テストコイン専用。購入・換金・実物景品はありません。スピンごとに抽選し、配当を積み上げます。最終配当は最低1C。${game==='plinko'?'配当上限なし。':'1ゲームの最大配当は消費Cの50倍。到達した時点で終了します。'} RTPは長期平均の目標値（${game==='plinko'?'配当表 約97%':'約97%'}）で、個々の結果を保証するものではありません。荒さは5段階の変動傾向で、勝ちやすさの保証ではありません。</p>`)+`</div>`;
 }

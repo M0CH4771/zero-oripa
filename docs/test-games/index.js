@@ -1,4 +1,5 @@
 // ゲームの一覧。template.game で選ぶ（省略時は rush）
+import {streamRound as tropicalStream,round as tropicalRound} from '../tropical.mjs?v=cap119';
 import * as rush from './rush.js?v=cap119';
 import * as fruit from './fruit.js?v=live113';
 import * as mine from './mine.js?v=cap119';
@@ -6,7 +7,9 @@ import * as plinko from './plinko.js?v=live113';
 import {FEATURE_CONFIG,featureModule} from './features.js?v=adventure131';
 
 
+const tropical={VOLATILITY:{normal:{}},*stream(opts){const it=tropicalStream(opts.rate,opts);let n=it.next(),played=0;yield n.value;while(!(n=it.next()).done){played++;yield n.value;}return {...n.value,played,freePlayed:played};},play(opts){const r=tropicalRound(opts.rate,opts);return {...r,played:r.steps.length,freePlayed:r.steps.length,spins:r.steps,script:r.steps};}};
 export const GAMES = {
+  tropical:{label:'ZERO HIBISCUS',theme:'tropical',mod:tropical},
   rush: { label: 'ZERO RUSH', theme: 'gems', mod: rush },
   fruit: { label: 'ZERO FRUITS', theme: 'fruit', mod: fruit },
   mine: { label: 'ZERO MINE', theme: 'mine', mod: mine },

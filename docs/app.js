@@ -1,5 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml,volatilityBadge} from './game-info.js?v=adventure131';
+import {gameInfoHtml,volatilityBadge} from './game-info.js?v=unified141';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -223,7 +223,7 @@ async function watchAd() {
 }
 
 // ゲームの名前と、スタート画面の説明
-const GAME_TITLE = { rush: ['ZERO', 'RUSH'], fruit: ['ZERO', 'FRUITS'], mine: ['ZERO', 'MINE'],plinko:['ZERO','PLINKO'],gods:['ZERO','GODS'],dogs:['ZERO','DOGS'],train:['ZERO','TRAIN'],dwarf:['ZERO','DWARF'] };
+const GAME_TITLE = { rush: ['ZERO', 'RUSH'], fruit: ['ZERO', 'FRUITS'], mine: ['ZERO', 'MINE'],plinko:['ZERO','PLINKO'],gods:['ZERO','GODS'],dogs:['ZERO','DOGS'],train:['ZERO','TRAIN'],dwarf:['ZERO','DWARF'],tropical:['ZERO','HIBISCUS'] };
 const CUSTOM_GAME_LOGOS=new Map([['rush','gems'],['fruit','fruit'],['mine','mine'],['plinko','plinko'],['gods','gods'],['dogs','dogs'],['train','train'],['dwarf','dwarf']]);
 const LOGO_REV='logos48';
 const BRAND_ASSET='./assets/brand/';
@@ -240,6 +240,7 @@ const TITLE_COLORS = {
   mine: { colors: ['#fffbe8', '#ffd86a', '#e0921a', '#8a4a10'], deep: '#3a1a00', mid: '#7a3a08', stroke: '#2a1000' },
 };
 function titleHtml(g, h = 40) {
+  if(g==='tropical')return `<img class="zt-img custom-game-logo" src="./assets/anime/tropical/logo103.webp" alt="ZERO HIBISCUS" style="height:${h}px;width:auto;max-width:100%;object-fit:contain">`;
   const [a, b] = GAME_TITLE[g] || GAME_TITLE.rush;
   if(CUSTOM_GAME_LOGOS.has(g))return `<img class="zt-img custom-game-logo" src="./assets/anime/${CUSTOM_GAME_LOGOS.get(g)}/logo.webp?v=${LOGO_REV}" alt="${esc(a+' '+b)}" style="height:${h}px;width:auto;max-width:100%;object-fit:contain">`;
   const style = TITLE_COLORS[g] || TITLE_COLORS.rush;
@@ -251,6 +252,7 @@ function titleHtml(g, h = 40) {
   return `<img class="zt-img" src="${c.toDataURL()}" alt="${esc(a + ' ' + b)}" style="height:${h}px">`;
 }
 const GAME_NOTE = {
+  tropical:()=>['青7・赤7・金7で遊ぶ3リール5ライン','無料テスト専用・最大配当50倍・RTP目標97%'],
   gods:()=>['15フリースピン・天空の累積倍率',featureBounds('gods')],
   dogs:()=>['最大117,649 WAYS・選べるワイルド',featureBounds('dogs')],
   train:()=>['NEW · LUCKY WAGON — 6列の鉱山を掘り進める',featureBounds('train')],
@@ -293,6 +295,7 @@ let slideTimer;
 
 // オリパの絵（画像がなければCSSで描く）
 function artHtml(p) {
+  if(p.game==='tropical')return `<div class="art brand-game-cover cover-hibiscus" style="--key-art:url('./assets/brand/cover-hibiscus.webp')"><span class="ribbon">${esc(p.badge)}</span><div class="feature-cover-title">${titleHtml('tropical',104)}</div></div>`;
   const bg = p.kind === 'rush' ? 'bg-rush' : ['daily', 'new', 'low', 'high', 'big', 'rank'].includes(p.tag) ? 'bg-' + p.tag : 'bg-default';
   if (p.image) return `<div class="art" style="background:url('${esc(p.image)}') center/cover"></div>`;
   if(p.kind==='rush'&&CUSTOM_GAME_LOGOS.has(p.game))return `<div class="art brand-game-cover cover-${p.game}" style="--key-art:url('${BRAND_ASSET}cover-${p.game}.webp')"><span class="ribbon">${esc(p.badge||gameName(p.game))}</span><div class="feature-cover-title">${titleHtml(p.game,104)}</div>${p.locked?`<div class="lock">🔒 ${esc(p.locked)}</div>`:''}</div>`;
@@ -349,7 +352,7 @@ function packCard(p) {
 function slidesData() {
   const u = ME.user;
   return [
-    u ? { bg: 'bg-daily', h: u.bonus_available ? '今日のログボ<br>受け取れます' : '本日の無料ゲーム<br>利用済み', p: `7機種から毎日1回 · 1,000 C相当を無料で`, deco: '📅', go: 'bonus' }
+    u ? { bg: 'bg-daily', h: u.bonus_available ? '今日のログボ<br>受け取れます' : '本日の無料ゲーム<br>利用済み', p: `8機種から毎日1回 · 1,000 C相当を無料で`, deco: '📅', go: 'bonus' }
       : { bg: 'bg-new', h: '登録だけで<br>' + num(CFG.signup_bonus) + 'コイン', p: '電話番号で無料登録。お金は1円もかかりません', deco: '🎁', go: 'signup' },
     { bg: 'bg-high', h: '招待すると<br>おたがいにコイン', p: `招待された人 +${num(CFG.invite_bonus_new)}・招待した人 +${num(CFG.invite_bonus_inviter)}`, deco: '🤝', go: 'invite' },
     { bg: 'bg-big', h: '連鎖スロットで<br>オリパを引こう', p: '8個そろうと消えて連鎖。倍率とフリースピンも', deco: '🎰', go: 'guide' },
@@ -411,8 +414,8 @@ async function viewHome() {
     </div>
     <div class="toolbar"><span><b>${shown.length}</b> 件</span>
       <select id="sortSel">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}" ${k === homeSort ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
-    ${rushes.length ? `<section class="rush-sec"><h4><span>ZERO ORIGINALS · ${rushes.length+1} GAMES</span>オリジナルゲーム</h4><div class="plist">${rushes.map(packCard).join('')}${hibiscusCard()}</div></section>` : ''}
-    ${rest.length ? `${featureOn?'<div class="catalog-heading"><span>ORIPA COLLECTION</span><h2>オリパ一覧</h2></div>':''}<div class="plist">${rest.map(packCard).join('')}${!featureOn&&!homeChips.size&&(homeCat==='all'||homeCat==='rush')?hibiscusCard():''}</div>` : rushes.length ? '' : '<div class="empty">条件に合うオリパはありません</div>'}
+    ${rushes.length ? `<section class="rush-sec"><h4><span>ZERO ORIGINALS · ${rushes.length} GAMES</span>オリジナルゲーム</h4><div class="plist">${rushes.map(packCard).join('')}</div></section>` : ''}
+    ${rest.length ? `${featureOn?'<div class="catalog-heading"><span>ORIPA COLLECTION</span><h2>オリパ一覧</h2></div>':''}<div class="plist">${rest.map(packCard).join('')}</div>` : rushes.length ? '' : '<div class="empty">条件に合うオリパはありません</div>'}
     ${siteFooter()}`;
   document.querySelectorAll('.cats button').forEach((b) => (b.onclick = () => { homeCat = b.dataset.c; viewHome(); }));
   document.querySelectorAll('.chips button').forEach((b) => (b.onclick = () => { const k = b.dataset.k; homeChips.has(k) ? homeChips.delete(k) : homeChips.add(k); viewHome(); }));
@@ -431,6 +434,7 @@ function tierAt(tiers, score, rate) { let t = tiers[0]; for (const x of tiers) i
 const THEME_ICONS = { gems: ['h4', 'h2', 'l3', 'l1', 'h1'], fruit: ['f7', 'f5', 'f6', 'f1', 'f2'], mine: ['X', 'G', 'H', 'N', 'R'] };
 const iconCache = {};
 function themeIcons(theme, size = 44) {
+  if(theme==='tropical')return [9,10,11,0,1].map(i=>`<i class="feature-sprite" style="width:${size}px;height:${size}px;background-image:url('./assets/anime/tropical/atlas109.webp');background-size:400% 400%;background-position:${i%4*100/3}% ${Math.floor(i/4)*100/3}%"></i>`).join('');
   if(isFeature(theme))return [0,1,2,3,4].map(i=>`<i class="feature-sprite" style="width:${size}px;height:${size}px;background-image:url('./assets/anime/${theme}/atlas.webp');background-position:${i%3*50}% ${Math.floor(i/3)*50}%"></i>`).join('');
   if(theme==='plinko')theme='gems';
   if (!window.ZG?.art) return '';
@@ -457,6 +461,7 @@ const RULES = {
     '最終配当が0Cの場合のみ1Cになります。最大はベットの50倍です'],
 };
 const FEATURES = {
+  tropical:[['2','青7・赤7','8スピンで継続判定'],['0','金7','専用リールで配当継続']],
   gods:[['s0','天空の宝石連鎖','累積倍率でスコア増加'],['s9','15フリースピン','スキャッターで追加']],
   dogs:[['s0','MEGAWAYS','6リール・最大117,649通り'],['s6','2種類のワイルド','STICKY / RAINING']],
   train:[['s0','コインをホールド','追加ごとに3回へ戻る'],['s6','鉱山トロッコ','爆破・倍率・回収']],
@@ -517,7 +522,7 @@ async function viewGame(id, demo, daily=false) {
   if (!p.rates.includes(rushRate)) rushRate = p.rates[0];
   if(daily)rushRate=1000;
   document.body.classList.add('gamemode');
-  const theme = ZG.THEME_OF[p.game] || 'gems';
+  const theme = p.game==='tropical'?'tropical':ZG.THEME_OF[p.game] || 'gems';
   const normalSpeed = ZG.SPIN_TIMING.normal;
   rushSpeed = normalSpeed;
   gameCtx = { p, demo,daily, count:1,risk:'medium',rows:12,credits: demo ? (p.game==='plinko'?100000:10000000) : ME.user.coins, busy: false, win: 0 };
@@ -532,7 +537,7 @@ async function viewGame(id, demo, daily=false) {
       <div class="gm-tier" id="rTier" aria-label="現在のカードランク"></div>
       <div class="gm-mode" id="gmMode">${p.game==='mine'?'採掘チャレンジ':p.game==='plinko'?'1球あたりの獲得コイン':p.game==='train'?'貨車リスピン':'フリースピン'}</div>
       <div class="gm-demo">${daily?'DAILY BONUS · 消費0 C':demo ? 'DEMO · 記録なし' : 'FREE PLAY · テストコイン専用'}${p.game==='plinko'?'':' · 荒さ '+(p.game==='dogs'?'4–5':p.volatility_level??3)+'/5'}</div>
-      <div class="gm-round-win" id="gmRoundWin" aria-live="polite">${p.game==='plinko'?'<div class="plinko-result-mult"><span>直近1球</span><strong id="plinkoLastCoin">—</strong></div><div class="plinko-result-pay"><span>今回の合計</span><b id="gmRoundAmount">0 C</b></div>':'<div class="round-readout"><span id="gmRoundLabel">'+(p.game==='mine'?'今回の採掘':'今回の配当')+'</span><b id="gmRoundAmount">0 C</b></div>'+(['rush','mine','gods','dogs','train','dwarf'].includes(p.game)?'<div class="round-metric" id="gmMetric" '+(p.game==='gods'?'':'hidden')+'><span id="gmMetricLabel">'+(p.game==='gods'?'累積倍率':'')+'</span><strong id="gmRoundMultiplier">'+(p.game==='gods'?'×0':'')+'</strong></div>':'')}</div>
+      <div class="gm-round-win" id="gmRoundWin" aria-live="polite">${p.game==='plinko'?'<div class="plinko-result-mult"><span>直近1球</span><strong id="plinkoLastCoin">—</strong></div><div class="plinko-result-pay"><span>今回の合計</span><b id="gmRoundAmount">0 C</b></div>':'<div class="round-readout"><span id="gmRoundLabel">'+(p.game==='mine'?'今回の採掘':'今回の配当')+'</span><b id="gmRoundAmount">0 C</b></div>'+(['rush','mine','gods','dogs','train','dwarf','tropical'].includes(p.game)?'<div class="round-metric" id="gmMetric" '+(p.game==='gods'?'':'hidden')+'><span id="gmMetricLabel">'+(p.game==='gods'?'累積倍率':'')+'</span><strong id="gmRoundMultiplier">'+(p.game==='gods'?'×0':'')+'</strong></div>':'')}</div>
       ${['rush','fruit','gods'].includes(p.game)?'<div class="fruit-detail" id="fruitDetail" aria-label="タンブル配当明細"><span>絵柄別配当</span><div id="fruitDetailItems"></div></div>':''}
       <div class="gm-hud">
         ${p.game==='dwarf'?'<div id="dwarfBase" class="dwarf-base" hidden><span>現在の基準C・宝箱×1</span><strong id="dwarfBaseValue">—</strong><small id="dwarfMinimum">最低宝箱 ×1</small><div id="dwarfInventory" class="dwarf-inventory" aria-label="所持アイテム"></div></div>':''}
@@ -540,7 +545,7 @@ async function viewGame(id, demo, daily=false) {
         <div class="gm-row">
           <div class="gm-box"><span>${demo ? 'デモ残高' : 'コイン残高'}</span><b id="hCoin">0</b></div>
           <div class="gm-box win"><span>${p.game==='mine'?'獲得見込':'累計獲得'}</span><b id="rScore">0</b></div>
-          <div class="gm-box"><span>${p.game==='plinko'?'残り球数':p.game==='train'?'残りリスピン':'残りスピン'}</span><b id="rSpin">${p.game==='mine'?5:p.game==='plinko'?1:FEATURE_CONFIG[p.game]?.initial??10}</b></div>
+          <div class="gm-box"><span>${p.game==='plinko'?'残り球数':p.game==='train'?'残りリスピン':'残りスピン'}</span><b id="rSpin">${p.game==='mine'?5:p.game==='plinko'?1:p.game==='tropical'?8:FEATURE_CONFIG[p.game]?.initial??10}</b></div>
         </div>
         ${p.game==='plinko'? `<div class="plinko-options"><div class="plinko-settings"><label>荒さ<select id="plinkoRisk"><option value="low">LOW・低変動</option><option value="medium" selected>MEDIUM・中変動</option><option value="high">HIGH・高変動</option></select></label><label class="plinko-rtp">配当表RTP<b>約97%</b></label></div><div class="plinko-label">落とす球数</div><div class="plinko-counts"><button data-count="1" class="selected">1</button><button data-count="10">10</button><button data-count="100">100</button><button data-count="custom">自由入力</button></div><input id="plinkoCustom" type="number" min="1" max="1000" value="1" inputmode="numeric" aria-label="球数" hidden><div class="plinko-cost">合計消費 <b id="plinkoCost">0 C</b></div></div>` : ''}
         <div class="gm-ctl">
@@ -602,10 +607,12 @@ async function viewGame(id, demo, daily=false) {
   };
   const showMetric=(label,value)=>{const metric=$('#gmMetric');if(!metric)return;$('#gmMetricLabel').textContent=label;$('#gmRoundMultiplier').textContent=value;metric.hidden=false;};
   const roundLabel=label=>{const el=$('#gmRoundLabel');if(el)el.textContent=label;};
+  if(p.game==='tropical')await import('./game/tropical-player141.mjs');
   game = ZG.createGame($('#gcanvas'), { game: p.game, plinko:p.game==='plinko'?window.plinkoConfig(gameCtx.rows,gameCtx.risk):null, region: gameRegion, getRate:()=>rushRate }, {
     onBonusIntro: async ({spins,choice}={}) => {
       const root=$('#gm');if(!root)return;
       const descriptions={
+        tropical:choice==='gold'?['金7の3×1専用リール','同じ絵柄3個で配当・継続','終了後は赤7へ']:['3リール・5ラインで配当','ハイビスカス点灯で最終7揃い確定','7揃いで継続または昇格'],
         rush:['同じ宝石が8個以上で配当・連鎖','オーブの倍率を配当に適用','スキャッターでスピン追加'],
         fruit:['同じお菓子が縦横5個以上つながると配当','消えた場所の倍率が育つ','スキャッターでスピン追加'],
         mine:['つるはしで真下の鉱石を掘る','列を掘り切ると宝箱が開く','宝箱倍率は最後の配当に適用'],
@@ -617,13 +624,13 @@ async function viewGame(id, demo, daily=false) {
       };
       const panel=document.createElement('section');panel.className='bonus-intro-overlay';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','ボーナス開始');
       const label=p.game==='plinko'?num(spins??gameCtx.count)+' BALLS':p.game==='mine'?num(spins??5)+' SPINS':num(spins??10)+' FREE SPINS';
-      const artIndex=({rush:0,fruit:1,mine:2,plinko:3,gods:4,dogs:5,dwarf:6,train:2})[p.game]??0;
+      const artIndex=p.game==='tropical'?({blue:11,red:10,gold:9}[choice]??11):({rush:0,fruit:1,mine:2,plinko:3,gods:4,dogs:5,dwarf:6,train:2})[p.game]??0;
       const accents={rush:'#ab70ff',fruit:'#ff7da8',mine:'#f1ba65',plinko:'#4bc9ff',gods:'#ae9aff',dogs:'#f5c584',dwarf:'#65d69c',train:'#e8ad60'};
       panel.style.setProperty('--intro-accent',ZEROGameUI.meta[p.game]?.accent||accents[p.game]||'#f6df9b');panel.classList.add('intro-'+p.game);
       const count=spins??(p.game==='plinko'?gameCtx.count:p.game==='mine'?5:10);
       const unit=p.game==='plinko'?'BALLS':p.game==='mine'?'SPINS':'FREE SPINS';
-      const title=p.game==='dogs'?(choice==='sticky'?'STICKY WILDS':'RAINING WILDS'):p.game==='plinko'?'PLINKO CHALLENGE':p.game==='mine'?'MINING EXPEDITION':'BONUS START';
-      panel.innerHTML=`<div class="bonus-intro-card"><div class="bonus-intro-logo">${titleHtml(p.game,95)}</div><div class="bonus-intro-hero"><div class="bonus-intro-count"><span>${title}</span><strong>${num(count)}</strong><b>${unit}</b></div><div class="bonus-intro-art" aria-hidden="true" style="background-position:${artIndex%4*100/3}% ${Math.floor(artIndex/4)*100}%"></div></div><h2>ボーナスの遊び方</h2><ol>${(descriptions[p.game]||descriptions.rush).map((line,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span><b>'+esc(line)+'</b></li>').join('')}</ol><button type="button" class="bonus-intro-start">タップしてスタート</button><small class="intro-footnote">無料テストコイン専用</small></div>`;
+      const title=p.game==='tropical'?({blue:'青7',red:'赤7',gold:'金7'}[choice]||'HIBISCUS'):p.game==='dogs'?(choice==='sticky'?'STICKY WILDS':'RAINING WILDS'):p.game==='plinko'?'PLINKO CHALLENGE':p.game==='mine'?'MINING EXPEDITION':'BONUS START';
+      panel.innerHTML=`<div class="bonus-intro-card"><div class="bonus-intro-logo">${titleHtml(p.game,95)}</div><div class="bonus-intro-hero"><div class="bonus-intro-count"><span>${title}</span><strong>${count===Infinity?'∞':num(count)}</strong><b>${count===Infinity?'ULTIMATE':unit}</b></div><div class="bonus-intro-art" aria-hidden="true" style="background-position:${artIndex%4*100/3}% ${Math.floor(artIndex/4)*100/(p.game==='tropical'?3:1)}%"></div></div><h2>ボーナスの遊び方</h2><ol>${(descriptions[p.game]||descriptions.rush).map((line,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span><b>'+esc(line)+'</b></li>').join('')}</ol><button type="button" class="bonus-intro-start">タップしてスタート</button><small class="intro-footnote">無料テストコイン専用</small></div>`;
       root.append(panel);$('#gmStatus').textContent='開始待機中';const button=panel.querySelector('button');button.focus();
       await new Promise(resolve=>{let timer;const done=()=>{clearInterval(timer);panel.remove();if($('#gmStatus'))$('#gmStatus').textContent='プレイ中';resolve();};button.addEventListener('click',done,{once:true});timer=setInterval(()=>{if(!panel.isConnected)done();},100);});
     },
@@ -651,10 +658,11 @@ async function viewGame(id, demo, daily=false) {
   setLoad(1, '完了');
   await sleep(80);
   // ---- スタート画面 ----
-  const feats = FEATURES[p.game || 'rush'];
-  const featIcon = (id) => { if(isFeature(theme)){const i=Number(id.slice(1)),cols=4,rows=theme==='dogs'?4:3;return `<i class="feature-sprite" style="width:64px;height:64px;background-image:url('./assets/anime/symbol109-${theme}.webp');background-size:${cols*100}% ${rows*100}%;background-position:${i%cols*100/(cols-1)}% ${Math.floor(i/cols)*100/(rows-1)}%"></i>`;}const th = id === 'bomb'||theme==='plinko' ? 'gems' : theme; const c = ZG.art.sprite(th, id, 64); return `<img src="${c.toDataURL()}" style="width:${64 + c.pad * 2}px;margin:-${c.pad}px" alt="">`; };
+  const feats = FEATURES[p.game || 'rush']||FEATURES.rush;
+  const featIcon = (id) => { if(theme==='tropical'){const i=[9,10,11][Number(id)]??0;return `<i class="feature-sprite" style="width:64px;height:64px;background-image:url('./assets/anime/tropical/atlas109.webp');background-size:400% 400%;background-position:${i%4*100/3}% ${Math.floor(i/4)*100/3}%"></i>`;} if(isFeature(theme)){const i=Number(id.slice(1)),cols=4,rows=theme==='dogs'?4:3;return `<i class="feature-sprite" style="width:64px;height:64px;background-image:url('./assets/anime/symbol109-${theme}.webp');background-size:${cols*100}% ${rows*100}%;background-position:${i%cols*100/(cols-1)}% ${Math.floor(i/cols)*100/(rows-1)}%"></i>`;}const th = id === 'bomb'||theme==='plinko' ? 'gems' : theme; const c = ZG.art.sprite(th, id, 64); return `<img src="${c.toDataURL()}" style="width:${64 + c.pad * 2}px;margin:-${c.pad}px" alt="">`; };
   if (!gameCtx.logo) { const lg = document.querySelector('.gm-logo'); if (lg) lg.innerHTML = titleHtml(p.game, 46); }
   if (p.game === 'mine') $('#rSpin').textContent = '5';
+  if(p.game==='tropical')$('#rSpin').textContent='8';
   if(isFeature(p.game))$('#rSpin').textContent=FEATURE_CONFIG[p.game].initial;
   $('#gmLoad').innerHTML = `
     <div class="gm-intro-kicker">ZERO ORIGINALS · FEATURE GAME</div>

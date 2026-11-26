@@ -1,4 +1,4 @@
-import { streamGame, tierFor, GAME_VOLATILITY } from './test-games/index.js?v=adventure131';
+import { streamGame, tierFor, GAME_VOLATILITY } from './test-games/index.js?v=unified141';
 import { plinkoConfig } from './test-games/plinko.js?v=live113';
 import {FEATURE_CONFIG,DWARF_ITEMS} from './test-games/features.js?v=adventure131';
 import {createEarnState,earnView,earnAction} from './earn.js?v=earn52';
@@ -27,6 +27,7 @@ function preparePacks(){
   s.packs.push({...structuredClone(base),id:11,name:'ZERO PLINKO',game:'plinko',theme:'plinko',tag:'rush',badge:'12段のピンボード',plays:0,actual_rtp:null,best:0});
  }
  const base=data.packs.find(p=>p.game==='rush');
+ if(!s.packs.some(p=>p.game==='tropical'))s.packs.push({...structuredClone(base),id:16,name:'ZERO HIBISCUS',game:'tropical',theme:'tropical',tag:'rush',badge:'3リール・青7／赤7／金7',plays:0,bet:0,won:0,actual_rtp:null,best:0,max_mult:50});
  for(const [game,c] of Object.entries(FEATURE_CONFIG))if(game!=='train'&&!s.packs.some(p=>p.game===game))s.packs.push({...structuredClone(base),id:c.id,name:c.title,game,theme:game,tag:'rush',badge:c.badge,rates:[100,300,1000,3000,10000],max_mult:c.max,plays:0,bet:0,won:0,actual_rtp:null,best:0});
 }
 preparePacks();
@@ -109,4 +110,4 @@ const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
 window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=hud138');
+await import('./app.js?v=unified141');
