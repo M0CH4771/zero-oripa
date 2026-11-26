@@ -71,9 +71,9 @@
     }}return;
    }
    if(mode==='dogs'){
-    const r=opt.region(w,h),compact=w<=640,bw=Math.min(r.w-(compact?8:20),700),bh=Math.max(12,Math.min(r.h-(compact?35:60),bw*1.12)),x=r.x+(r.w-bw)/2,y=r.y+Math.max(compact?27:42,(r.h-bh)/2+8),cw=bw/6;
+    const r=opt.region(w,h),compact=w<=640,bw=Math.min(r.w-(compact?8:20),700),bh=Math.max(12,Math.min(r.h-(compact?20:24),bw*1.12)),x=r.x+(r.w-bw)/2,y=r.y+Math.max(10,(r.h-bh)/2),cw=bw/6;
     ZG.rr(ctx,x-7,y-7,bw+14,bh+14,12);ctx.fillStyle='#4d271de8';ctx.fill();ctx.strokeStyle='#ffe1a5';ctx.lineWidth=3;ctx.stroke();
-    text(ctx,dogWays.toLocaleString()+' MEGAWAYS',w/2,y-(compact?16:25),Math.min(21,w/19),cfg.accent,w-24);
+    // Dynamic WAYS is displayed in the dedicated metric readout.
     dogPositions=[];for(let c=0;c<6;c++){const count=dogVisualHeights[c].heightSlots,ch=bh/count;ctx.save();ctx.beginPath();ctx.rect(x+c*cw,y,cw,bh);ctx.clip();for(let row=0;row<Math.ceil(count);row++){const j=row*6+c,xx=x+c*cw,yy=y+row*ch,cx=xx+cw/2,cy=yy+ch/2;if(row<dogHeights[c])dogPositions[j]={x:cx,y:cy};const m=reelState(j,6),spinning=m.rolling,s=spinning?'s'+([0,1,2,3,4,5,9,10,11,12,13][(Math.floor(st.t/70)+j)%11]):grid[j];
     tile(ctx,xx+2,yy+2,cw-4,ch-4,hits.includes(j),true);
     ctx.fillStyle='#a16b43';ctx.fillRect(xx,yy,cw,2);ctx.fillRect(xx,yy,3,ch);
@@ -96,11 +96,11 @@
     for(let c=0;c<6;c++){const xx=x+c*cell,cy=y+cell*6.5;tile(ctx,xx+2,y+cell*6+2,cell-4,cell-4,!!wagonOpened[c]);icon(wagonOpened[c]?8:7,xx+cell/2,cy-cell*.08,cell*.84,wagonOpened[c]?'💰':'🔒');text(ctx,wagonOpened[c]?'OPEN':'LOCK',xx+cell/2,cy+cell*.34,cell*.18,wagonOpened[c]?'#aaffbb':'#c8b49a');}
     text(ctx,'回収 '+hooks.fmt(Math.floor(wagonCollected*currentUnit))+' C  ·  '+note,w/2,y+cell*7+14,Math.min(13,cell*.24),'#ffe1a2',w-12);return;
    }
-   const r=opt.region(w,h),compact=w<=640,gap=3,topPad=compact?(mode==='train'?50:mode==='gods'?11:34):(['train','gods'].includes(mode)?24:36),bottomPad=compact?(mode==='train'?25:12):24,targetCell=Math.max(8,Math.min((r.w-(compact?8:22))/cols,(r.h-topPad-bottomPad)/rows,mode==='dwarf'?170:130)),cell=expansion?expansion.cell+(targetCell-expansion.cell)*expansion.progress:targetCell,
+   const r=opt.region(w,h),compact=w<=640,gap=3,topPad=compact?(mode==='train'?50:11):(mode==='train'?24:12),bottomPad=compact?(mode==='train'?25:12):24,targetCell=Math.max(8,Math.min((r.w-(compact?8:22))/cols,(r.h-topPad-bottomPad)/rows,mode==='dwarf'?170:130)),cell=expansion?expansion.cell+(targetCell-expansion.cell)*expansion.progress:targetCell,
     visibleCols=expansion?cols-1+expansion.progress:cols,bw=visibleCols*cell,bh=rows*cell,x=r.x+(r.w-bw)/2,y=r.y+Math.max(topPad,(r.h-bh)/2);
    board={x,y,cell};
    ZG.rr(ctx,x-9,y-9,bw+18,bh+18,13);ctx.fillStyle='#060815e8';ctx.fill();ctx.strokeStyle=cfg.accent;ctx.lineWidth=3;ctx.stroke();
-   if(mode!=='gods')text(ctx,note,w/2,y-17,Math.min(16,w/24),cfg.accent,w-24);
+   // Standard spin narration belongs in the HUD, not above the reels.
    if(mode==='train'){if(trainOrder)text(ctx,trainOrder,w/2,y+bh+14,12,'#ffe19a',bw);text(ctx,'SPINS '+trainRemaining+' / '+trainReset,w*.25,y-50,Math.min(17,w/23),cfg.accent,w*.43);text(ctx,'合計 ×'+hooks.fmt(trainTotal),w*.75,y-50,Math.min(17,w/23),cfg.accent,w*.43);}
 
    for(let j=0;j<cols*rows;j++){

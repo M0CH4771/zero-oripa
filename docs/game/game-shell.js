@@ -6,7 +6,7 @@
  const fmt=n=>Number(n??0).toLocaleString('ja-JP',{maximumFractionDigits:2});
  const text=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const timing=Object.freeze({normal:1,quick:.5,turbo:.25,reel:1100,pause:200});
- const speedName=n=>n===timing.normal?'NORMAL':n===timing.quick?'QUICK':'TURBO';
+ const speedName=n=>n===timing.normal?'通常':n===timing.quick?'高速':'最速';
  const nextSpeed=n=>n===timing.normal?timing.quick:n===timing.quick?timing.turbo:timing.normal;
  const result=(game,{score=0,cost=0,played=0,base=cost}={})=>{
   const m=meta[game]||meta.rush,ratio=base>0?fmt(score/base)+'倍':'—',logo=m.logo==='tropical'?'logo103.webp':'logo.webp';

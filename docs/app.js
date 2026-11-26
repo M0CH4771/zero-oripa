@@ -546,10 +546,10 @@ async function viewGame(id, demo, daily=false) {
         <div class="gm-ctl">
           <button class="gm-icon sm" id="gmInfo" aria-label="${p.game==='plinko'?'配当一覧・遊び方':'遊び方'}"><b>ⓘ</b><small>${p.game==='plinko'?'配当表':'遊び方'}</small></button>
           <div class="gm-bet"><button class="gm-pm" id="betMinus">−</button>
-            <button type="button" id="betSelect" class="gm-betv" aria-label="ベット額を選択"><span>${p.game==='plinko'?'1球の消費 C':'1回の消費 C'}</span><b id="hBet">${num(rushRate)}</b></button>
+            <button type="button" id="betSelect" class="gm-betv" aria-label="ベット額を選択"><span>${p.game==='plinko'?'1球の消費':'消費コイン'}</span><b id="hBet">${num(rushRate)}</b></button>
             <button class="gm-pm" id="betPlus">＋</button></div>
-          <button class="gm-spin" id="rPlay" aria-label="${p.game==='plinko'?'落とす':'ボーナス開始'}">${p.game==='plinko'?'<b>落とす</b><small>DROP</small>':SPIN_SVG+'<small>BONUS</small>'}</button>
-          <button class="gm-icon sm" id="gmTurbo" aria-label="速度切替"><b>⚡</b><small>NORMAL</small></button>
+          <button class="gm-spin" id="rPlay" aria-label="${p.game==='plinko'?'落とす':'開始'}">${p.game==='plinko'?'<b>落とす</b>':SPIN_SVG+'<small>開始</small>'}</button>
+          <button class="gm-icon sm" id="gmTurbo" aria-label="速度切替"><b>⚡</b><small>通常</small></button>
         </div>
       </div>
       <div class="gm-load" id="gmLoad">
@@ -596,7 +596,7 @@ async function viewGame(id, demo, daily=false) {
   const gameRegion = (w,h) => {
     const root=$('#gm'),bounds=root.getBoundingClientRect();
     const visibleBottom=el=>el?.getClientRects().length?el.getBoundingClientRect().bottom-bounds.top:0;
-    const top=Math.ceil(Math.max(0,...['.gm-top','.gm-tier','.gm-demo','.gm-mode','#gmRoundWin','#fruitDetail'].map(s=>visibleBottom($(s))))+5);
+    const top=Math.ceil(Math.max(0,...['.gm-top','#gmRoundWin','#fruitDetail'].map(s=>visibleBottom($(s))))+5);
     const bottom=$('.gm-hud')?.getBoundingClientRect().top-bounds.top;
     return {x:0,y:top,w,h:Math.max(1,(Number.isFinite(bottom)?bottom:h-140)-top-3)};
   };
