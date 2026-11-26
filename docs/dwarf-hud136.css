@@ -1,0 +1,79 @@
+/* DWARF: illustrated forged-metal HUD, scoped to this game only. */
+.gm.theme-dwarf{
+ --dwarf-pay:url('./assets/anime/dwarf/hud136-pay.webp');
+ --dwarf-base:url('./assets/anime/dwarf/hud136-base.webp');
+ --dwarf-stat:url('./assets/anime/dwarf/hud136-stat.webp');
+ --dwarf-control:url('./assets/anime/dwarf/hud136-control.webp');
+ --hud-hi:#fff0c8;--hud-metal:#c09b56;--hud-glow:#75c8c3;
+}
+.gm.theme-dwarf .gm-top{background:linear-gradient(180deg,#080f15bc,transparent);padding-bottom:3px}
+.gm.theme-dwarf .gm-top .gm-icon{
+ border:1px solid #d2ac69!important;border-radius:50%;color:#f4e7c5;background:radial-gradient(ellipse at 40% 23%,#35574e,#101f23 70%)!important;box-shadow:inset 0 0 0 2px #160f0d,0 2px 7px #04090a9c;
+}
+.gm.theme-dwarf .gm-tier,.gm.theme-dwarf .gm-mode{
+ border:1px solid transparent!important;border-radius:0!important;border-image:var(--dwarf-control) 25 70 fill / 5px 9px / 0 stretch!important;
+ background:linear-gradient(#112b28,#071b1d)!important;box-shadow:none!important;color:#f9e7bc!important;padding:4px 10px;
+}
+.gm.theme-dwarf .gm-demo{color:#eee6ca!important;letter-spacing:.035em;text-shadow:0 1px 3px #000,0 1px 6px #000}
+.gm.theme-dwarf .gm-round-win{gap:4px!important}
+.gm.theme-dwarf .gm-round-win :is(.round-readout,.round-metric){
+ border:1px solid transparent!important;border-radius:0!important;border-image:var(--dwarf-pay) 28 91 fill / 9px 13px / 0 stretch!important;
+ background:linear-gradient(#0d2520,#06201a)!important;box-shadow:none!important;padding:4px 9px!important;isolation:isolate;
+}
+.gm.theme-dwarf .gm-round-win :is(.round-readout,.round-metric)::before{content:none!important}
+.gm.theme-dwarf .gm-round-win .round-metric{border-image-source:var(--dwarf-stat)!important}
+.gm.theme-dwarf .gm-round-win :is(.round-readout,.round-metric)>span{color:#e1d3ae!important;font-size:11px!important;letter-spacing:.045em!important}
+.gm.theme-dwarf .gm-round-win :is(b,strong){color:#fff1c4!important;font-family:system-ui,sans-serif!important;font-weight:900!important;text-shadow:0 1px 2px #000!important}
+.gm.theme-dwarf .gm-hud{
+ background:linear-gradient(180deg,#172a2c,#0a171c 72%,#061219)!important;
+ border-top:1px solid #b89a5f!important;box-shadow:inset 0 2px 0 #0d1216,0 -3px 12px #0007;padding-top:5px!important;
+}
+.gm.theme-dwarf .dwarf-base:not([hidden]){
+ border:1px solid transparent!important;border-radius:0!important;border-image:var(--dwarf-base) 30 100 fill / 10px 15px / 0 stretch!important;
+ background:#102b22!important;box-shadow:none!important;padding:8px 12px 7px!important;gap:2px 8px!important;margin-bottom:3px;
+}
+.gm.theme-dwarf .dwarf-base>span{color:#dfcda4;font-size:clamp(10px,2.85vw,14px)}
+.gm.theme-dwarf .dwarf-base>strong{color:#fff1b9;text-shadow:0 2px 2px #000;letter-spacing:.015em}
+.gm.theme-dwarf .dwarf-base #dwarfMinimum{border:1px solid #b69a63;background:#0b251f;color:#f2e2b5;padding:3px 5px}
+.gm.theme-dwarf .dwarf-inventory{justify-content:center;gap:5px}
+.gm.theme-dwarf .dwarf-inventory::before{content:'所持アイテム';color:#baaa85;font-size:10px;white-space:nowrap}
+.gm.theme-dwarf .dwarf-inventory>small{font-size:11px;color:#b7c9b8}
+.gm.theme-dwarf .dwarf-inventory-item{border-color:#b79b64;border-radius:3px;background:radial-gradient(#25483a,#0a1918)}
+.gm.theme-dwarf .gm-status{color:#e5d2a4!important;letter-spacing:.09em;font-size:11px;margin:2px auto 4px;line-height:1.2}
+.gm.theme-dwarf .gm-row{gap:4px;margin-bottom:5px}
+.gm.theme-dwarf .gm-row .gm-box{
+ border:1px solid transparent!important;border-radius:0!important;border-image:var(--dwarf-stat) 28 83 fill / 9px 11px / 0 stretch!important;
+ background:#0b221e!important;box-shadow:none!important;padding:6px 6px!important;
+}
+.gm.theme-dwarf .gm-row .gm-box.win{border-image-source:var(--dwarf-pay)!important;background:#12382c!important}
+.gm.theme-dwarf .gm-box span,.gm.theme-dwarf .gm-betv span{color:#d8c7a0!important;font-size:10px!important;letter-spacing:.035em!important}
+.gm.theme-dwarf .gm-box b{color:#fdf1d7!important;line-height:1.1;letter-spacing:-.025em;text-shadow:0 1px 2px #000}
+.gm.theme-dwarf .gm-box.win b{color:#fff0b6!important}
+.gm.theme-dwarf .gm-row .gm-box:last-child b{color:#b9eee0!important}
+.gm.theme-dwarf .gm-ctl{gap:6px;align-items:center}
+.gm.theme-dwarf .gm-bet{
+ border:1px solid transparent!important;border-radius:0!important;border-image:var(--dwarf-control) 24 73 fill / 8px 11px / 0 stretch!important;
+ background:#122629!important;box-shadow:none!important;padding:5px 7px!important;gap:3px;
+}
+.gm.theme-dwarf .gm-pm,.gm.theme-dwarf .gm-icon.sm{
+ border:1px solid #a8915c!important;border-radius:5px!important;background:linear-gradient(145deg,#334340,#152426)!important;color:#f8e9c4;
+ box-shadow:inset 0 0 0 1px #171b17,0 2px 3px #0008!important;
+}
+.gm.theme-dwarf .gm-pm:disabled{opacity:.5}
+.gm.theme-dwarf .gm-icon.sm.on{background:#d8b872!important;color:#132223!important}
+.gm.theme-dwarf .gm-spin{
+ border:3px solid #d5b879!important;background:radial-gradient(circle at 38% 25%,#456d60,#204139 55%,#102a26 90%)!important;
+ box-shadow:0 0 0 2px #332b1b,0 0 0 4px #89805c,0 3px 7px #0009,inset 0 0 0 2px #b8995a7a!important;color:#f9efce!important;
+}
+.gm.theme-dwarf .gm-spin.busy{background:radial-gradient(circle at 38% 25%,#65503a,#392d22 55%,#1f211c 90%)!important}
+.gm.theme-dwarf .gm-spin small{color:#f5e1b3;font-size:9px;letter-spacing:.08em}
+@media(max-width:640px){
+ .gm.theme-dwarf .gm-round-win :is(.round-readout,.round-metric){border-image-width:7px 10px!important;padding:3px 8px!important}
+ .gm.theme-dwarf .gm-round-win :is(.round-readout,.round-metric)>span{font-size:10px!important}
+ .gm.theme-dwarf .gm-row .gm-box{border-image-width:7px 9px!important;padding:5px 5px!important}
+ .gm.theme-dwarf .gm-box span{font-size:10px!important}
+ .gm.theme-dwarf .dwarf-base:not([hidden]){border-image-width:8px 12px!important;padding:6px 10px 5px!important}
+ .gm.theme-dwarf .gm-ctl{gap:5px}
+}
+@media(max-width:360px){.gm.theme-dwarf .gm-ctl{gap:4px}.gm.theme-dwarf .gm-bet{padding:3px 4px!important}.gm.theme-dwarf .dwarf-base>span{font-size:10px}.gm.theme-dwarf .gm-box span{font-size:9px!important}}
+@media(max-height:600px){.gm.theme-dwarf .dwarf-base:not([hidden]){padding:3px 8px!important}.gm.theme-dwarf .gm-row .gm-box{padding:3px 5px!important}.gm.theme-dwarf .gm-status{margin:0 auto 2px}}
