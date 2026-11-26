@@ -1,0 +1,2 @@
+// Safari can report a layout viewport taller than the unobscured visual viewport.
+(()=>{const vv=window.visualViewport;let frame=0;function fit(){frame=0;const h=Math.floor(Math.min(window.innerHeight,vv?.height??window.innerHeight));if(h>0)document.documentElement.style.setProperty('--game-viewport',h+'px');}function schedule(){if(!frame)frame=requestAnimationFrame(fit);}fit();window.addEventListener('resize',schedule,{passive:true});vv?.addEventListener('resize',schedule,{passive:true});window.addEventListener('orientationchange',schedule,{passive:true});})();

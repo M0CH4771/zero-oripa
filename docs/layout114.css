@@ -1,0 +1,44 @@
+/* Keep all cabinets inside the visible browser viewport, including mobile Safari. */
+body.gamemode .gm{height:100dvh;height:var(--game-viewport,100dvh);bottom:auto}
+body:has(#board){min-height:100dvh}
+body:has(#board) main{height:var(--game-viewport,100dvh);min-height:0;max-height:100%;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto minmax(0,1fr) auto auto auto auto;align-content:stretch;justify-content:stretch;gap:5px;padding:6px 9px max(8px,env(safe-area-inset-bottom));padding-top:max(6px,env(safe-area-inset-top))}
+body:has(#board) main>header{grid-row:1;min-height:42px}
+body:has(#board) .logo img{height:clamp(42px,8dvh,72px)}
+body:has(#board) .notice{grid-row:2;font-size:10px;line-height:1.25}
+body:has(#board) .readouts{grid-row:3;order:0;margin:0}
+body:has(#board) .readouts>div{padding:3px 5px!important}
+body:has(#board) .rush-header{grid-row:4;order:0;min-height:0;height:clamp(44px,9dvh,80px)}
+body:has(#board) .rush-header .flower{width:clamp(44px,9dvh,80px);height:clamp(44px,9dvh,80px)}
+body:has(#board) .rush-header strong{font-size:clamp(20px,5.6vw,32px)}
+body:has(#board) .board{grid-row:5;order:0;width:100%;height:100%;min-height:0;max-height:none;aspect-ratio:auto;margin:0;align-self:center;justify-self:center}
+body:has(#board) .board:not(.ultimate) .cell{container-type:size}
+body:has(#board) .board:not(.ultimate) .symbol{width:min(92%,92cqh);height:auto;aspect-ratio:1;object-fit:contain}
+body:has(#board) .status{grid-row:6;order:0;min-height:24px;padding:3px 6px;font-size:12px}
+body:has(#board) .hud{grid-row:7;order:0;margin:0}
+body:has(#board) footer{grid-row:8;order:0;grid-template-columns:42px minmax(0,1fr) 62px 56px;gap:5px}
+body:has(#board) footer #buy{width:60px;min-height:60px;height:60px;justify-self:center}
+body:has(#board) .refill{grid-row:9;order:0;justify-self:center;min-height:24px;padding:2px 8px}
+@media(max-width:640px){
+ .gm .gm-top{padding:calc(3px + env(safe-area-inset-top)) 7px 0}
+ .gm .gm-top .gm-logo{height:43px}
+ .gm .gm-top .gm-logo img{max-height:43px!important}
+ .gm:not(.theme-plinko) .gm-tier,.gm:not(.theme-plinko) .gm-mode{top:calc(48px + env(safe-area-inset-top))}
+ .gm:not(.theme-plinko) .gm-demo{top:calc(71px + env(safe-area-inset-top));font-size:10px}
+ .gm:not(.theme-plinko) .gm-round-win,.gm.theme-mine .gm-round-win{top:calc(87px + env(safe-area-inset-top));height:44px;min-height:44px}
+ .gm.theme-gems .gm-round-win+.fruit-detail,.gm.theme-fruit .gm-round-win+.fruit-detail,.gm.theme-gods .gm-round-win+.fruit-detail{top:calc(136px + env(safe-area-inset-top));height:28px}
+ .gm .gm-hud{padding-bottom:max(8px,env(safe-area-inset-bottom));padding-inline:7px}
+ .gm .gm-row .gm-box{min-width:0}
+ .gm .gm-ctl>*{min-width:0}
+ .gm .gm-icon.sm,.gm .gm-pm{min-height:42px}
+ .gm .gm-spin{flex-shrink:0}
+ .gm .dog-choice{max-height:calc(var(--game-viewport,100dvh) - 100px);overflow:auto;inset:50% 6% auto;transform:translateY(-50%)}
+ .gm .bonus-intro-card{max-height:calc(var(--game-viewport,100dvh) - 24px);overflow:auto}
+}
+@media(max-height:590px){
+ body:has(#board) main{gap:3px}
+ body:has(#board) .logo img{height:36px}
+ body:has(#board) .rush-header{height:38px}
+ body:has(#board) .rush-header .flower{width:38px;height:38px}
+ body:has(#board) footer #buy{width:48px;height:48px;min-height:48px}
+ body:has(#board) footer{grid-template-columns:40px minmax(0,1fr) 50px 52px}
+}
