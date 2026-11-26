@@ -20,7 +20,7 @@
   const atlasDims={rush:[4,3],fruits:[3,3],mine:[4,4],gods:[4,3],dogs:[4,4],dwarf:[4,3],plinko:[3,2],multipliers:[3,6]},atlasPromises=new Map();
   ZG.loadSymbolAtlas=(name)=>{
     if(!atlasDims[name])return Promise.resolve(null);
-    if(!atlasPromises.has(name))atlasPromises.set(name,new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(ZG.cleanSymbolAtlas(img,...atlasDims[name]));img.onerror=()=>resolve(null);img.src='./assets/anime/symbol92-'+name+'.png';}));
+    if(!atlasPromises.has(name))atlasPromises.set(name,new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(ZG.cleanSymbolAtlas(img,...atlasDims[name]));img.onerror=()=>resolve(null);img.src=name==='multipliers'?'./assets/anime/symbol92-multipliers.png':'./assets/anime/symbol105-'+name+'.webp';}));
     return atlasPromises.get(name);
   };
   const multiplierSource=new Image();let multiplierArt=multiplierSource,multiplierArtReady=false;
