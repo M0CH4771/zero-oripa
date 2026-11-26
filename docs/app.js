@@ -322,6 +322,7 @@ function tagsHtml(p) {
   return t.slice(0, 4).join('');
 }
 function barClass(p) { const r = p.total ? p.remaining / p.total : 0; return r <= 0.1 ? 'low' : r <= 0.4 ? 'mid' : ''; }
+function hibiscusCard(){return `<a class="pcard game-card game-fruit" href="./tropical.html?v=hibiscus103"><div class="ptags"><span class="tg red">ZERO HIBISCUS</span><span class="tg game-rtp">無料テスト専用</span></div><div class="pimg"><div class="art brand-game-cover cover-hibiscus" style="--key-art:url('./assets/brand/cover-hibiscus.webp')"><span class="ribbon">NEW</span><div class="feature-cover-title"><img class="zt-img custom-game-logo" src="./assets/anime/tropical/logo103.webp" alt="ZERO HIBISCUS" style="height:104px;width:auto;max-width:100%;object-fit:contain"></div></div></div><div class="pinfo"><div class="pprice"><span class="coin-ico">C</span>500<small>〜100,000 /1回</small></div><div class="premain"><div class="muted" style="font-weight:400">独立した無料デモ・景品なし</div></div></div><span class="pcta">ZERO HIBISCUSを体験する</span></a>`;}
 function packCard(p) {
   if (p.kind === 'rush') {
     return `<a class="pcard game-card game-${esc(p.theme)}" href="#pack-${p.id}">
@@ -402,7 +403,7 @@ async function viewHome() {
   const rest = featureOn ? shown.filter((p) => !rushes.includes(p)) : shown;
   $('#view').innerHTML = `
     ${ME.user ? '' : `<div class="notice">🎁 新規登録で ${num(CFG.signup_bonus)}コインプレゼント！ 完全無料</div>`}
-    <section class="lobby-hero"><div class="hero-copy"><span class="hero-kicker">ZERO ORIPA / GAME LOBBY</span><h1>ゼロ円から、<br>新しい冒険へ。</h1><p>7つのゲーム・オリパと新作デモを無料で体験。</p><span class="hero-note">TEST EDITION · 実物景品なし</span></div><div class="hero-art" aria-hidden="true"></div></section>
+    <section class="lobby-hero"><div class="hero-copy"><span class="hero-kicker">ZERO ORIPA / GAME LOBBY</span><h1>ゼロ円から、<br>新しい冒険へ。</h1><p>8つのゲーム・オリパを無料で体験。</p><span class="hero-note">TEST EDITION · 実物景品なし</span></div><div class="hero-art" aria-hidden="true"></div></section>
     ${earnStrip()}
     <div class="stickybar">
       <div class="cats">${CATS.map((c) => `<button data-c="${c.key}" class="${c.key === homeCat ? 'on' : ''}">${c.label}</button>`).join('')}</div>
@@ -410,8 +411,8 @@ async function viewHome() {
     </div>
     <div class="toolbar"><span><b>${shown.length}</b> 件</span>
       <select id="sortSel">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}" ${k === homeSort ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
-    ${rushes.length ? `<section class="rush-sec"><h4><span>ZERO ORIGINALS · ${rushes.length} GAMES</span>オリジナルゲーム</h4><div class="plist">${rushes.map(packCard).join('')}</div><a href="./tropical.html" style="display:block;margin:12px 10px;padding:22px 16px;border-radius:13px;color:white;background:linear-gradient(90deg,#222439d9,#a44b3f8c),url(./assets/anime/tropical/bg.webp) center 42%/cover;text-decoration:none"><b style="font-size:22px;color:#ffdf9b">🌺 ZERO HIBISCUS</b><br><small>NEW · ボーナスバイ専用 · 独立した無料デモ</small></a></section>` : ''}
-    ${rest.length ? `${featureOn?'<div class="catalog-heading"><span>ORIPA COLLECTION</span><h2>オリパ一覧</h2></div>':''}<div class="plist">${rest.map(packCard).join('')}</div>` : rushes.length ? '' : '<div class="empty">条件に合うオリパはありません</div>'}
+    ${rushes.length ? `<section class="rush-sec"><h4><span>ZERO ORIGINALS · ${rushes.length+1} GAMES</span>オリジナルゲーム</h4><div class="plist">${rushes.map(packCard).join('')}${hibiscusCard()}</div></section>` : ''}
+    ${rest.length ? `${featureOn?'<div class="catalog-heading"><span>ORIPA COLLECTION</span><h2>オリパ一覧</h2></div>':''}<div class="plist">${rest.map(packCard).join('')}${!featureOn&&!homeChips.size&&(homeCat==='all'||homeCat==='rush')?hibiscusCard():''}</div>` : rushes.length ? '' : '<div class="empty">条件に合うオリパはありません</div>'}
     ${siteFooter()}`;
   document.querySelectorAll('.cats button').forEach((b) => (b.onclick = () => { homeCat = b.dataset.c; viewHome(); }));
   document.querySelectorAll('.chips button').forEach((b) => (b.onclick = () => { const k = b.dataset.k; homeChips.has(k) ? homeChips.delete(k) : homeChips.add(k); viewHome(); }));
