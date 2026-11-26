@@ -1,10 +1,11 @@
 // Original, virtual-coin-only feature games. All scripts are deterministic given rand.
 import {secureRandom,picker,bonusEntry} from './common.js';
+import {dwarfAdventureStream} from './dwarf-adventure.js?v=adventure124';
 export const FEATURE_CONFIG={
 gods:{id:12,title:'ZERO GODS',badge:'天空の累積倍率',minCoins:1,max:50,scale:.00909,cols:6,rows:5,initial:15},
 dogs:{id:13,title:'ZERO DOGS',badge:'6リール・最大117,649 WAYS',minCoins:1,max:50,scale:.00909,rainingScale:.005355,cols:6,rows:7,initial:7},
  train:{id:14,title:'ZERO TRAIN',badge:'6列・鉱山トロッコ＆宝箱',minCoins:1,max:200,scale:.015,cols:6,rows:6,initial:3},
- dwarf:{id:15,title:'ZERO DWARF',badge:'バトル＆宝箱ラッシュ',minCoins:1,max:50,scale:.0025832,cols:3,rows:3,initial:10}
+ dwarf:{id:15,title:'ZERO DWARF',badge:'アイテム成長型の冒険ラッシュ',minCoins:1,max:50,scale:.0025832,cols:3,rows:3,initial:10}
 };
 const lottery=(r,a)=>a[Math.floor(r()*a.length)];
 const grid=(n,fn)=>Array.from({length:n},(_,i)=>fn(i));
@@ -95,66 +96,18 @@ function train(r,{strategy}={}){
  }
  spins[0].initialGrid=initialGrid;spins[0].initialDepth=initialDepth;spins[0].initialEvents=[];return spins;
 }
-const DWARF_MONSTERS={Goblin:{hp:3,win:10,icon:'s1'},Troll:{hp:4,win:10,icon:'s3'},Dragon:{hp:5,win:10,icon:'s2'}};
-export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1,-4]};
-// Exact basis-point weights in roulette display order. Weighted encounter
-// distribution keeps expected added spins below ten per battle.
-export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
-export const DWARF_WEIGHTS={Goblin:[3185,3185,1815,1815],Troll:[3103,3103,1897,1897],Dragon:[2790,2790,2210,2210]};
-export const DWARF_CHEST_WEIGHTS={1:4000,3:3000,5:1000,10:1000,30:800,50:150,100:50};
-export const DWARF_SYMBOL_WEIGHTS={s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:3.07,s9:3.07};
-export const DWARF_INITIAL_SCALE=.001;
-export const DWARF_INITIAL_SCALES=[.001,.003,.005,.01];
-export function dwarfInitialTable(rate){return {values:DWARF_INITIAL_SCALES.map(s=>Number((rate*s).toFixed(8))),weights:Array(4).fill(25)};}
-export const DWARF_UPGRADE_MULTIPLIERS={Goblin:[1.5,2],Troll:[2,3],Dragon:[3,5]};
-export const DWARF_UPGRADE_WEIGHTS={Goblin:[80,20],Troll:[80,20],Dragon:[80,20]};
-export function dwarfUpgradeTable(rate,monster){return {values:[...DWARF_UPGRADE_MULTIPLIERS[monster]],weights:[...DWARF_UPGRADE_WEIGHTS[monster]]};}
-function dwarfInitial(rate,rand){const {values,weights}=dwarfInitialTable(rate),selected=Math.min(values.length-1,Math.floor(rand()*values.length));return {selected,values,weights,amount:values[selected]};}
-function dwarfUpgrade(rate,monster,rand){const {values,weights}=dwarfUpgradeTable(rate,monster);let ticket=rand()*weights.reduce((a,b)=>a+b,0),selected=values.length-1;for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}return {selected,values,weights,amount:values[selected]};}
-function* dwarfStream(r){
- const spins=[];
- const pick=picker(DWARF_SYMBOL_WEIGHTS,r);
- const pickChest=picker(DWARF_CHEST_WEIGHTS,r);
- const pays={s0:20,s2:7,s3:5,s1:3,s4:.5,s5:.4,s6:.3,s7:.2};
- let remaining=10,freePlayed=0;
- yield null;
- const stages={10:'Goblin',20:'Troll',30:'Dragon'};
- function battle(monster){
-  const m=DWARF_MONSTERS[monster];
-  const choices=DWARF_ROULETTE[monster],weights=DWARF_WEIGHTS[monster],actions=[];
-  let hp=4,enemy=m.hp;
-  while(hp>0&&enemy>0){
-   let ticket=r()*10000,selected=choices.length-1;
-   for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}
-   const roll=choices[selected];
-   if(roll>0)enemy=Math.max(0,enemy-roll);else hp=Math.max(0,hp+roll);
-   actions.push({type:roll>0?'ATTACK':'DAMAGE',selected,roll,heroHP:hp,enemyHP:enemy});
-  }
-  const won=enemy===0;
-  const awarded=won?m.win:0;remaining+=awarded;
-  const battleGrid=['s0','s7',m.icon,'s4','s7','s5','s6','s7','s8'];
-  return {grid:battleGrid,raw:0,cols:3,rows:3,note:won?'勝利':'追加なし',battle:true,monster,monsterHP:m.hp,reward:m.win,choices,weights,actions,won,awarded,freePlayed,remaining,total:freePlayed+remaining};
- }
- while(remaining>0){remaining--;freePlayed++;const g=grid(9,pick);let raw=0,hits=[],chests=[];
-  for(const line of [[0,1,2],[3,4,5],[6,7,8],[0,4,8],[2,4,6]])if(pays[g[line[0]]]&&line.every(j=>g[j]===g[line[0]])){raw+=pays[g[line[0]]];hits.push(...line);}
-  for(let j=0;j<g.length;j++)if(g[j]==='s8'||g[j]==='s9'){const value=Number(pickChest());raw+=value;chests.push({pos:j,value});hits.push(j);}
-  const target=freePlayed<=10?10:freePlayed<=20?20:freePlayed<=30?30:null;
-  yield {grid:g,raw,cols:3,rows:3,hits:[...new Set(hits)],chests,freePlayed,remaining,note:target===null?'最終宝箱ラッシュ':({10:'ゴブリン',20:'トロール',30:'ドラゴン'}[target])+' まで '+Math.max(0,target-freePlayed)+' 回',total:freePlayed+remaining};
-  if(stages[freePlayed])yield battle(stages[freePlayed]);
- }
-}
-const generators={gods:godsStream,dogs:dogsStream,dwarf:dwarfStream};
+export {DWARF_CHEST_WEIGHTS,DWARF_ITEMS,DWARF_INITIAL_SCALE,DWARF_BATTLE_CHANCE,DWARF_CHEST_CHANCE,DWARF_REWARD_TIERS} from './dwarf-adventure.js?v=adventure124';
+const generators={gods:godsStream,dogs:dogsStream};
 
-export function featureRaw(game,rand=secureRandom,opts={}){if(game==='train')return train(rand,opts);const it=generators[game](rand,opts);const entry=it.next().value;const spins=[...it];if(spins.length&&entry)spins[0].entry=entry;return spins;}
+export function featureRaw(game,rand=secureRandom,opts={}){if(game==='train')return train(rand,opts);if(game==='dwarf')return featurePlay(game,{...opts,rate:opts.rate??10000,rand,withScript:true}).spins;const it=generators[game](rand,opts);const entry=it.next().value;const spins=[...it];if(spins.length&&entry)spins[0].entry=entry;return spins;}
 export function* featureStream(game,{rate,rand=secureRandom,strategy='battle',dogEntry=null,encounter=null}){
- const c=FEATURE_CONFIG[game],initialDraw=game==='dwarf'?dwarfInitial(rate,rand):null,initialUnit=game==='dwarf'?initialDraw.amount:rate*(game==='dogs'?(strategy==='raining'?c.rainingScale:c.scale):c.scale);
+ if(game==='dwarf')return yield* dwarfAdventureStream({rate,rand});
+ const c=FEATURE_CONFIG[game],initialUnit=rate*(game==='dogs'?(strategy==='raining'?c.rainingScale:c.scale):c.scale);
  const it=generators[game](rand,{strategy,dogEntry,encounter});let entry=it.next().value;
  const cap=Math.floor(c.max*rate);let running=game==='gods'?3*initialUnit:0,paid=Math.floor(running),unit=initialUnit,played=0,freePlayed=0;
- if(entry)entry={...entry,win:paid};yield {entry,unit:initialUnit,cap,...(initialDraw?{initialDraw}:{})};
+ if(entry)entry={...entry,win:paid};yield {entry,unit:initialUnit,cap};
  for(const s of it){played++;if(!s.battle)freePlayed++;
-  if(game==='dwarf'){s.unit=unit;if(s.battle&&s.won){s.upgrade=dwarfUpgrade(rate,s.monster,rand);unit=Number((unit*s.upgrade.amount).toFixed(8));s.nextUnit=unit;}}
   const before=running;running+=s.raw*(game==='dwarf'?s.unit:initialUnit);const next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;
-  if(game==='dwarf'&&s.chests?.length){let subtotal=before+(s.raw-s.chests.reduce((n,chest)=>n+chest.value,0))*unit,credited=Math.min(cap,Math.floor(subtotal));for(const [i,chest] of s.chests.entries()){subtotal+=chest.value*unit;const end=i===s.chests.length-1?next:Math.min(cap,Math.floor(subtotal));chest.win=Math.max(0,end-credited);credited=end;}}
   if(s.steps)for(const step of s.steps){step.win=Math.floor(step.value*initialUnit);step.groups=step.groups.map(g=>({...g,pay:g.base*initialUnit,base:g.base*initialUnit,mult:1}));step.credited=Math.min(s.win,Math.floor(step.tumbleTotal*initialUnit));}
   if(paid>=cap){s.add=0;s.remaining=0;s.total=game==='dwarf'?freePlayed:played;}
   yield s;

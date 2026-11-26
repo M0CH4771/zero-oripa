@@ -1,5 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml,volatilityBadge} from './game-info.js?v=dwarf123';
+import {gameInfoHtml,volatilityBadge} from './game-info.js?v=adventure124';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -254,7 +254,7 @@ const GAME_NOTE = {
   gods:()=>['15フリースピン・天空の累積倍率',featureBounds('gods')],
   dogs:()=>['最大117,649 WAYS・選べるワイルド',featureBounds('dogs')],
   train:()=>['NEW · LUCKY WAGON — 6列の鉱山を掘り進める',featureBounds('train')],
-  dwarf:()=>['3連戦の冒険・最大40スピン',featureBounds('dwarf')],
+  dwarf:()=>['アイテムで成長する冒険・最大100スピン',featureBounds('dwarf')],
   rush: (p) => ['最初から10回のフリースピン', `6×5・8個以上で連鎖・RTP目標97%・最低1C・最高50倍`],
   fruit: (p) => ['スキャッター3〜7個で10〜30回のフリースピン', `7×7・5個以上のクラスター・倍率スポット最大128倍・RTP目標97%・最低1C・最高50倍`],
   mine: (p) => ['最初の採掘＋4スピンの合計で、もらえるカードが決まる', `荒さ ${esc(p.volatility_label)}・還元率 約97%・最低1C・最高 ベットの${p.max_mult}倍`],
@@ -441,7 +441,7 @@ const RULES = {
   gods:['6×5の盤面で同じ絵柄8個以上がそろうと消えて連鎖。','4スキャッターで15回。4/5/6個は基準ベットの3/5/100倍。フリースピン中は3個以上で5回追加。','×2〜500の新規オーブが当たりスピンに出た場合だけ累積倍率を加算・適用。ハズレ時のオーブは不発。',featureBounds('gods')],
   dogs:['6リール・各2〜7段。左から3リール以上の連続一致。最大117,649 WAYS。','3〜6個の肉球でSTICKY（7/12/15/20回）かRAINING（15/18/25/30回）を選択。','ワイルドは2〜5リールのみ。×1〜3の倍率は組み合わせごとに乗算。再トリガーなし。',featureBounds('dogs')],
   train:['6列・最大6段。開始時に2〜4段のコースを選択。コインが着地すると残り3回に戻ります。','上段のトロッコが、同じ列の新規コインを強化。爆弾で岩を除去し、下の宝箱を開けることも。','バッグ・チェスト・ドワーフの回収と、終了時の宝箱追加報酬を合計します。',featureBounds('train')],
-  dwarf:['最初のフリースピンは10回。初期基準Cは消費Cの0.1／0.3／0.5／1.0%からルーレット抽選。宝箱の倍率に基準Cを掛けて配当を計算。','10回でゴブリン、20回でトロール、30回でドラゴン。どの敵も勝利で＋10回。ドラゴン撃破後は最終宝箱ラッシュ。','勝率はゴブリン80%・トロール60%・ドラゴン30%。敗北で終了。','勝利時は基準C強化宝箱も獲得。基準Cをゴブリン×1.5／×2、トロール×2／×3、ドラゴン×3／×5のルーレットで強化。以降のスピンのみ適用。宝箱倍率は×1〜×100、抽選は全ステージ共通。',featureBounds('dwarf')],
+  dwarf:['初期10G。基準CはBETの1%。宝箱倍率を掛けて配当。','バトルシンボル成立または残り0Gでバトル。敵は3種類から均等に出現。','勝利で5〜10Gとアイテム1個。途中敗北時は残りGがあれば継続。','16種類のアイテムで基準C・宝箱・バトル・追加Gを強化。',featureBounds('dwarf')],
   plinko:['ボールが12段のピンを左右に通過します。','最下段に表示されたコイン数を1球ごとに獲得します。BETに応じて表示が変わります。','全3設定で配当表還元率約97%。0 Cの着地枠もあり、全ボール合計が0Cの場合のみ1Cになります。配当上限なし。'],
   rush: ['テストコインのレートを選び、BONUSで10回のフリースピンを開始します', '6×5の盤面のどこでも、同じ宝石が8個以上あれば配当。消えたあと上から落ちてきて連鎖します',
     '魔法のオーブ（×2〜×100）が出現し、勝った連鎖の合計に倍率を適用します', '魔法の杖が3個以上で5回追加。4／5／6個以上の杖には3／5／100倍の配当（テスト版の最大120回）','1回のボーナス全体の配当は最低1C・最高50倍。還元率目標97%。'],
@@ -535,7 +535,7 @@ async function viewGame(id, demo, daily=false) {
       <div class="gm-round-win" id="gmRoundWin" aria-live="polite">${p.game==='plinko'?'<div class="plinko-result-mult"><span>直近1球</span><strong id="plinkoLastCoin">—</strong></div><div class="plinko-result-pay"><span>今回の合計</span><b id="gmRoundAmount">0 C</b></div>':'<div class="round-readout"><span id="gmRoundLabel">'+(p.game==='mine'?'今回の採掘':'今回の配当')+'</span><b id="gmRoundAmount">0 C</b></div>'+(['rush','mine','gods','dogs','train','dwarf'].includes(p.game)?'<div class="round-metric" id="gmMetric" '+(p.game==='gods'?'':'hidden')+'><span id="gmMetricLabel">'+(p.game==='gods'?'累積倍率':'')+'</span><strong id="gmRoundMultiplier">'+(p.game==='gods'?'×0':'')+'</strong></div>':'')}</div>
       ${['rush','fruit','gods'].includes(p.game)?'<div class="fruit-detail" id="fruitDetail" aria-label="タンブル配当明細"><span>絵柄別配当</span><div id="fruitDetailItems"></div></div>':''}
       <div class="gm-hud">
-        ${p.game==='dwarf'?'<div id="dwarfBase" class="dwarf-base" hidden><span>現在の基準C・宝箱×1</span><strong id="dwarfBaseValue">—</strong></div>':''}
+        ${p.game==='dwarf'?'<div id="dwarfBase" class="dwarf-base" hidden><span>現在の基準C・宝箱×1</span><strong id="dwarfBaseValue">—</strong><small id="dwarfMinimum">最低宝箱 ×1</small><div id="dwarfInventory" class="dwarf-inventory" aria-label="所持アイテム"></div></div>':''}
         <div class="gm-status" id="gmStatus">プレイ待機中</div>
         <div class="gm-row">
           <div class="gm-box"><span>${demo ? 'デモ残高' : 'コイン残高'}</span><b id="hCoin">0</b></div>
@@ -611,7 +611,7 @@ async function viewGame(id, demo, daily=false) {
         mine:['つるはしで真下の鉱石を掘る','列を掘り切ると宝箱が開く','宝箱倍率は最後の配当に適用'],
         gods:['同じ宝石が8個以上で配当・連鎖','当たりとオーブが重なると累積倍率が増える','スキャッターでスピン追加'],
         dogs:[choice==='sticky'?'固定WILDが最後まで残る':'各スピンで降下WILDが出現','左から3リール以上の一致で配当','リールの高さに応じてWAYSが変化'],
-        dwarf:['宝箱の倍率に基準Cを掛けて配当','ゴブリン・トロール・ドラゴンと順に戦う','勝利でスピン追加・基準C強化'],
+        dwarf:['基準C×宝箱倍率が配当','バトルシンボル成立・残り0Gで戦闘','勝利で5〜10G追加・アイテム1個'],
         plinko:['12段のピンを通過して着地','着地枠の表示Cを獲得','設定：'+String(gameCtx.risk).toUpperCase()],
         train:['コイン着地でリスピン回数が回復','宝箱・強化・回収で配当を獲得']
       };
@@ -633,6 +633,7 @@ async function viewGame(id, demo, daily=false) {
     onBallLand:(v)=>{gameCtx.ballTotal=(gameCtx.ballTotal||0)+v;const el=$('#gmRoundAmount');if(el)el.textContent=num(gameCtx.ballTotal)+' C';const latest=$('#plinkoLastCoin');if(latest&&Number.isFinite(v))latest.textContent=num(v)+' C';},
     onMultiplier:(base,mult)=>{if(p.game==='rush'){roundLabel(base?'倍率適用前':'配当なし');$('#gmRoundAmount').textContent=num(base)+' C';showMetric('適用倍率','×'+num(mult));}},
     onFeatureMetric:(label,value)=>showMetric(label,value),
+    onDwarfInventory:state=>{const el=$('#dwarfInventory'),min=$('#dwarfMinimum');if(!el||!state)return;if(min)min.textContent='最低宝箱 ×'+state.minimum;el.innerHTML=state.items.length?state.items.map(x=>'<span class="dwarf-inventory-item tier-'+x.rarity+'" title="'+esc(x.name+'：'+x.description)+'"><i class="dwarf-item-art" style="--ix:'+((x.icon%4)*100/3)+'%;--iy:'+(Math.floor(x.icon/4)*100/3)+'%"></i><b>'+x.count+'</b></span>').join(''):'<small>所持アイテムなし</small>';},
     onBaseUnit:unit=>{const el=$('#dwarfBase');if(el){el.hidden=false;const value=$('#dwarfBaseValue');if(value)value.textContent=unit.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C';}},
     onSpinWin: (v) => { const el = $('#gmRoundAmount');if(el)el.textContent=num(v)+' C';roundLabel(p.game==='mine'?'今回の採掘':'今回の配当'); },
     onTumble:(groups)=>{const el=$('#fruitDetailItems');if(!el)return;for(const g of groups){const row=document.createElement('span');row.textContent=g.cells.length+'個 · '+(g.mult>1?num(g.base??g.pay)+' ×'+g.mult+' = ':'')+num(g.pay)+' C';if(p.game==='gods'){const i=Number(g.sym.slice(1)),icon=document.createElement('i');icon.style.cssText='width:24px;height:24px;background-image:url(./assets/anime/symbol109-gods.webp);background-size:400% 300%;background-position:'+(i%4*100/3)+'% '+(Math.floor(i/4)*50)+'%';row.prepend(icon);}else{const icon=document.createElement('img');icon.src=ZG.art.sprite(theme,g.sym,24).toDataURL();row.prepend(icon);}el.append(row);}el.scrollLeft=el.scrollWidth;},
@@ -728,7 +729,7 @@ async function gameSpin() {
     if(p.game==='train'&&!daily){strategy=await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>LUCKY WAGON</strong><b>'+num(cost)+' C</b><small>開始時に開く段数を選択</small><div><button data-tier="train2">2段</button><button data-tier="train3">3段</button><button data-tier="train4">4段</button><button data-tier="">取消</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.tier)});});if(!strategy)return;}
     if(p.game==='dogs'){
       if(!daily&&!await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>BUY FREE SPINS</strong><b>'+num(cost)+' C</b><small>1ゲームの消費C</small><div><button data-buy="no">取消</button><button data-buy="yes">確定</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.buy==='yes')});}))return;
-      const {dogsEntry}=await import('./test-games/features.js?v=dwarf123');dogEntry=dogsEntry();strategy=await game.prepareDogs(dogEntry);if(!strategy)return;const demoLabel=$('.gm-demo');if(demoLabel)demoLabel.textContent=demoLabel.textContent.replace(/荒さ [0-9–]+\/5/,'荒さ '+(strategy==='raining'?5:4)+'/5');
+      const {dogsEntry}=await import('./test-games/features.js?v=adventure124');dogEntry=dogsEntry();strategy=await game.prepareDogs(dogEntry);if(!strategy)return;const demoLabel=$('.gm-demo');if(demoLabel)demoLabel.textContent=demoLabel.textContent.replace(/荒さ [0-9–]+\/5/,'荒さ '+(strategy==='raining'?5:4)+'/5');
     }
     const r = await api(`/api/packs/${p.id}/${daily?'daily':demo ? 'rush-demo' : 'rush'}`, { rate: rushRate,count,risk:gameCtx.risk,rows:gameCtx.rows,strategy,dogEntry });
     activeRound=r;
