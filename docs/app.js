@@ -1,5 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml,volatilityBadge} from './game-info.js?v=live112';
+import {gameInfoHtml,volatilityBadge} from './game-info.js?v=live113';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -322,7 +322,7 @@ function tagsHtml(p) {
   return t.slice(0, 4).join('');
 }
 function barClass(p) { const r = p.total ? p.remaining / p.total : 0; return r <= 0.1 ? 'low' : r <= 0.4 ? 'mid' : ''; }
-function hibiscusCard(){return `<a class="pcard game-card game-fruit" href="./tropical.html?v=live112"><div class="ptags"><span class="tg red">ZERO HIBISCUS</span><span class="tg game-rtp">無料テスト専用</span></div><div class="pimg"><div class="art brand-game-cover cover-hibiscus" style="--key-art:url('./assets/brand/cover-hibiscus.webp')"><span class="ribbon">NEW</span><div class="feature-cover-title"><img class="zt-img custom-game-logo" src="./assets/anime/tropical/logo103.webp" alt="ZERO HIBISCUS" style="height:104px;width:auto;max-width:100%;object-fit:contain"></div></div></div><div class="pinfo"><div class="pprice"><span class="coin-ico">C</span>500<small>〜100,000 /1回</small></div>${volatilityBadge("tropical")}<div class="premain"><div class="muted" style="font-weight:400">独立した無料デモ・景品なし</div></div></div><span class="pcta">ZERO HIBISCUSを体験する</span></a>`;}
+function hibiscusCard(){return `<a class="pcard game-card game-fruit" href="./tropical.html?v=live113"><div class="ptags"><span class="tg red">ZERO HIBISCUS</span><span class="tg game-rtp">無料テスト専用</span></div><div class="pimg"><div class="art brand-game-cover cover-hibiscus" style="--key-art:url('./assets/brand/cover-hibiscus.webp')"><span class="ribbon">NEW</span><div class="feature-cover-title"><img class="zt-img custom-game-logo" src="./assets/anime/tropical/logo103.webp" alt="ZERO HIBISCUS" style="height:104px;width:auto;max-width:100%;object-fit:contain"></div></div></div><div class="pinfo"><div class="pprice"><span class="coin-ico">C</span>500<small>〜100,000 /1回</small></div>${volatilityBadge("tropical")}<div class="premain"><div class="muted" style="font-weight:400">独立した無料デモ・景品なし</div></div></div><span class="pcta">ZERO HIBISCUSを体験する</span></a>`;}
 function packCard(p) {
   if (p.kind === 'rush') {
     return `<a class="pcard game-card game-${esc(p.theme)}" href="#pack-${p.id}">
@@ -728,7 +728,7 @@ async function gameSpin() {
     if(p.game==='train'&&!daily){strategy=await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>LUCKY WAGON</strong><b>'+num(cost)+' C</b><small>開始時に開く段数を選択</small><div><button data-tier="train2">2段</button><button data-tier="train3">3段</button><button data-tier="train4">4段</button><button data-tier="">取消</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.tier)});});if(!strategy)return;}
     if(p.game==='dogs'){
       if(!daily&&!await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>BUY FREE SPINS</strong><b>'+num(cost)+' C</b><small>1ゲームの消費C</small><div><button data-buy="no">取消</button><button data-buy="yes">確定</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.buy==='yes')});}))return;
-      const {dogsEntry}=await import('./test-games/features.js?v=live112');dogEntry=dogsEntry();strategy=await game.prepareDogs(dogEntry);if(!strategy)return;const demoLabel=$('.gm-demo');if(demoLabel)demoLabel.textContent=demoLabel.textContent.replace(/荒さ [0-9–]+\/5/,'荒さ '+(strategy==='raining'?5:4)+'/5');
+      const {dogsEntry}=await import('./test-games/features.js?v=live113');dogEntry=dogsEntry();strategy=await game.prepareDogs(dogEntry);if(!strategy)return;const demoLabel=$('.gm-demo');if(demoLabel)demoLabel.textContent=demoLabel.textContent.replace(/荒さ [0-9–]+\/5/,'荒さ '+(strategy==='raining'?5:4)+'/5');
     }
     const r = await api(`/api/packs/${p.id}/${daily?'daily':demo ? 'rush-demo' : 'rush'}`, { rate: rushRate,count,risk:gameCtx.risk,rows:gameCtx.rows,strategy,dogEntry });
     activeRound=r;

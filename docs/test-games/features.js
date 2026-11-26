@@ -2,7 +2,7 @@
 import {secureRandom,picker,bonusEntry} from './common.js';
 export const FEATURE_CONFIG={
 gods:{id:12,title:'ZERO GODS',badge:'天空の累積倍率',minCoins:1,max:50,scale:.00909,cols:6,rows:5,initial:15},
-dogs:{id:13,title:'ZERO DOGS',badge:'6リール・最大117,649 WAYS',minCoins:1,max:75,scale:.00861,rainingScale:.004885,cols:6,rows:7,initial:7},
+dogs:{id:13,title:'ZERO DOGS',badge:'6リール・最大117,649 WAYS',minCoins:1,max:75,scale:.00915,rainingScale:.005355,cols:6,rows:7,initial:7},
  train:{id:14,title:'ZERO TRAIN',badge:'6列・鉱山トロッコ＆宝箱',minCoins:1,max:200,scale:.015,cols:6,rows:6,initial:3},
  dwarf:{id:15,title:'ZERO DWARF',badge:'バトル＆宝箱ラッシュ',minCoins:1,max:200,scale:.0025832,cols:3,rows:3,initial:10}
 };
@@ -45,22 +45,23 @@ function* godsStream(r){
 }
 const DOGS_RAW_PAYS={s0:[1.1,2,3,5.5],s1:[.75,1,1.5,2.3],s2:[.5,.75,1,1.6],s3:[.35,.5,.75,1.15],s4:[.26,.4,.5,1.1],s5:[.26,.4,.5,1.1],s9:[.19,.24,.3,.75],s10:[.19,.24,.3,.75],s11:[.19,.24,.3,.75],s12:[.12,.15,.2,.4],s13:[.12,.15,.2,.4]};
 export const DOGS_PAYS=Object.fromEntries(Object.entries(DOGS_RAW_PAYS).map(([k,v])=>[k,[v[0]*1.25,Math.max(v[0]*1.25,v[1]*1.1),v[2],v[3]]]));
+export const DOGS_STICKY_PAYS=Object.fromEntries(Object.entries(DOGS_PAYS).map(([k,v])=>{const base=DOGS_RAW_PAYS[k][0]*3.4,b=Math.max(base,v[1]*2),c=Math.max(b,v[2]*1.3);return [k,[base,b,c,Math.max(c,v[3]*.45)]]}));
 const dogWeights={s0:3,s1:4,s2:5,s3:6,s4:8,s5:8,s9:12,s10:12,s11:12,s12:14,s13:14};
-const dogHeight=r=>Number(picker({3:1,4:9,5:35,6:35,7:20},r)());
+const dogHeight=(r,mode)=>Number(picker(mode==='sticky'?{3:.5,4:3,5:46,6:46,7:4.5}:{3:1,4:9,5:35,6:35,7:20},r)());
 const dogAwards={sticky:[7,12,15,20],raining:[15,18,25,30]};
 const dogWays=h=>h.reduce((a,b)=>a*b,1);
 export function dogsEntry(r=secureRandom){const pickHeight=picker({2:30,3:32,4:22,5:10,6:4,7:2},r),heights=Array.from({length:6},()=>Number(pickHeight())),pick=picker(dogWeights,r),g=grid(42,j=>Math.floor(j/6)<heights[j%6]?pick():null),columns=[0,1,2,3,4,5];let scatters=3;while(scatters<6&&r()<.035)scatters++;for(let i=0;i<scatters;i++){const c=columns.splice(Math.floor(r()*columns.length),1)[0];g[Math.floor(r()*heights[c])*6+c]='S';}return {grid:g,heights,ways:dogWays(heights),scatters,choices:{sticky:dogAwards.sticky[scatters-3],raining:dogAwards.raining[scatters-3]}};}
-export function dogsWins(g,h){let raw=0,groups=[],hits=new Set();for(const [sym,pay] of Object.entries(DOGS_PAYS)){let weighted=1,ways=1,n=0,cells=[];for(let c=0;c<6;c++){const matches=[];for(let y=0;y<h[c];y++){const j=y*6+c,s=g[j];if(s===sym||s?.startsWith('W'))matches.push(j);}if(!matches.length)break;n++;ways*=matches.length;weighted*=matches.reduce((sum,j)=>sum+(g[j].startsWith('W')?Number(g[j].slice(1)):1),0);cells.push(...matches);}if(n<3)continue;const value=pay[n-3]*weighted;raw+=value;cells.forEach(j=>hits.add(j));groups.push({sym,cells,ways,reels:n,value});}return {raw,groups,hits:[...hits]};}
+export function dogsWins(g,h,pays=DOGS_PAYS){let raw=0,groups=[],hits=new Set();for(const [sym,pay] of Object.entries(pays)){let weighted=1,ways=1,n=0,cells=[];for(let c=0;c<6;c++){const matches=[];for(let y=0;y<h[c];y++){const j=y*6+c,s=g[j];if(s===sym||s?.startsWith('W'))matches.push(j);}if(!matches.length)break;n++;ways*=matches.length;weighted*=matches.reduce((sum,j)=>sum+(g[j].startsWith('W')?Number(g[j].slice(1)):1),0);cells.push(...matches);}if(n<3)continue;const value=pay[n-3]*weighted;raw+=value;cells.forEach(j=>hits.add(j));groups.push({sym,cells,ways,reels:n,value});}return {raw,groups,hits:[...hits]};}
 function* dogsStream(r,{strategy='sticky',dogEntry=null}={}){
- const entry=dogEntry||dogsEntry(r),mode=strategy==='raining'?'raining':'sticky',total=entry.choices[mode],pick=picker(dogWeights,r),sticky=Array(42).fill(0),spins=[];
+ const entry=dogEntry||dogsEntry(r),mode=strategy==='raining'?'raining':'sticky',total=entry.choices[mode],pick=picker(mode==='sticky'?{...dogWeights,s12:20,s13:20,s9:13,s10:13,s11:13}:dogWeights,r),sticky=Array(42).fill(0),spins=[];
  yield {...entry,mode,initialSpins:total,win:0};
  const mult=()=>Number(picker(mode==='raining'?{1:70,2:20,3:10}:{1:90,2:9,3:1},r)());
  for(let i=0;i<total;i++){
-  const heights=Array.from({length:6},(_,c)=>Math.max(dogHeight(r),...sticky.flatMap((v,j)=>v&&j%6===c?[Math.floor(j/6)+1]:[])));
+  const heights=Array.from({length:6},(_,c)=>Math.max(dogHeight(r,mode),...sticky.flatMap((v,j)=>v&&j%6===c?[Math.floor(j/6)+1]:[])));
   const g=grid(42,j=>Math.floor(j/6)<heights[j%6]?(sticky[j]?'W'+sticky[j]:pick()):null),eligible=g.flatMap((v,j)=>v&&j%6>0&&j%6<5&&!sticky[j]?[j]:[]);
-  if(mode==='sticky'){for(const j of eligible)if(r()<.029){sticky[j]=mult();g[j]='W'+sticky[j];}}
-  else {const count=Math.min(eligible.length,Number(picker({0:36,1:50,2:8,3:2,4:1,5:1,6:2},r)()));for(let k=0;k<count;k++){const j=eligible.splice(Math.floor(r()*eligible.length),1)[0];g[j]='W'+(count===6?Number(picker({1:20,2:30,3:50},r)()):mult());}}
-  const win=dogsWins(g,heights);yield {grid:g,...win,cols:6,rows:7,heights,ways:dogWays(heights),sticky:sticky.slice(),total,mode,note:mode==='sticky'?'STICKY WILDS':'RAINING WILDS'};
+  if(mode==='sticky'){for(const j of eligible)if(r()<(i<2?.055:.0035)){sticky[j]=mult();g[j]='W'+sticky[j];}}
+  else {const count=Math.min(eligible.length,Number(picker({0:36,1:50,2:8,3:2,4:1,5:1,6:1.75},r)()));for(let k=0;k<count;k++){const j=eligible.splice(Math.floor(r()*eligible.length),1)[0];g[j]='W'+(count===6?Number(picker({1:20,2:30,3:50},r)()):mult());}}
+  const win=dogsWins(g,heights,mode==='sticky'?DOGS_STICKY_PAYS:DOGS_PAYS);yield {grid:g,...win,cols:6,rows:7,heights,ways:dogWays(heights),sticky:sticky.slice(),total,mode,note:mode==='sticky'?'STICKY WILDS':'RAINING WILDS'};
  }
 
 }
@@ -100,7 +101,7 @@ export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1
 // distribution keeps expected added spins below ten per battle.
 export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
 export const DWARF_WEIGHTS={Goblin:[3185,3185,1815,1815],Troll:[3103,3103,1897,1897],Dragon:[2790,2790,2210,2210]};
-export const DWARF_CHEST_WEIGHTS={1:2600,2:2600,3:1500,5:1800,8:800,10:400,15:150,20:100,50:40,100:10};
+export const DWARF_CHEST_WEIGHTS={1:1000,2:4000,3:3000,5:1500,8:350,10:100,15:30,20:10,50:5,100:5};
 export const DWARF_INITIAL_SCALE=.01;
 export const DWARF_UPGRADE_SCALES={Goblin:[.001,.002,.005,.007,.01],Troll:[.005,.006,.008,.011,.02],Dragon:[.01,.015,.02,.025,.03]};
 export const DWARF_UPGRADE_WEIGHTS=[2000,2000,2000,2000,2000];
@@ -108,8 +109,10 @@ export function dwarfUpgradeTable(rate,monster){const raw=DWARF_UPGRADE_SCALES[m
 function dwarfUpgrade(rate,monster,rand){const {values,weights}=dwarfUpgradeTable(rate,monster);let ticket=rand()*weights.reduce((a,b)=>a+b,0),selected=values.length-1;for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}return {selected,values,weights,amount:values[selected]};}
 function* dwarfStream(r){
  const spins=[];
- const pick=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:2,s9:2},r);
+ const pickEarly=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:23.3,s9:23.3},r);
+ const pick=picker({s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:.18,s9:.18},r);
  const pickChest=picker(DWARF_CHEST_WEIGHTS,r);
+ const pickLateChest=picker({1:90,2:8,3:1.5,5:.4,10:.1},r);
  const pays={s0:20,s2:7,s3:5,s1:3,s4:.5,s5:.4,s6:.3,s7:.2};
  let remaining=10,freePlayed=0;
  yield null;
@@ -130,9 +133,9 @@ function* dwarfStream(r){
   const battleGrid=['s0','s7',m.icon,'s4','s7','s5','s6','s7','s8'];
   return {grid:battleGrid,raw:0,cols:3,rows:3,note:won?'勝利':'追加なし',battle:true,monster,monsterHP:m.hp,reward:m.win,choices,weights,actions,won,awarded,freePlayed,remaining,total:freePlayed+remaining};
  }
- while(remaining>0){remaining--;freePlayed++;const g=grid(9,pick);let raw=0,hits=[],chests=[];
+ while(remaining>0){remaining--;freePlayed++;const g=grid(9,freePlayed<=10?pickEarly:pick);let raw=0,hits=[],chests=[];
   for(const line of [[0,1,2],[3,4,5],[6,7,8],[0,4,8],[2,4,6]])if(pays[g[line[0]]]&&line.every(j=>g[j]===g[line[0]])){raw+=pays[g[line[0]]];hits.push(...line);}
-  for(let j=0;j<g.length;j++)if(g[j]==='s8'||g[j]==='s9'){const value=Number(pickChest());raw+=value;chests.push({pos:j,value});hits.push(j);}
+  for(let j=0;j<g.length;j++)if(g[j]==='s8'||g[j]==='s9'){const value=Number((freePlayed<=10?pickChest:pickLateChest)());raw+=value;chests.push({pos:j,value});hits.push(j);}
   const target=freePlayed<=10?10:freePlayed<=20?20:freePlayed<=40?40:null;
   yield {grid:g,raw,cols:3,rows:3,hits:[...new Set(hits)],chests,freePlayed,remaining,note:target===null?'最終宝箱ラッシュ':({10:'ゴブリン',20:'トロール',40:'ドラゴン'}[target])+' まで '+Math.max(0,target-freePlayed)+' 回',total:freePlayed+remaining};
   if(stages[freePlayed])yield battle(stages[freePlayed]);

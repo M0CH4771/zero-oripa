@@ -1,4 +1,4 @@
-import {streamRound,SYMBOLS,PAYS,TIERS,UNIT,LINES,REELS,ULTIMATE_STRIP,reelWindow,reelStop} from './tropical.mjs?v=live112';
+import {streamRound,SYMBOLS,PAYS,TIERS,UNIT,TIER_PAY_FACTORS,LINES,REELS,ULTIMATE_STRIP,reelWindow,reelStop} from './tropical.mjs?v=live113';
 const $=s=>document.querySelector(s),reels=[...document.querySelectorAll('.reel')],fmt=n=>Math.round(n).toLocaleString('ja-JP');
 let balance=100000,busy=false,speed=ZEROGameUI.timing.normal,muted=true,context=null,displayed=0;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms*speed));
@@ -22,12 +22,12 @@ async function spin(g){layout(g);$('#lines').replaceChildren();const rows=g.leng
  }));$('#board').classList.remove('reaching');$('#reachBadge').hidden=true;document.querySelectorAll('.reach-seven').forEach(el=>{el.classList.remove('reach-seven');delete el.dataset.reachColor;});document.querySelectorAll('.cell.hit').forEach(el=>el.classList.remove('hit'));}
 function highlight(wins,phase=0){for(const w of wins){for(const j of w.cells)reels[j%3].children[phase===2?0:Math.floor(j/3)]?.classList.add('hit');const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.setAttribute('points',w.cells.map(j=>((j%3)*100+50)+','+(phase===2?150:Math.floor(j/3)*100+50)).join(' '));line.setAttribute('fill','none');line.setAttribute('stroke','#ffeb72');line.setAttribute('stroke-width','3');$('#lines').append(line);}}
 const status=s=>$('#status').textContent=s;
-function setMode(i){document.body.dataset.mode=String(i);$('#mode').textContent=TIERS[i].name;}
+function setMode(i){document.body.dataset.mode=String(i);$('#mode').textContent=TIERS[i].name;$('#mode').title='絵柄配当 ×'+TIER_PAY_FACTORS[i];}
 function modal(title,body,button='閉じる'){const d=$('#modal');$('#dialogTitle').textContent=title;$('#dialogBody').innerHTML=body;$('#ok').textContent=button;d.showModal();return new Promise(resolve=>{d.addEventListener('close',resolve,{once:true});$('#ok').onclick=()=>d.close();});}
 const tierDetails=[
  ['青7','8 FREE SPINS','同じ絵柄3個を5ラインのいずれかに揃えると配当。','花が点灯すると8回目の7揃いが確定。','青7で継続、赤7で上位ラッシュへ。'],
- ['赤7','8 FREE SPINS','同じ絵柄3個を5ラインのいずれかに揃えると配当。','青7より点灯・継続しやすいモード。','赤7で継続、金7で最上位ラッシュへ。'],
- ['金7','ULTIMATE','専用3×1リールで、同じ絵柄3個が揃うと配当。','配当が成立する限り継続。','終了後は赤7ラッシュへ移行。']
+ ['赤7','8 FREE SPINS','同じ絵柄3個を5ラインのいずれかに揃えると配当。絵柄配当は青7の×'+TIER_PAY_FACTORS[1]+'。','青7より点灯・継続しやすいモード。','赤7で継続、金7で最上位ラッシュへ。'],
+ ['金7','ULTIMATE','専用3×1リールで、同じ絵柄3個が揃うと配当。絵柄配当は基準の×'+TIER_PAY_FACTORS[2]+'。','配当が成立する限り継続。','終了後は赤7ラッシュへ移行。']
 ];
 function tierArt(t){return '<div class="tier-art" data-tier="'+t+'" aria-hidden="true"></div>';}
 async function sevenAward(t,first){const d=tierDetails[t];if(first){const dialog=$('#modal');dialog.dataset.tier=String(t);const cancel=e=>e.preventDefault();dialog.addEventListener('cancel',cancel);try{await modal(TIERS[t].name,'<div class="tier-intro-hero"><div><small>'+d[0]+' 確定</small><strong>'+(t===2?'∞':'8')+'</strong><b>'+(t===2?'ULTIMATE':'FREE SPINS')+'</b></div>'+tierArt(t)+'</div><h3 class="tier-count">ラッシュの遊び方</h3><ol class="tier-rules">'+d.slice(2).map((x,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span>'+x+'</li>').join('')+'</ol>','タップしてスタート');}finally{delete dialog.dataset.tier;dialog.removeEventListener('cancel',cancel);}}else{const layer=$('#tierAward');layer.dataset.tier=String(t);layer.innerHTML=tierArt(t)+'<strong>'+d[0]+' · '+TIERS[t].name+'</strong>';layer.hidden=false;try{await sleep(750);}finally{layer.hidden=true;layer.replaceChildren();}}}
@@ -35,7 +35,7 @@ async function countTotal(value){const from=displayed,start=performance.now();aw
 $('#sound').onclick=()=>{muted=!muted;$('#sound').textContent=muted?'♪':'♫';tone();};
 $('#speed').onclick=()=>{speed=ZEROGameUI.nextSpeed(speed);$('#speed').textContent=ZEROGameUI.speedName(speed);};
 $('#refill').onclick=()=>{if(!busy){balance+=100000;$('#balance').textContent=fmt(balance);}};
-$('#info').onclick=()=>modal('遊び方','<p>荒さ：★★★☆☆（3/5）・RTP目標97%</p><p>無料テスト専用。3リール・5ライン。青7・赤7は8スピンのセット。ハイビスカスが点灯すると最終スピンの7揃いが確定します。金7は3×1の専用リールで、配当不成立後は赤7に移行します。</p><p>現在の消費Cに対応する1ラインの計算配当：</p><div class="paytable">'+SYMBOLS.map((s,i)=>'<span>'+s+'</span><span>'+fmt(PAYS[i]*UNIT*Number($('#bet').value))+' C</span>').join('')+'</div><p>独立したテストコインのみ。景品・換金なし。確率・配当は本デモ独自設定です。</p>');
+$('#info').onclick=()=>modal('遊び方','<p>荒さ：★★★☆☆（3/5）・RTP目標97%</p><p>無料テスト専用。3リール・5ライン。青7・赤7は8スピンのセット。ハイビスカスが点灯すると最終スピンの7揃いが確定します。金7は3×1の専用リールで、配当不成立後は赤7に移行します。</p><p>現在の消費Cに対応する青7の1ラインの計算配当（赤7は×3.2、金7は×3.7）：</p><div class="paytable">'+SYMBOLS.map((s,i)=>'<span>'+s+'</span><span>'+fmt(PAYS[i]*UNIT*Number($('#bet').value))+' C</span>').join('')+'</div><p>独立したテストコインのみ。景品・換金なし。確率・配当は本デモ独自設定です。</p>');
 $('#buy').onclick=async()=>{if(busy)return;const bet=Number($('#bet').value);if(balance<bet){status('テストコインが不足しています');return;}busy=true;for(const id of ['buy','bet','refill','info'])$('#'+id).disabled=true;
 try{const it=streamRound(bet),r=it.next().value;let next,played=0;balance-=bet;$('#balance').textContent=fmt(balance);displayed=0;$('#total').textContent='0';$('#win').textContent='0 C';document.body.dataset.mode='idle';$('#flower').classList.remove('lit');status('ラッシュ抽選');await spin(r.entry,{entry:true});highlight([{cells:r.entryLine}]);setMode(r.tier);$('#remain').textContent=r.tier===2?'—':'8';$('#topRemaining').textContent=r.tier===2?'ULTIMATE':'8';const seenTiers=new Set([r.tier]);await sevenAward(r.tier,true);
 while(!(next=it.next()).done){const s=next.value;played++;setMode(s.phase);$('#flower').classList.toggle('lit',s.lit);$('#setCount').textContent=s.phase===2?'ULTIMATE':'FREE SPINS';$('#topRemaining').textContent=s.phase===2?'∞':Math.max(1,s.continuation?s.continuation.extra?1: s.add?1:s.remain+1:s.remain+1);status(s.lit?'点灯 · 継続確定':'SET '+s.set+' · SPIN '+s.played);if(s.justLit)tone(780);await spin(s.grid);$('#win').textContent=fmt(s.win)+' C';$('#remain').textContent=s.mode===2?'—':s.remain;

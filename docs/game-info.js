@@ -1,7 +1,7 @@
-import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=live112';
-import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live112';
-import {BLOCKS,VOLATILITY as mineVolatility} from './test-games/mine.js?v=live112';
-import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DWARF_CHEST_WEIGHTS,dwarfUpgradeTable} from './test-games/features.js?v=live112';
+import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=live113';
+import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live113';
+import {BLOCKS,VOLATILITY as mineVolatility} from './test-games/mine.js?v=live113';
+import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,dwarfUpgradeTable} from './test-games/features.js?v=live113';
 const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:4});
 const coin=n=>fmt(n)+' C';
 const order=['rush','fruit','mine','plinko','gods','dogs','train','dwarf'];
@@ -21,7 +21,7 @@ const rules={
 };
 export function gameInfoHtml(game,rate,volatility='normal'){const [start,intro]=rules[game]||rules.rush;const unit=rate*({rush:rushUnit,fruit:fruitUnit,gods:FEATURE_CONFIG.gods.scale,dogs:FEATURE_CONFIG.dogs.scale}[game]??.01);const idx=order.indexOf(game),max=FEATURE_CONFIG[game]?.max??50;
  let out=`<div class="game-info">${volatilityBadge(game)}<div class="info-hero" style="--ix:${idx%4*100/3}%;--iy:${Math.floor(idx/4)*100}%"><span>${start}</span></div>${section('基本ルール',`<p>${intro}</p><p class="info-note">${game==='plinko'?'1球の消費':'1ゲームの消費'}：<b>${coin(rate)}</b>　${game==='plinko'?'':'最大配当：<b>'+coin(max*rate)+'</b>'}</p>`)} `;
- if(['rush','fruit','gods','dogs'].includes(game)){const pays=({rush:rushPays,fruit:fruitPays,gods:GODS_PAYS,dogs:DOGS_PAYS})[game],theme=game==='rush'?'gems':game;const heads=game==='fruit'?Array.from({length:11},(_,i)=>i===10?'15+':i+5):game==='dogs'?[3,4,5,6]:['8〜9','10〜11','12+'];const renderPay=u=>table(['絵柄 / 成立数',...heads.map(n=>game==='dogs'?n+'リール':n+'個')],Object.entries(pays).reverse().map(([id,v])=>[icon(theme,id),...v.map(x=>coin(x*u))]));out+=section('シンボル配当表',`<p>現在のBET（${coin(rate)}）での${game==='dogs'?'1 WAYSあたりの':'倍率適用前の'}配当。最終獲得Cはゲーム内で集計・整数化します。</p>${game==='dogs'?'<h4>STICKY WILDS</h4>'+renderPay(unit)+'<h4>RAINING WILDS</h4>'+renderPay(rate*FEATURE_CONFIG.dogs.rainingScale):renderPay(unit)}`);}
+ if(['rush','fruit','gods','dogs'].includes(game)){const pays=({rush:rushPays,fruit:fruitPays,gods:GODS_PAYS,dogs:DOGS_PAYS})[game],theme=game==='rush'?'gems':game;const heads=game==='fruit'?Array.from({length:11},(_,i)=>i===10?'15+':i+5):game==='dogs'?[3,4,5,6]:['8〜9','10〜11','12+'];const renderPay=(u,tablePays=pays)=>table(['絵柄 / 成立数',...heads.map(n=>game==='dogs'?n+'リール':n+'個')],Object.entries(tablePays).reverse().map(([id,v])=>[icon(theme,id),...v.map(x=>coin(x*u))]));out+=section('シンボル配当表',`<p>現在のBET（${coin(rate)}）での${game==='dogs'?'1 WAYSあたりの':'倍率適用前の'}配当。最終獲得Cはゲーム内で集計・整数化します。</p>${game==='dogs'?'<h4>STICKY WILDS</h4>'+renderPay(unit,DOGS_STICKY_PAYS)+'<h4>RAINING WILDS</h4>'+renderPay(rate*FEATURE_CONFIG.dogs.rainingScale):renderPay(unit)}`);}
  if(game==='rush')out+=section('特殊シンボル',card('魔法のオーブ ×2〜100','配当が成立したスピンで出たオーブの倍率を合計して、そのスピンの連鎖配当に掛けます。配当がない場合は適用されません。')+card('スキャッター（魔法の杖）','3個以上で＋5回。4／5／6個以上は配当計算単位の3／5／100倍。最大120回。')+card('計算例',`連鎖 ${coin(unit*5)} × オーブ合計10 = ${coin(unit*50)}。`));
  if(game==='fruit')out+=section('倍率スポット',card('同じマスで繰り返し配当','初回は印がつき、以降×2・×4・×8…最大×128へ。成立グループに含まれる倍率を合計して適用します。')+card('金のりんご','3／4／5／6／7個で10／12／15／20／30回。追加時も同じ回数。最大120回。')+card('計算例',`${coin(unit*2)} のグループに×2と×4があると、合計×6で ${coin(unit*12)}。`));
  if(game==='mine')out+=section('鉱石配当表',table(['鉱石','HP','破壊時'],Object.entries(BLOCKS).map(([id,x])=>[icon('mine',id)+' '+x.name,x.hp,id==='Q'?'ランダム':coin(rate*mineVolatility.mild.scale*.994*x.v)])))+section('アイテムと宝箱',card('つるはし','数字1／2／3／5／7の回数だけ削ります。HPが0になると破壊。')+card('強化の書・ダイナマイト・スター','同列のつるはしを5または7に強化。ダイナマイトは3×3の範囲に2ダメージ。スターで＋1回、最大20回。')+card('宝箱倍率','開いた宝箱は掛け算。例：×2と×3を開けば採掘合計に×6。'));

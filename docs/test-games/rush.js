@@ -7,13 +7,13 @@
 import { picker, secureRandom, MAX_SPINS, BONUS_BUY_MULT, bonusEntry } from './common.js';
 
 export const COLS = 6, ROWS = 5, CELLS = COLS * ROWS;
-export const PAY_UNIT_FACTOR=.00974;
+export const PAY_UNIT_FACTOR=.01235;
 const PAY_SYMS = ['l1', 'l2', 'l3', 'l4', 'l5', 'h1', 'h2', 'h3', 'h4'];
 
 // 配当表（1スピンあたりの賭け＝レート÷10 の何倍か）。[8〜9個, 10〜11個, 12個以上]
 export const PAYS = {
-  l1: [0.25, 0.75, 2], l2: [0.4, 0.9, 4], l3: [0.5, 1, 5], l4: [0.8, 1.2, 8],
-  l5: [1, 1.5, 10], h1: [1.5, 2, 12], h2: [2, 5, 15], h3: [2.5, 10, 25], h4: [10, 25, 50],
+  l1: [.4,.8,1.5], l2:[.55,1,2.5], l3:[.7,1.2,3], l4:[.9,1.4,4],
+  l5:[1.1,1.6,5], h1:[1.5,2,6], h2:[2,4,8], h3:[2.5,7,13], h4:[10,20,30],
 };
 
 // 荒さ（ボラティリティ）ごとの設定。
@@ -27,7 +27,7 @@ export const VOLATILITY = {
   normal: {
     label: '通常', bolt: 3,
     weights: { l1: 22, l2: 20, l3: 18, l4: 16, h1: 11, h2: 8, h3: 6, h4: 3, S: 1.6 },
-    featureBombP: .035, bombP: 0.004, bombs: [[2, 30], [3, 25], [4, 15], [5, 12], [10, 8], [15, 4], [20, 3], [25, 2], [50, 0.8], [100, 0.2]],
+    featureBombP: .09, bombP: 0.004, bombs: [[2, 30], [3, 25], [4, 15], [5, 12], [10, 8], [15, 4], [20, 3], [25, 2], [50, 0.8], [100, 0.2]],
     scale: 0.444,
   },
   extreme: {
@@ -44,7 +44,7 @@ function makeCellGen(v, rand, bonus = false) {
   const pick = picker({...v.weights,l5:v.weights.h1*.85}, rand);
   const {S:_, ...ordinary}=v.weights;
   const pickOrdinary=picker({...ordinary,l5:v.weights.h1*.85},rand);
-  const bombPick = picker({2:30,3:25,4:15,5:12,6:8,8:6,10:5,12:4,15:3,20:2,25:1.5,50:1.6,100:.6}, rand);
+  const bombPick = picker({2:63,3:25,4:7,5:3,6:.8,8:.4,10:.3,12:.15,15:.1,20:.1,25:.08,50:.05,100:.02}, rand);
   return (allowScatter=true,above=null) => {
     if(PAYS[above] && rand() < (v.stackP??.315))return above;
     return bonus && rand() < (v.featureBombP??.045) ? 'B' + bombPick() : (allowScatter?pick():pickOrdinary());

@@ -1,9 +1,9 @@
 // ゲームの一覧。template.game で選ぶ（省略時は rush）
-import * as rush from './rush.js?v=live112';
-import * as fruit from './fruit.js?v=live112';
-import * as mine from './mine.js?v=live112';
-import * as plinko from './plinko.js?v=live112';
-import {FEATURE_CONFIG,featureModule} from './features.js?v=live112';
+import * as rush from './rush.js?v=live113';
+import * as fruit from './fruit.js?v=live113';
+import * as mine from './mine.js?v=live113';
+import * as plinko from './plinko.js?v=live113';
+import {FEATURE_CONFIG,featureModule} from './features.js?v=live113';
 
 
 export const GAMES = {
