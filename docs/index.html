@@ -23,6 +23,7 @@
 <link rel="stylesheet" href="./game-shell.css?v=108">
 <link rel="stylesheet" href="./hud110.css?v=110"><link rel="stylesheet" href="./volatility111.css">
 <link rel="stylesheet" href="./layout114.css?v=114"><script src="./viewport114.js?v=114"></script>
+<link rel="stylesheet" href="./mobile115.css?v=115">
 </head>
 <body>
 <header class="top">
@@ -37,7 +38,7 @@
 </header>
 
 <main id="view"></main>
-<aside style="position:fixed;z-index:30;bottom:76px;right:8px;background:#182038;color:white;border-radius:12px;padding:7px;box-shadow:0 2px 12px #0004;font-size:11px;text-align:center" id="testControls"><b>テスト専用・景品なし</b><br><button style="margin:4px;padding:5px;color:#111" onclick="testRefill()">+100万C</button><button style="margin:4px;padding:5px;color:#111" onclick="testReset()">リセット</button></aside>
+<details id="testControls" style="color:white;font-size:12px"><summary>テスト専用メニュー・景品なし</summary><button style="margin:4px;color:#111" onclick="testRefill()">+100万C</button><button style="margin:4px;color:#111" onclick="testReset()">リセット</button></details>
 
 <nav class="bottom">
   <a href="#home" data-tab="home"><img src="./assets/brand/nav-home.webp" alt="">オリパ一覧</a>
