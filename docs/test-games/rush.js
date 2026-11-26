@@ -107,7 +107,7 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
   const spins = [];
   let total = entry.win, paid=entry.win, left = entry.initialSpins, played = 0;
   yield {entry,unit,cap};
-  while (left > 0 && played < MAX_SPINS) {
+  while (left > 0 && played < MAX_SPINS && paid < cap) {
     left--; played++;
     const s = runSpin(makeCellGen(v,rand,true));
     const add=Math.max(0,Math.min(s.scatters>=3?5:0,MAX_SPINS-played-left));
@@ -123,13 +123,13 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
         bombs: s.mult > 1 ? s.bombs : [],
         mult: s.mult,
         win: settled,
-        add: Math.max(0, add),
+        add: paid>=cap?0:Math.max(0, add),
         bonus:true, trigger:false, scatters:s.scatters, scatterPay:Math.min(settled,Math.round(scatterPay)),
       };
     }
   }
   const score = Math.max(floor,paid);
-  return { score, capped: total > cap, guaranteed:paid<floor, guarantee:score-paid, spins, played, entry, unit };
+  return { score, capped: total >= cap, guaranteed:paid<floor, guarantee:score-paid, spins, played, entry, unit };
 }
 
 

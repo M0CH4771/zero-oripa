@@ -17,6 +17,7 @@ for(const name of cases){
  const result2=name==='tropical'?round(opts.rate,args(name,rng(1234))):playGame(kind(name),args(name,rng(1234)));
  assert.equal(result.value.score,result2.score,name+' deterministic final amount');assert.deepEqual(steps,result2.steps??result2.spins,name+' same spin stream');
  assert.ok(Number.isInteger(result.value.score)&&result.value.score>=1);
+ if(!name.startsWith('plinko'))assert.ok(result.value.score<=opts.rate*50,name+' max 50x');
  if(name==='mine')assert.equal(result.value.score,Math.max(1,Math.min(Math.floor(result.value.final.raw),opts.rate*50)));
  else if(name!=='tropical')assert.equal(result.value.score,Math.max(1,(entry.value.entry?.win??0)+steps.reduce((sum,sp)=>sum+sp.win,0)),name+' ledger');
  console.log(name+' stream OK');
@@ -24,7 +25,7 @@ for(const name of cases){
 const selected=process.argv[2],N=Number(process.argv[3]||0);
 if(N&&selected){
  const name=selected,rand=rng(0x9e3779b9),values=new Float64Array(N);let sum=0,squares=0,recoup=0,high=0;
- for(let i=0;i<N;i++){const opts={...args(name,rand),withScript:false};const x=(name==='tropical'?round(opts.rate,opts):playGame(kind(name),opts)).score/opts.rate;assert.ok(Number.isFinite(x));values[i]=x;sum+=x;squares+=x*x;recoup+=x>=1;high+=x>=5;}
+ for(let i=0;i<N;i++){const opts={...args(name,rand),withScript:false};const x=(name==='tropical'?round(opts.rate,opts):playGame(kind(name),opts)).score/opts.rate;assert.ok(Number.isFinite(x));if(!name.startsWith('plinko'))assert.ok(x<=50,name+' max 50x');values[i]=x;sum+=x;squares+=x*x;recoup+=x>=1;high+=x>=5;}
  values.sort();const mean=sum/N,sd=Math.sqrt(squares/N-mean*mean);
  console.log(JSON.stringify({name,N,rtp:mean*100,sd,median:values[Math.floor(N/2)],recoup:recoup/N,high:high/N,ci95:1.96*sd/Math.sqrt(N)*100}));
 }

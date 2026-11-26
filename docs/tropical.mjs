@@ -6,7 +6,7 @@ export const LINES=[[3,4,5],[0,1,2],[6,7,8],[0,4,8],[6,4,2]];
 export const TIERS=[{name:'HIBISCUS RUSH',seven:2,continue:.22},{name:'HIBISCUS RUSH SUPER',seven:1,continue:.30},{name:'ULTIMATE RUSH',seven:0}];
 export const TIER_PAY_FACTORS=[1,3.2,3.7];
 export const lampChance=phase=>1-Math.pow(1-TIERS[phase].continue,1/8);
-export const CAP=200,MAX_SPINS=160,UNIT=.03888;
+export const CAP=50,MAX_SPINS=160,UNIT=.03888;
 const weights=[2,3,5,7,12,14,16,18,20];
 // Each normal reel is a circular, immutable strip. The right reel reverses the adjacent seven pair.
 export const REELS=Object.freeze([
@@ -39,13 +39,13 @@ export function* streamRound(bet,{rand=secureRandom,tier=null,unit=UNIT}={}){
   const wins=evaluate(grid,phase).map(w=>({...w,pay:w.pay*TIER_PAY_FACTORS[phase]}));
   if(phase===2){if(wins.length){remain=1;continuation={success:true,ultimate:true};}else{mode=1;remain=8;set++;continuation={success:true,extra:true};}}
   raw+=wins.reduce((s,w)=>s+w.pay,0);const total=Math.min(bet*CAP,Math.floor(raw*unit*bet)),win=total-previous;previous=total;
-  if(total===bet*CAP||played===MAX_SPINS)remain=0;
+  if(total===bet*CAP){remain=0;add=0;continuation=null;lit=false;}else if(played===MAX_SPINS)remain=0;
   yield {grid,wins,win,total,remain,played,add,continuation,mode,phase,set:setBefore,lit:phase!==2&&lit,justLit};
   if(continuation)lit=false;
  }
  // A hard limit can truncate a set; do not announce an unreached guaranteed result.
 
- return {entry,entryLine,tier:initialTier,entryWin:0,steps,score:Math.max(1,previous),raw};
+ return {entry,entryLine,tier:initialTier,entryWin:0,steps,score:Math.max(1,previous),raw,capped:previous>=bet*CAP};
 }
 
 export function round(bet,opts){const it=streamRound(bet,opts),start=it.next().value,steps=[];let n;while(!(n=it.next()).done)steps.push(n.value);return {...start,...n.value,steps}}

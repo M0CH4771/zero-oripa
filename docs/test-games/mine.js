@@ -134,13 +134,14 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
         for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) damage(c + dc, at + dr, 2, ev);
       }
     }
-    if (add) total = Math.min(MAX_SPINS, total + add);
+    if (base*mult>=rate*Math.min(50,maxMult)) {total=s+1;add=0;}
+    else if (add) total = Math.min(MAX_SPINS, total + add);
     yield { reel, events: ev, add, total, base: r2(base), mult };
   }
   const sum = base * mult;
   const floor = MIN_PAY, cap = rate * Math.min(50,maxMult);
   const score = Math.max(floor, Math.min(Math.floor(sum), cap));
-  const guaranteed = Math.floor(sum) < floor, capped = sum > cap;
+  const guaranteed = Math.floor(sum) < floor, capped = sum >= cap;
   return {
     score, capped, guaranteed, guarantee:guaranteed?score-Math.floor(sum):0, played: total,
     spins, board, chests, final: { base: Math.round(base * 100) / 100, mult, raw: Math.floor(sum), score, guaranteed, capped },

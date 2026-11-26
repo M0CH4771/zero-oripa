@@ -1,7 +1,7 @@
-import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=live113';
+import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=cap119';
 import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live113';
-import {BLOCKS,VOLATILITY as mineVolatility} from './test-games/mine.js?v=live113';
-import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,dwarfUpgradeTable} from './test-games/features.js?v=dwarf118';
+import {BLOCKS,VOLATILITY as mineVolatility} from './test-games/mine.js?v=cap119';
+import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,dwarfUpgradeTable} from './test-games/features.js?v=cap119';
 const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:4});
 const coin=n=>fmt(n)+' C';
 const order=['rush','fruit','mine','plinko','gods','dogs','train','dwarf'];
@@ -30,7 +30,7 @@ export function gameInfoHtml(game,rate,volatility='normal'){const [start,intro]=
  if(game==='train')out+=section('上段トロッコの強化', [['COIN','コイン値を1〜100にする'],['MULTI','新しいコインを2〜25倍にする'],['BOMB','岩を1段開け、6段開いた列では回収宝箱を開ける'],['BAG','列のコインを新しいコインの位置にまとめる'],['CHEST','列のコインを回収し、マスを空ける'],['DWARF','登場後は毎スピン、盤面の値を回収する']].map(([a,b])=>card(a,b)).join('')+card('最下段の宝箱','開封後は同じ列のコインを毎スピン回収。終了時にさらに3回分を追加。残り0回または盤面が満杯で終了。'));
  if(game==='dwarf')out+=section('3連戦',table(['累計スピン','敵','勝利報酬'],[[10,'ゴブリン','＋10回'],[20,'トロール','＋20回'],[40,'ドラゴン','＋30回']])+`<p>敗北で終了。ドラゴン撃破後は70回まで最終宝箱ラッシュ。</p>`)+section('勝利で宝箱の配当アップ',`<p>開始時は宝箱×1につき ${coin(unit)}。バトルに勝つと、×1あたりの獲得Cが増えます。例えば＋${coin(unit*.5)} を引けば、以降は×1につき ${coin(unit*1.5)} になります。</p>${table(['敵','宝箱×1あたりの増加C'],['Goblin','Troll','Dragon'].map((n,i)=>[['ゴブリン','トロール','ドラゴン'][i],dwarfUpgradeTable(rate,n).values.map(v=>'+'+fmt(v)).join(' / ')]))}`)+section('宝箱倍率',`<p>宝箱は全ステージ共通の抽選で、5種類あります。開封すると倍率が表示されます。ゲーム開始直後の獲得Cの例です。</p>`+table(['宝箱','倍率','開始時の獲得C'],Object.keys(DWARF_CHEST_WEIGHTS).map(x=>[x>=1000?'虹':x>=250?'赤金':x>=50?'金':x>=15?'銀':'木製','×'+fmt(x),coin(unit*x)]))+card('計算例',`宝箱×1の獲得Cが ${coin(unit*1.5)} に増えたら、×10の宝箱は ${coin(unit*15)}。`));
  if(game==='plinko')out+=section('配当の読み方',card('リスクの違い','LOWは小さな配当を受け取りやすく、MEDIUMは中央の配当が小さく、外側ではより大きな配当、HIGHは中央が×0.01の大きな変動です。いずれも配当表RTPは約97%。最大倍率はLOW 30倍、MEDIUM 50倍、HIGH 200倍。')+card('着地枠','枠の数字は倍率ではなく、現在のBET（${coin(rate)}）での獲得コインです。')+card('複数球','全ボールの配当を合計します。合計0Cの場合は1C。配当上限なし。'));
- return out+section('配当・遊び方の注意',`<p>各ゲームは無料テストコイン専用。購入・換金・実物景品はありません。スピンごとに抽選し、配当を積み上げます。最終配当は最低1C。RTPは長期平均の目標値（${game==='plinko'?'配当表 約97%':'約97%'}）で、個々の結果を保証するものではありません。荒さは5段階の変動傾向で、勝ちやすさの保証ではありません。</p>`)+`</div>`;
+ return out+section('配当・遊び方の注意',`<p>各ゲームは無料テストコイン専用。購入・換金・実物景品はありません。スピンごとに抽選し、配当を積み上げます。最終配当は最低1C。${game==='plinko'?'配当上限なし。':'1ゲームの最大配当は消費Cの50倍。到達した時点で終了します。'} RTPは長期平均の目標値（${game==='plinko'?'配当表 約97%':'約97%'}）で、個々の結果を保証するものではありません。荒さは5段階の変動傾向で、勝ちやすさの保証ではありません。</p>`)+`</div>`;
 }
 
 export function volatilityBadge(game){if(game==='dogs')return '<div class="volatility-badge is-selectable" aria-label="荒さ STICKY 4段階 RAINING 5段階"><span>荒さ</span><strong>STICKY ★★★★☆</strong><strong>RAINING ★★★★★</strong></div>';const level=({mine:2,rush:3,gods:4,tropical:3,fruit:5,dwarf:5})[game];return '<div class="volatility-badge'+(level?'':' is-selectable')+'" aria-label="荒さ '+(level?level+'段階（5段階中）':'選択式')+'"><span>荒さ</span><strong>'+(level?'★'.repeat(level)+'☆'.repeat(5-level):'LOW / MEDIUM / HIGH')+'</strong>'+(level?'<small>'+level+'/5</small>':'')+'</div>';}
