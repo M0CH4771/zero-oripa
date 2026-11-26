@@ -248,7 +248,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
   // Keep the stone arch fixed and animate their edges continuously over the open frame.
   const anime133Cache=new Map();
   function anime133(name){
-   if(!anime133Cache.has(name))anime133Cache.set(name,Promise.all([0,1].map(i=>im('./assets/anime/dwarf/anime133-'+name+'-'+i+'.png'))).then(a=>a.every(Boolean)?a:null));
+   if(!anime133Cache.has(name))anime133Cache.set(name,im('./assets/anime/dwarf/anime135-'+name+'.webp').then(img=>img?[img]:Promise.all([0,1].map(i=>im('./assets/anime/dwarf/anime133-'+name+'-'+i+'.png'))).then(a=>a.every(Boolean)?a:null)));
    return anime133Cache.get(name);
   }
   // The two generated sheets overlap in story time. Keep only the first
@@ -259,19 +259,20 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    troll:[...Array.from({length:11},(_,i)=>i),...Array.from({length:16},(_,i)=>16+i)],
    dragon:[...Array.from({length:10},(_,i)=>i),...Array.from({length:16},(_,i)=>16+i)]
   });
+  const anime135Edit=Array.from({length:32},(_,i)=>i);
   function drawAnime133(ctx,images,frame,x,y,w,h,edit){
-   const pos=Math.max(0,Math.min(edit.length-1,Math.floor(frame))),i=edit[pos],art=images[i>>4],f=i%16,sw=art.width/4,sh=art.height/4;
-   ctx.drawImage(art,(f%4)*sw+2,Math.floor(f/4)*sh+2,sw-4,sh-4,x,y,w,h);
+   const pos=Math.max(0,Math.min(edit.length-1,Math.floor(frame))),i=edit[pos],single=images.length===1,cols=single?8:4,art=images[single?0:i>>4],f=single?i:i%16,sw=art.width/cols,sh=art.height/4;
+   ctx.drawImage(art,(f%cols)*sw+2,Math.floor(f/cols)*sh+2,sw-4,sh-4,x,y,w,h);
   }
   async function dwarfGate(closing=false){
-   const gate32=animeGate32,art=gate32?.[0]||animeGate||st.scenes?.gate;if(!art||st.skip||st.dead)return;
+   const gate32=animeGate32,gateEdit=gate32?.length===1?anime135Edit:anime133Edit.gate,art=gate32?.[0]||animeGate||st.scenes?.gate;if(!art||st.skip||st.dead)return;
    const region=opt.region(st.w,st.h),n=st.add({x:0,y:0,z:58,progress:0,alpha:0});
    n.draw=(ctx,o)=>{
-    const sw=art.width/(gate32||animeGate?4:8),sh=art.height/(gate32?4:animeGate?2:1),w=region.w,h=region.h,scale=Math.min(w/sw,h/sh),dw=sw*scale,dh=sh*scale,x=region.x+(w-dw)/2,y=region.y+(h-dh)/2;
+    const sw=art.width/(gate32?.length===1?8:gate32||animeGate?4:8),sh=art.height/(gate32?4:animeGate?2:1),w=region.w,h=region.h,scale=Math.min(w/sw,h/sh),dw=sw*scale,dh=sh*scale,x=region.x+(w-dw)/2,y=region.y+(h-dh)/2;
     const p=closing?1-o.progress:o.progress,opening=ZG.Ease.inOutCubic(p),left=.225,right=.775,mid=.5,top=.29,bottom=.81;
     ctx.save();ctx.beginPath();ctx.rect(region.x,region.y,w,h);ctx.clip();ctx.globalAlpha=o.alpha;
     ctx.fillStyle='#0a0e0d';ctx.fillRect(region.x,region.y,w,h);
-    if(gate32){const z=1+.045*p;drawAnime133(ctx,gate32,p*(anime133Edit.gate.length-.001),x-dw*(z-1)/2,y-dh*(z-1)/2,dw*z,dh*z,anime133Edit.gate);ctx.restore();return;}
+    if(gate32){const z=1+.045*p;drawAnime133(ctx,gate32,p*(gateEdit.length-.001),x-dw*(z-1)/2,y-dh*(z-1)/2,dw*z,dh*z,gateEdit);ctx.restore();return;}
     if(animeGate){const f=Math.min(7,Math.floor(opening*7.99)),fx=(f%4)*sw,fy=Math.floor(f/4)*sh,z=1+.07*opening;ctx.drawImage(art,fx+2,fy+2,sw-4,sh-4,x-dw*(z-1)/2,y-dh*(z-1)/2,dw*z,dh*z);ctx.restore();return;}
     ctx.drawImage(art,7*sw,0,sw,sh,x,y,dw,dh);
     const a=x+dw*left,b=x+dw*mid,c=x+dw*right,yy=y+dh*top,hh=dh*(bottom-top);
@@ -289,13 +290,13 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
    try{await st.tween(n,{alpha:1},220);ZG.sfx?.play('gate');await st.wait(230);
     const r=opt.region(st.w,st.h),cx=r.x+r.w/2,cy=r.y+r.h*.65;
     st.burst(cx,cy,{n:16,colors:['#ffe2a1','#b9a082','#d8cdbc'],speed:1.2,life:650,gravity:.015});
-    await st.tween(n,{progress:1},gate32?(closing?2050:2450):(closing?1350:1850),ZG.Ease.linear);
+    await st.tween(n,{progress:1},gate32?(closing?2600:3200):(closing?1350:1850),ZG.Ease.linear);
     if(closing){st.shake(3,170);ZG.sfx?.play('land');}
     await st.wait(180);await st.tween(n,{alpha:0},240);
    }finally{st.remove(n);}
   }
   async function monsterArrival(monster,hp,reward){
-   const key=monster.toLowerCase(),frames32=await anime133(key),edit=anime133Edit[key],row={Goblin:0,Troll:1,Dragon:2}[monster],r=opt.region(st.w,st.h),image=animeArrival||arrivalArt||arrivalAlt;
+   const key=monster.toLowerCase(),frames32=await anime133(key),edit=frames32?.length===1?anime135Edit:anime133Edit[key],row={Goblin:0,Troll:1,Dragon:2}[monster],r=opt.region(st.w,st.h),image=animeArrival||arrivalArt||arrivalAlt;
    if(st.skip||st.dead)return;
    const n=st.add({x:r.x+r.w/2,y:r.y+r.h/2,z:60,frame:0,zoom:1,alpha:0,caption:0});
    n.draw=(ctx,o)=>{
@@ -313,8 +314,8 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
     ZG.sfx?.play('enemyArrival');await st.wait(160);
     for(let k=1;k<=times.length;k++){
      await st.tween(n,{frame:k,zoom:1.04+k*(frames32?.004:.016)},times[k-1],ZG.Ease.linear);
-     if(k===(frames32?edit.indexOf(monster==='Goblin'?21:monster==='Troll'?23:21):3)){st.shake(row===0?2:row===1?5:7,220);st.burst(r.x+r.w*.5,r.y+r.h*.72,{n:16+row*8,colors:['#d0b28a','#ffe2a3','#8e765b'],speed:2+row,life:450,gravity:.035});}
-     if(k===(frames32?edit.indexOf(27):animeArrivalClose?6:4)&&row===2)st.flash('#ffad64',.08);
+     if(k===(frames32?(frames32.length===1?(monster==='Goblin'?20:monster==='Troll'?23:14):edit.indexOf(monster==='Goblin'?21:monster==='Troll'?23:21)):3)){st.shake(row===0?2:row===1?5:7,220);st.burst(r.x+r.w*.5,r.y+r.h*.72,{n:16+row*8,colors:['#d0b28a','#ffe2a3','#8e765b'],speed:2+row,life:450,gravity:.035});}
+     if(k===(frames32?(frames32.length===1?23:edit.indexOf(27)):animeArrivalClose?6:4)&&row===2)st.flash('#ffad64',.08);
     }
     await st.tween(n,{caption:1,zoom:1.19},220);await st.wait(650);await st.tween(n,{alpha:0},240);
    }finally{st.remove(n);}
