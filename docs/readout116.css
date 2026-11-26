@@ -30,7 +30,7 @@ body:has(#board) :is(.readouts,.hud)>div>:is(b,small){display:block;min-width:0;
 
 /* Adventure inventory, item atlas and reward reveal. */
 .dwarf-item-art{display:block;background-image:url('./assets/anime/dwarf/items124.webp');background-size:400% 400%;background-position:var(--ix,0%) var(--iy,0%);background-repeat:no-repeat;aspect-ratio:1;flex:none;}
-.gm .dwarf-base{gap:3px 10px!important;position:relative;}
+.gm .dwarf-base{gap:3px 10px!important;position:relative;max-width:700px;}
 .gm .dwarf-base #dwarfMinimum{font-size:11px;font-weight:800;color:#d8eabb;border:1px solid #81a66a;border-radius:5px;padding:3px 5px;white-space:nowrap}
 .gm .dwarf-inventory{flex:1 0 100%;display:flex;align-items:center;justify-content:center;gap:4px;overflow-x:auto;min-height:28px;max-height:38px;scrollbar-width:none;}
 .gm .dwarf-inventory>small{color:#bed2b4;font-size:11px;}

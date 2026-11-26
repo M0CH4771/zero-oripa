@@ -157,9 +157,9 @@
    }finally{el.remove();}
   }
   async function battleTrigger(forced){
-   const region=opt.region(st.w,st.h),d=Math.min(region.w/3*.77,region.h*.34,115),y=region.y+region.h*.46,items=[];
+   const region=opt.region(st.w,st.h),d=Math.min((board?.cell||region.w/3)*.92,115),y=cellPoint(4)?.y??region.y+region.h*.46,items=[];
    try{
-    for(let j=0;j<3;j++){const n=st.add({x:region.x+region.w*(j+.5)/3,y,z:65,sx:.45,sy:.45});n.draw=ctx=>{if(battleArt)ctx.drawImage(battleArt,-d/2,-d/2,d,d);else text(ctx,'VS',0,0,d*.45,'#ffe29e');};items.push(n);await st.tween(n,{sx:1,sy:1},150,ZG.Ease.outCubic);ZG.sfx?.play('land',j);}
+    for(let j=0;j<3;j++){const p=cellPoint(3+j)??{x:region.x+region.w*(j+.5)/3,y};const n=st.add({...p,z:65,sx:.45,sy:.45});n.draw=ctx=>{if(battleArt)ctx.drawImage(battleArt,-d/2,-d/2,d,d);else text(ctx,'VS',0,0,d*.45,'#ffe29e');};items.push(n);await st.tween(n,{sx:1,sy:1},150,ZG.Ease.outCubic);ZG.sfx?.play('land',j);}
     st.impact(st.w/2,y,d*.9,'#ffe09c',1.2);await st.banner(['BATTLE',forced?'残り0G · 最終挑戦':'バトルシンボル成立'],{hold:450});
    }finally{for(const n of items)st.remove(n);}
   }
