@@ -16,10 +16,10 @@ async function spin(g){layout(g);$('#lines').replaceChildren();const rows=g.leng
  if(end<0)throw Error('Invalid fixed reel stop');if(start<0)start=0;
  const cell=(reel.getBoundingClientRect().height-(rows-1)*3)/rows,step=cell+3,loops=normal?2:1,distance=loops*strip.length+(start-end+strip.length)%strip.length;
  const track=document.createElement('div');track.className='reel-track';for(let i=0;i<distance+rows;i++){const el=symbol(strip[(end+i)%strip.length]);el.style.height=cell+'px';track.append(el);}reel.classList.add('rolling');reel.replaceChildren(track);
- const duration=normal?1450+c*260+(c===2&&reach.length?550:0):(650+c*185)*rate;
+ const duration=normal?1450+c*260+(c===2&&reach.length?1800:0):(650+c*185+(c===2&&reach.length?900:0))*rate;
  try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)await new Promise(r=>setTimeout(r,duration));else{const a=track.animate([{transform:'translateY('+(-distance*step)+'px)',filter:'blur(1px)'},{transform:'translateY(0px)',filter:'blur(0px)'}],{duration,easing:'cubic-bezier(.15,.45,.65,1)',fill:'forwards'});await a.finished;}}finally{renderCol(g,c);reel.classList.remove('rolling');tone(350+c*110);}
- if(c===1&&reach.length){status(reach.length>1?'ダブルテンパイ':'7 テンパイ');for(const line of reach)for(const j of line.slice(0,2))reels[j%3].children[Math.floor(j/3)]?.classList.add('hit');}
- }));document.querySelectorAll('.cell.hit').forEach(el=>el.classList.remove('hit'));}
+ if(c===1&&reach.length){status('REACH');$('#board').classList.add('reaching');$('#reachBadge').hidden=false;for(const line of reach)for(const j of line.slice(0,2)){const el=reels[j%3].children[Math.floor(j/3)];el?.classList.add('reach-seven');if(el)el.dataset.reachColor=String(g[j]);}}
+ }));$('#board').classList.remove('reaching');$('#reachBadge').hidden=true;document.querySelectorAll('.reach-seven').forEach(el=>{el.classList.remove('reach-seven');delete el.dataset.reachColor;});document.querySelectorAll('.cell.hit').forEach(el=>el.classList.remove('hit'));}
 function highlight(wins,phase=0){for(const w of wins){for(const j of w.cells)reels[j%3].children[phase===2?0:Math.floor(j/3)]?.classList.add('hit');const line=document.createElementNS('http://www.w3.org/2000/svg','polyline');line.setAttribute('points',w.cells.map(j=>((j%3)*100+50)+','+(phase===2?150:Math.floor(j/3)*100+50)).join(' '));line.setAttribute('fill','none');line.setAttribute('stroke','#ffeb72');line.setAttribute('stroke-width','3');$('#lines').append(line);}}
 const status=s=>$('#status').textContent=s;
 function setMode(i){document.body.dataset.mode=String(i);$('#mode').textContent=TIERS[i].name;}
