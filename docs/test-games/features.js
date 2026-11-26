@@ -1,6 +1,6 @@
 // Original, virtual-coin-only feature games. All scripts are deterministic given rand.
 import {secureRandom,picker,bonusEntry} from './common.js';
-import {dwarfAdventureStream} from './dwarf-adventure.js?v=adventure124';
+import {dwarfAdventureStream} from './dwarf-adventure.js?v=adventure126';
 export const FEATURE_CONFIG={
 gods:{id:12,title:'ZERO GODS',badge:'天空の累積倍率',minCoins:1,max:50,scale:.00909,cols:6,rows:5,initial:15},
 dogs:{id:13,title:'ZERO DOGS',badge:'6リール・最大117,649 WAYS',minCoins:1,max:50,scale:.00909,rainingScale:.005355,cols:6,rows:7,initial:7},
@@ -96,7 +96,7 @@ function train(r,{strategy}={}){
  }
  spins[0].initialGrid=initialGrid;spins[0].initialDepth=initialDepth;spins[0].initialEvents=[];return spins;
 }
-export {DWARF_CHEST_WEIGHTS,DWARF_ITEMS,DWARF_INITIAL_SCALE,DWARF_BATTLE_CHANCE,DWARF_CHEST_CHANCE,DWARF_REWARD_TIERS} from './dwarf-adventure.js?v=adventure124';
+export {DWARF_CHEST_WEIGHTS,DWARF_ITEMS,DWARF_INITIAL_SCALE,DWARF_BATTLE_CHANCE,DWARF_CHEST_CHANCE,DWARF_REWARD_TIERS} from './dwarf-adventure.js?v=adventure126';
 const generators={gods:godsStream,dogs:dogsStream};
 
 export function featureRaw(game,rand=secureRandom,opts={}){if(game==='train')return train(rand,opts);if(game==='dwarf')return featurePlay(game,{...opts,rate:opts.rate??10000,rand,withScript:true}).spins;const it=generators[game](rand,opts);const entry=it.next().value;const spins=[...it];if(spins.length&&entry)spins[0].entry=entry;return spins;}

@@ -108,11 +108,13 @@
     const xx=x+j%cols*cell,yy=y+Math.floor(j/cols)*cell;
     ZG.rr(ctx,xx+gap/2,yy+gap/2,cell-gap,cell-gap,8);ctx.fillStyle=cfg.panel;ctx.fill();tile(ctx,xx+gap/2,yy+gap/2,cell-gap,cell-gap,hits.includes(j));if(j===trainSource){ctx.strokeStyle='#54e8ff';ctx.lineWidth=3;ctx.stroke();}
     const m=reelState(j),spinning=m.rolling;
-    const item=spinning?'s'+((Math.floor(st.t/75)+j)%6):grid[j];if(!item)continue;
+    const spinIndex=(Math.floor(st.t/75)+j)%(mode==='dwarf'?9:6);
+    const item=spinning?(mode==='dwarf'&&spinIndex===8?'S':'s'+spinIndex):grid[j];if(!item)continue;
     const id=typeof item==='string'?item:item.id;
     const k=id[0]==='s'?+id.slice(1):id[0]==='W'?6:id[0]==='B'?(mode==='gods'?10:8):mode==='dwarf'?11:mode==='gods'?9:7;
     const d=cell*.99,cy=yy+cell/2+(spinning?((st.t%75)/75-.5)*cell*.85:m.shift*cell)-(mode==='gods'?(fall.dist[j]||0)*cell*fall.v:0),cx=xx+cell/2;
     ctx.save();ctx.beginPath();if(mode==='gods'&&fall.v>0)ctx.rect(x,y,bw,bh);else ctx.rect(xx,yy,cell,cell);ctx.clip();
+    if(mode==='dwarf'&&id==='S'){if(battleArt)ctx.drawImage(battleArt,cx-d/2,cy-d/2,d,d);else text(ctx,'VS',cx,cy,d*.42,'#ffe29e');ctx.restore();continue;}
     if(mode==='dwarf'&&!spinning&&spinChestValues.has(j)){const value=spinChestValues.get(j),state=chestReveals.get(j);if(!state?.active){drawSpinChest(ctx,value,state?7:0,cx,cy,d);if(state)drawChestNumber(ctx,value,cx,cy+d*.12,d);}ctx.restore();continue;}
     if(mode==='gods'&&id.startsWith('B'))ZG.emblemTrail(ctx,mode,Number(id.slice(1)),cx,cy,d,Math.max(fall.v&&fall.dist[j]?fall.v:0,Math.abs(m.shift)));
     if(mode==='train'&&typeof item==='object'&&!offset.locked?.has(j))ZG.emblemTrail(ctx,mode,item.value,cx,cy,d,Math.abs(m.shift));
@@ -157,11 +159,9 @@
    }finally{el.remove();}
   }
   async function battleTrigger(forced){
-   const region=opt.region(st.w,st.h),d=Math.min((board?.cell||region.w/3)*.92,115),y=cellPoint(4)?.y??region.y+region.h*.46,items=[];
-   try{
-    for(let j=0;j<3;j++){const p=cellPoint(3+j)??{x:region.x+region.w*(j+.5)/3,y};const n=st.add({...p,z:65,sx:.45,sy:.45});n.draw=ctx=>{if(battleArt)ctx.drawImage(battleArt,-d/2,-d/2,d,d);else text(ctx,'VS',0,0,d*.45,'#ffe29e');};items.push(n);await st.tween(n,{sx:1,sy:1},150,ZG.Ease.outCubic);ZG.sfx?.play('land',j);}
-    st.impact(st.w/2,y,d*.9,'#ffe09c',1.2);await st.banner(['BATTLE',forced?'残り0G · 最終挑戦':'バトルシンボル成立'],{hold:450});
-   }finally{for(const n of items)st.remove(n);}
+   const slots=grid.flatMap((id,j)=>id==='S'?[j]:[]);
+   for(const j of slots){const p=cellPoint(j);if(p)st.impact(p.x,p.y,Math.min(board?.cell||100,115)*.65,'#ffe09c',1.2);}
+   await st.wait(270);await st.banner(['BATTLE',forced?'残り0G · 最終挑戦':'バトルシンボル成立'],{hold:450});
   }
   async function attackRoulette(choices,selected,weights){
    const panel=document.createElement('div');panel.className='attack-roulette';const r=opt.region(st.w,st.h);if(panel.style){panel.style.top=(r.y+r.h*.55)+'px';panel.style.maxHeight=Math.max(64,r.h*.43)+'px';}
@@ -304,7 +304,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
     if(sp.battle){
      hooks.onFeatureMetric?.('バトル','対 '+foeNames[sp.monster]);
      await st.transition('gate');for(const key of sp.activated||[])if(key!=='pickaxe')await itemActivation(key);
-     await monsterArrival(sp.monster,sp.monsterHP,'5〜10');
+     await monsterArrival(sp.monster,sp.monsterHP,sp.baseReward);
      duel={monster:sp.monster,hp:4,enemyHP:sp.monsterHP,max:sp.monsterHP};
      const fighter=(id,x,flip)=>{const region=opt.region(st.w,st.h),d=Math.min(165,st.w*.40,Math.max(36,region.h*.25)),n=st.add({x,y:region.y+Math.max(52+d/2,region.h*.34),z:25,motion:0});n.draw=(ctx)=>{if(drawCombat(ctx,flip===1?0:({Goblin:1,Troll:2,Dragon:3}[sp.monster]),n.motion||0,d))return;if(flip!==1&&sp.monster!=='Goblin'&&monsters){
        const sw=monsters.width/4,sh=monsters.height/2;

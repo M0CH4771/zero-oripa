@@ -1,7 +1,7 @@
 import {secureRandom} from './common.js';
 export const DWARF_CHEST_WEIGHTS={1:400,3:300,5:174,10:100,30:20,50:5,100:1};
-export const DWARF_CHEST_CHANCE=.0675;
-export const DWARF_BATTLE_CHANCE=.05;
+export const DWARF_CHEST_CHANCE=.052;
+export const DWARF_BATTLE_CHANCE=1/12;
 export const DWARF_MAX_SPINS=100;
 export const DWARF_INITIAL_SCALE=.01;
 export const DWARF_REWARD_TIERS=[[70,25,4,1,0],[45,35,15,4,1],[20,30,30,15,5]];
@@ -28,11 +28,12 @@ const byKey=Object.fromEntries(DWARF_ITEMS.map(x=>[x.key,x]));
 const tiers=Array.from({length:5},(_,i)=>DWARF_ITEMS.filter(x=>x.rarity===i+1));
 const monsters=['Goblin','Troll','Dragon'],monsterIcons=['s1','s3','s2'];
 const choicesByMonster=[[1,2,-1,-2],[1,2,-1,-3],[1,2,-1,-4]];
-const attackWeights=[[3185,3185,1815,1815],[3103,3103,1897,1897],[2790,2790,2210,2210]];
+export const DWARF_ATTACK_WEIGHTS=[[2802,2802,2198,2198],[2791,2791,2209,2209],[2790,2790,2210,2210]];
+export const DWARF_BATTLE_REWARDS=[5,10,20];
 const chestValues=Object.keys(DWARF_CHEST_WEIGHTS).map(Number),chestWeights=Object.values(DWARF_CHEST_WEIGHTS);
 const symbolWeights=[4,7,5,8,16,17,18,20],linePay=[20,3,7,5,.5,.4,.3,.2],lines=[[0,1,2],[3,4,5],[6,7,8],[0,4,8],[2,4,6]];
 function pick(weights,rand){let t=rand()*weights.reduce((a,b)=>a+b,0);for(let i=0;i<weights.length;i++)if((t-=weights[i])<0)return i;return weights.length-1;}
-export function* dwarfAdventureStream({rate,rand=secureRandom}){
+export function* dwarfAdventureStream({rate,rand=secureRandom,chestChance=DWARF_CHEST_CHANCE}){
  const cap=rate*50,initialUnit=rate*DWARF_INITIAL_SCALE;
  let unit=initialUnit,remaining=10,freePlayed=0,played=0,running=0,paid=0;
  let shield=0,glove=0,whetstone=0,sword=0,pickaxe=false,sage=false,evolution=0,blast=0,revive=0;
@@ -40,26 +41,30 @@ export function* dwarfAdventureStream({rate,rand=secureRandom}){
  yield {entry:null,unit:initialUnit,cap,inventory:inventory()};
  while(remaining>0&&freePlayed<DWARF_MAX_SPINS&&paid<cap){
   remaining--;freePlayed++;played++;
-  const all=blast>0;if(all)blast--;
-  const chance=all?1:Math.min(1,DWARF_CHEST_CHANCE*(pickaxe?1.5:1));
+  const forced=remaining===0&&freePlayed<DWARF_MAX_SPINS;
+  const all=blast>0&&!forced;if(all)blast--;
+  const chance=all?1:Math.min(1,chestChance*(pickaxe?1.5:1));
+  const early=!all&&freePlayed<DWARF_MAX_SPINS&&rand()<DWARF_BATTLE_CHANCE;
+  const battleLine=!all&&(early||forced);
   const g=[],chests=[],hits=[];let raw=0;
   for(let j=0;j<9;j++){
+   if(battleLine&&j>=3&&j<=5){g.push('S');hits.push(j);continue;}
    if(rand()<chance){const value=chestValues[evolution+pick(chestWeights.slice(evolution),rand)];g.push('s8');chests.push({pos:j,value});hits.push(j);raw+=value;}
    else g.push('s'+pick(symbolWeights,rand));
   }
-  let lineRaw=0;for(const [a,b,c] of lines){const n=Number(g[a].slice(1));if(n<8&&g[a]===g[b]&&g[a]===g[c]){lineRaw+=linePay[n];hits.push(a,b,c);}}
+  let lineRaw=0;for(const [a,b,c] of lines){const n=Number(g[a].slice(1));if(g[a].startsWith('s')&&n<8&&g[a]===g[b]&&g[a]===g[c]){lineRaw+=linePay[n];hits.push(a,b,c);}}
   raw+=lineRaw;
   const before=running;running+=raw*unit;
   const next=Math.min(cap,Math.floor(running)),win=next-paid;paid=next;
   let subtotal=before+lineRaw*unit,credited=Math.min(cap,Math.floor(subtotal));
   for(const [i,chest] of chests.entries()){subtotal+=chest.value*unit;const end=i===chests.length-1?next:Math.min(cap,Math.floor(subtotal));chest.win=Math.max(0,end-credited);credited=end;}
   const finished=paid>=cap||freePlayed>=DWARF_MAX_SPINS;
-  const early=!finished&&rand()<DWARF_BATTLE_CHANCE,forced=!finished&&remaining===0,battleTriggered=early||forced;
+  const battleTriggered=!finished&&(early||forced);
   if(finished)remaining=0;
   yield {grid:g,raw,win,cols:3,rows:3,hits:[...new Set(hits)],chests,unit,freePlayed,remaining,total:Math.min(DWARF_MAX_SPINS,freePlayed+remaining),battleTriggered,forced,activated:all?['blast']:[],inventory:inventory(),note:battleTriggered?'BATTLE TRIGGER':'宝箱ラッシュ'};
   if(!battleTriggered)continue;
   played++;
-  const m=Math.floor(rand()*3),monster=monsters[m],choices=choicesByMonster[m],weights=attackWeights[m],monsterHP=Math.max(1,m+3-whetstone),battleItems=[];
+  const m=Math.floor(rand()*3),monster=monsters[m],choices=choicesByMonster[m],weights=DWARF_ATTACK_WEIGHTS[m],monsterHP=Math.max(1,m+3-whetstone),battleItems=[];
   if(whetstone)battleItems.push('whetstone');if(sword)battleItems.push('sword');if(pickaxe)battleItems.push('pickaxe');
   let hp=4,enemy=monsterHP,boost=sword;
   whetstone=sword=0;pickaxe=false;
@@ -74,7 +79,7 @@ export function* dwarfAdventureStream({rate,rand=secureRandom}){
   if(!won&&revive){revive--;won=true;revived=true;}
   const beforeUnit=unit;let awarded=0,reward=null,extra=0;
   if(won){
-   awarded=5+Math.floor(rand()*6);remaining+=awarded;
+   awarded=DWARF_BATTLE_REWARDS[m];remaining+=awarded;
    const tier=pick(DWARF_REWARD_TIERS[m].map((w,j)=>sage&&j<2?0:w),rand);sage=false;
    const pool=tiers[tier].filter(x=>x.key!=='evolution'||evolution<3);
    const selected=Math.floor(rand()*pool.length);reward={...pool[selected],pool:pool.map(x=>({...x})),selected};
@@ -99,7 +104,7 @@ export function* dwarfAdventureStream({rate,rand=secureRandom}){
    remaining+=extra;
   }
   remaining=Math.min(remaining,DWARF_MAX_SPINS-freePlayed);
-  yield {grid:['s0','s7',monsterIcons[m],'s4','s7','s5','s6','s7','s8'],raw:0,win:0,cols:3,rows:3,battle:true,monster,monsterHP,heroMax:4,choices,weights,actions:attacks,won,revived,awarded,extra,reward,unit:beforeUnit,nextUnit:unit,freePlayed,remaining,total:freePlayed+remaining,activated:battleItems,inventory:inventory(),note:won?'勝利':remaining?'敗北・冒険継続':'冒険終了'};
+  yield {grid:['s0','s7',monsterIcons[m],'s4','s7','s5','s6','s7','s8'],raw:0,win:0,cols:3,rows:3,battle:true,monster,monsterHP,heroMax:4,choices,weights,actions:attacks,won,revived,awarded,baseReward:DWARF_BATTLE_REWARDS[m],extra,reward,unit:beforeUnit,nextUnit:unit,freePlayed,remaining,total:freePlayed+remaining,activated:battleItems,inventory:inventory(),note:won?'勝利':remaining?'敗北・冒険継続':'冒険終了'};
  }
  const score=Math.max(1,paid);return {score,played,freePlayed,guarantee:score-paid,capped:paid>=cap,unit:initialUnit,finalUnit:unit,entry:null,inventory:inventory()};
 }

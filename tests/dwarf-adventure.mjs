@@ -10,9 +10,9 @@ for(let i=0;i<N;i++){
  while(!(n=it.next()).done){
   const s=n.value;ledger+=s.win;
   if(s.battle){assert.ok(triggered);triggered=false;totals.battles++;
-   if(s.won){assert.ok(s.awarded>=5&&s.awarded<=10);assert.ok(s.reward);totals.items++;seen.add(s.reward.key);}
+   if(s.won){assert.equal(s.awarded,({Goblin:5,Troll:10,Dragon:20})[s.monster]);assert.ok(s.reward);totals.items++;seen.add(s.reward.key);}
    else assert.equal(s.reward,null);
-  }else{assert.equal(s.grid.length,9);triggered=s.battleTriggered;if(s.activated.includes('blast'))assert.equal(s.chests.length,9);assert.ok(s.chests.every(c=>c.value>=s.inventory.minimum));}
+  }else{assert.equal(s.grid.length,9);triggered=s.battleTriggered;if(s.activated.includes('blast'))assert.equal(s.chests.length,9);else if(s.battleTriggered)assert.deepEqual(s.grid.slice(3,6),['S','S','S']);assert.ok(s.chests.every(c=>c.value>=s.inventory.minimum));}
   assert.ok(s.inventory.minimum<=10);assert.ok(s.freePlayed<=100);
  }
  const r=n.value;assert.equal(r.score,Math.max(1,ledger));assert.ok(r.score<=rate*50);
