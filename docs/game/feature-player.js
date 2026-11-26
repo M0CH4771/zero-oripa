@@ -38,7 +38,7 @@
   const chestReveals=new Map(),spinChestValues=new Map();
   const chestTypes=['normal','rare','gold','legend','mythic'],chestColors=['#ffe6a1','#9fe4ff','#ffe281','#ffb06e','#f2ddff'];
   let spinChestArt=[];
-  const chestTier=value=>value>=1000?4:value>=250?3:value>=50?2:value>=15?1:0;
+  const chestTier=value=>value>=100?4:value>=30?3:value>=10?2:value>=3?1:0;
   function drawSpinChest(ctx,value,frame,cx,cy,d){
    const art=spinChestArt[chestTier(value)],f=Math.min(7,Math.max(0,Math.floor(frame)));
    if(art){const sw=art.width/4,sh=art.height/2;ctx.drawImage(art,sw*(f%4),sh*Math.floor(f/4),sw,sh,cx-d/2,cy-d/2,d,d);}
@@ -137,6 +137,7 @@
    ZG.sfx?.play('free');st.flash(color,.15);st.impact(st.w/2,st.h/2,Math.min(st.w*.32,145),color,2);await st.banner([title,subtitle],{rainbow:false});
   }
   async function baseReel(draw,monster,nextUnit){
+   const initial=monster==='Initial';
    if(!draw?.values?.length||draw.values[draw.selected]!==draw.amount||Math.abs(currentUnit+draw.amount-nextUnit)>1e-8)throw new Error('基準C強化データが一致しません');
    const values=draw.values,n=values.length,selected=draw.selected,enemyRow={Goblin:0,Troll:1,Dragon:2}[monster]??0;
    const format=v=>v.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C';
@@ -144,17 +145,17 @@
    reel.draw=(ctx,o)=>{
     const d=Math.min(st.w*.94,390,st.h*.58),w=d,frame=Math.min(5,Math.floor(o.frame));
     ctx.fillStyle='#080a0bf2';ctx.fillRect(-st.w,-st.h,st.w*2,st.h*2);
-    text(ctx,foeNames[monster]+'の宝箱',0,-d*.52-20,21,'#ffe9ac',w);
+    text(ctx,initial?'初期基準C抽選':foeNames[monster]+'の宝箱',0,-d*.52-20,21,'#ffe9ac',w);
     if(upgradeArt){const sw=upgradeArt.width/6,sh=upgradeArt.height/3;ctx.drawImage(upgradeArt,sw*frame,sh*enemyRow,sw,sh,-d/2,-d/2,d,d);}
     else {ZG.rr(ctx,-w/2,-d/2,w,d,16);ctx.fillStyle='#30261b';ctx.fill();ctx.strokeStyle='#d8bd76';ctx.stroke();}
     if(frame===5){const rw=d*.26,rh=d*.34,y=-d*.17,row=rh/3,k=Math.floor(o.offset),frac=o.offset-k;
      ctx.save();ZG.rr(ctx,-rw/2,y-rh/2,rw,rh,4);ctx.clip();ctx.fillStyle='#17140f';ctx.fillRect(-rw/2,y-rh/2,rw,rh);
-     for(let i=-2;i<=2;i++){const idx=((k+i)%n+n)%n,yy=y+(i-frac)*row;ctx.fillStyle=i===0?'#704a1c':'#211c16';ctx.fillRect(-rw/2,yy-row/2,rw,row-1);text(ctx,'+'+format(values[idx]),0,yy,Math.min(25,rw*.28),i===0?'#fff5d4':'#c7b99e',rw-6);}
+     for(let i=-2;i<=2;i++){const idx=((k+i)%n+n)%n,yy=y+(i-frac)*row;ctx.fillStyle=i===0?'#704a1c':'#211c16';ctx.fillRect(-rw/2,yy-row/2,rw,row-1);text(ctx,(initial?'':'+')+format(values[idx]),0,yy,Math.min(25,rw*.28),i===0?'#fff5d4':'#c7b99e',rw-6);}
      ctx.restore();ctx.strokeStyle='#ffe4a0';ctx.lineWidth=2;ctx.strokeRect(-rw/2,y-row/2,rw,row);
     }
-    const label=o.locked?(draw.amount===0?'宝箱配当は変化なし':'宝箱配当アップ！'):'宝箱配当アップ抽選';
+    const label=initial?(o.locked?'初期基準C 確定！':'初期基準C抽選'):(o.locked?(draw.amount===0?'宝箱配当は変化なし':'宝箱配当アップ！'):'宝箱配当アップ抽選');
     text(ctx,label,0,d*.52+10,17,'#ffe6a0',w);
-    text(ctx,o.locked?format(currentUnit)+' ＋ '+format(draw.amount)+' → '+format(nextUnit):'宝箱×1の獲得C '+format(currentUnit),0,d*.52+38,18,'#fff',w);
+    text(ctx,initial?(o.locked?'宝箱×1の獲得C '+format(nextUnit):'BETの0.1%〜1.0%'):(o.locked?format(currentUnit)+' ＋ '+format(draw.amount)+' → '+format(nextUnit):'宝箱×1の獲得C '+format(currentUnit)),0,d*.52+38,18,'#fff',w);
    };
    try{ZG.sfx?.play('chest');await st.tween(reel,{frame:5.99},1200,ZG.Ease.linear);await st.wait(250);ZG.sfx?.play('spin');await st.tween(reel,{offset:n*5+selected},2300,ZG.Ease.outCubic);reel.locked=true;ZG.sfx?.play('rouletteLock');st.flash('#ffd980',.15);st.impact(reel.x,reel.y,90,'#ffe3a0',1.5);await st.wait(1300);}finally{st.remove(reel);}
   }
@@ -286,7 +287,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
   }
   return {st,idle:reset,prepareDogs,async warm(cb){if(mode==='dwarf'){[arena,escapeArt,upgradeArt,arrivalArt,arrivalAlt,combatArt,combatAlt]=await Promise.all(['arena','escape','upgrade-reel-v1','arrival-v3','arrival-v4','combat-v3','combat-v4'].map(n=>im('./assets/anime/dwarf/'+n+'.webp')));spinChestArt=await Promise.all(chestTypes.map(n=>im('./assets/anime/dwarf/chest118-'+n+'.webp')));}await Promise.all(({dwarf:['gate','knockout'],gods:['gate','cast'],dogs:[],train:[]})[mode].map(name=>st.loadScene(name)));[bg,atlas,actions,plates,kennels,monsters,trophies,blanks,glyphs]=await Promise.all([im('./assets/anime/'+mode+'/bg.webp'),mode==='train'?im('./assets/anime/train/wagon-atlas.webp'):ZG.loadSymbolAtlas(mode),['train','dwarf'].includes(mode)?im('./assets/anime/'+mode+'/actions.webp'):null,['train','gods'].includes(mode)?im('./assets/anime/'+mode+'/multipliers.webp'):null,mode==='dogs'?im('./assets/anime/dogs/kennels.webp'):null,...['monsters','trophies'].map(name=>mode==='dwarf'?im('./assets/anime/dwarf/'+name+'.webp'):null),...['blanks','glyphs'].map(name=>mode==='train'?im('./assets/anime/train/'+name+'.webp'):null)]);cb?.(1)},async play(r){
    if(mode==='dogs'){if(!dogPrepared){reset();await showDogs(r.entry);await reveal('BONUS ACTIVE',r.entry.initialSpins+' FREE SPINS');}dogPrepared=false;currentUnit=r.unit||1;let score=0;hooks.onSpin(0,r.entry.initialSpins);await hooks.onBonusIntro?.({spins:r.entry.initialSpins,choice:r.entry.mode});hooks.onMode?.('BONUS');let i=0;for await(const sp of r.spinStream()){note=sp.note;hooks.onSpin(i+1,sp.total);await showDogs(sp,true);dogPay=sp.win;if(sp.win){ZG.sfx?.play('win');for(const g of sp.groups){const p=dogPositions[g.cells[0]];for(const j of g.cells){const q=cellPoint(j);if(q)st.impact(q.x,q.y,Math.min(18,st.w*.035),'#ffe295',.35);}if(p)await st.popText(p.x,p.y,g.ways+' WAYS · +'+hooks.fmt(g.value*currentUnit),{size:Math.min(20,st.w*.05),hold:220});}await st.wait(280);}hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.rate||opt.getRate?.(),hooks.fmt);await st.roundPause();i++;}if(r.guarantee)await st.banner(['最終配当','1 C'],{hold:350});if(r.capped)await st.banner(['MAX WIN',hooks.fmt(r.score)+' C'],{});hooks.onScore(r.score);note='FREE SPINS COMPLETED';hooks.onMode?.('COMPLETE');return;}
-   reset();currentUnit=r.unit||1;let score=0;hooks.onMode?.('ENTRY');hooks.onSpin(0,r.entry?.initialSpins??10);if(mode==='train'&&r.entry)await trainEntry(r.entry);else if(r.entry){await show(r.entry.grid);hits=r.entry.grid.map((s,i)=>s==='S'?i:-1).filter(i=>i>=0);await st.wait(300);if(r.entry.tickets)await tickets(r.entry.tickets);if(mode==='gods'){score=r.entry.win;godsTumble=hooks.fmt(score)+' C';hooks.onScore(score);}await reveal(cfg.title,r.entry.initialSpins+' FREE SPINS');await hooks.onBonusIntro?.({spins:r.entry.initialSpins});}else if(mode==='dwarf'){hooks.onSpin(0,10);await reveal('宝箱ラッシュ','10フリースピン');hooks.onBaseUnit?.(currentUnit);await st.banner(['宝箱×1の獲得C',currentUnit.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C · BETの1%'],{hold:800});await hooks.onBonusIntro?.({spins:10});}else {await reveal(cfg.title,'BONUS START');await hooks.onBonusIntro?.({spins:10});}hooks.onMode?.('BONUS');
+   reset();currentUnit=r.unit||1;let score=0;hooks.onMode?.('ENTRY');hooks.onSpin(0,r.entry?.initialSpins??10);if(mode==='train'&&r.entry)await trainEntry(r.entry);else if(r.entry){await show(r.entry.grid);hits=r.entry.grid.map((s,i)=>s==='S'?i:-1).filter(i=>i>=0);await st.wait(300);if(r.entry.tickets)await tickets(r.entry.tickets);if(mode==='gods'){score=r.entry.win;godsTumble=hooks.fmt(score)+' C';hooks.onScore(score);}await reveal(cfg.title,r.entry.initialSpins+' FREE SPINS');await hooks.onBonusIntro?.({spins:r.entry.initialSpins});}else if(mode==='dwarf'){hooks.onSpin(0,10);await reveal('宝箱ラッシュ','10フリースピン');currentUnit=0;await baseReel(r.initialDraw,'Initial',r.unit);currentUnit=r.unit;hooks.onBaseUnit?.(currentUnit);await hooks.onBonusIntro?.({spins:10});}else {await reveal(cfg.title,'BONUS START');await hooks.onBonusIntro?.({spins:10});}hooks.onMode?.('BONUS');
    let i=0;for await(const sp of r.spinStream()){cols=sp.cols;rows=sp.rows;note=sp.battle?'バトル':sp.note;if(mode==='dwarf')hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining-(sp.battle?sp.awarded:0));else if(mode==='train')hooks.onSpin(i+1,i+1+Math.max(0,trainRemaining-1));else hooks.onSpin(i+1,Math.max(i+1,(sp.total||r.played)-(sp.add||0)));
     if(mode==='train'){
      cols=sp.landingCols;rows=6;wagonEnhancers=sp.enhancers;note='空きマスをリスピン';trainRemaining=Math.max(0,trainRemaining-1);
