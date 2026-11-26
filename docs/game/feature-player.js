@@ -138,7 +138,7 @@
   }
   async function baseReel(draw,monster,nextUnit){
    const initial=monster==='Initial';
-   if(!draw?.values?.length||draw.values[draw.selected]!==draw.amount||Math.abs(currentUnit+draw.amount-nextUnit)>1e-8)throw new Error('基準C強化データが一致しません');
+   if(!draw?.values?.length||draw.values[draw.selected]!==draw.amount||Math.abs((initial?draw.amount:currentUnit*draw.amount)-nextUnit)>1e-7)throw new Error('基準C強化データが一致しません');
    const values=draw.values,n=values.length,selected=draw.selected,enemyRow={Goblin:0,Troll:1,Dragon:2}[monster]??0;
    const format=v=>v.toLocaleString('ja-JP',{maximumFractionDigits:8})+' C';
    const reel=st.add({x:st.w/2,y:st.h*.44,z:65,offset:0,frame:0,locked:false});
@@ -150,12 +150,12 @@
     else {ZG.rr(ctx,-w/2,-d/2,w,d,16);ctx.fillStyle='#30261b';ctx.fill();ctx.strokeStyle='#d8bd76';ctx.stroke();}
     if(frame===5){const rw=d*.26,rh=d*.34,y=-d*.17,row=rh/3,k=Math.floor(o.offset),frac=o.offset-k;
      ctx.save();ZG.rr(ctx,-rw/2,y-rh/2,rw,rh,4);ctx.clip();ctx.fillStyle='#17140f';ctx.fillRect(-rw/2,y-rh/2,rw,rh);
-     for(let i=-2;i<=2;i++){const idx=((k+i)%n+n)%n,yy=y+(i-frac)*row;ctx.fillStyle=i===0?'#704a1c':'#211c16';ctx.fillRect(-rw/2,yy-row/2,rw,row-1);text(ctx,(initial?'':'+')+format(values[idx]),0,yy,Math.min(25,rw*.28),i===0?'#fff5d4':'#c7b99e',rw-6);}
+     for(let i=-2;i<=2;i++){const idx=((k+i)%n+n)%n,yy=y+(i-frac)*row;ctx.fillStyle=i===0?'#704a1c':'#211c16';ctx.fillRect(-rw/2,yy-row/2,rw,row-1);text(ctx,initial?format(values[idx]):'×'+values[idx],0,yy,Math.min(25,rw*.28),i===0?'#fff5d4':'#c7b99e',rw-6);}
      ctx.restore();ctx.strokeStyle='#ffe4a0';ctx.lineWidth=2;ctx.strokeRect(-rw/2,y-row/2,rw,row);
     }
     const label=initial?(o.locked?'初期基準C 確定！':'初期基準C抽選'):(o.locked?(draw.amount===0?'宝箱配当は変化なし':'宝箱配当アップ！'):'宝箱配当アップ抽選');
     text(ctx,label,0,d*.52+10,17,'#ffe6a0',w);
-    text(ctx,initial?(o.locked?'宝箱×1の獲得C '+format(nextUnit):'BETの0.1%〜1.0%'):(o.locked?format(currentUnit)+' ＋ '+format(draw.amount)+' → '+format(nextUnit):'宝箱×1の獲得C '+format(currentUnit)),0,d*.52+38,18,'#fff',w);
+    text(ctx,initial?(o.locked?'宝箱×1の獲得C '+format(nextUnit):'BETの0.1%〜1.0%'):(o.locked?format(currentUnit)+' ×'+draw.amount+' → '+format(nextUnit):'宝箱×1の獲得C '+format(currentUnit)),0,d*.52+38,18,'#fff',w);
    };
    try{ZG.sfx?.play('chest');await st.tween(reel,{frame:5.99},1200,ZG.Ease.linear);await st.wait(250);ZG.sfx?.play('spin');await st.tween(reel,{offset:n*5+selected},2300,ZG.Ease.outCubic);reel.locked=true;ZG.sfx?.play('rouletteLock');st.flash('#ffd980',.15);st.impact(reel.x,reel.y,90,'#ffe3a0',1.5);await st.wait(1300);}finally{st.remove(reel);}
   }

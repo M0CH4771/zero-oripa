@@ -95,20 +95,20 @@ function train(r,{strategy}={}){
  }
  spins[0].initialGrid=initialGrid;spins[0].initialDepth=initialDepth;spins[0].initialEvents=[];return spins;
 }
-const DWARF_MONSTERS={Goblin:{hp:3,win:10,icon:'s1'},Troll:{hp:4,win:20,icon:'s3'},Dragon:{hp:5,win:30,icon:'s2'}};
+const DWARF_MONSTERS={Goblin:{hp:3,win:10,icon:'s1'},Troll:{hp:4,win:10,icon:'s3'},Dragon:{hp:5,win:10,icon:'s2'}};
 export const DWARF_ROULETTE={Goblin:[1,2,-1,-2],Troll:[1,2,-1,-3],Dragon:[1,2,-1,-4]};
 // Exact basis-point weights in roulette display order. Weighted encounter
 // distribution keeps expected added spins below ten per battle.
 export const DWARF_ENCOUNTER_WEIGHTS={Goblin:6500,Troll:2500,Dragon:1000};
 export const DWARF_WEIGHTS={Goblin:[3185,3185,1815,1815],Troll:[3103,3103,1897,1897],Dragon:[2790,2790,2210,2210]};
 export const DWARF_CHEST_WEIGHTS={1:4000,3:3000,5:1000,10:1000,30:800,50:150,100:50};
-export const DWARF_SYMBOL_WEIGHTS={s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:1.992,s9:1.992};
+export const DWARF_SYMBOL_WEIGHTS={s0:4,s1:7,s2:5,s3:8,s4:16,s5:17,s6:18,s7:20,s8:3.715,s9:3.715};
 export const DWARF_INITIAL_SCALE=.001;
 export const DWARF_INITIAL_SCALES=Array.from({length:10},(_,i)=>(i+1)/1000);
 export function dwarfInitialTable(rate){return {values:DWARF_INITIAL_SCALES.map(s=>Number((rate*s).toFixed(8))),weights:Array(10).fill(10)};}
-export const DWARF_UPGRADE_SCALES={Goblin:[.001,.002,.003,.004,.005,.01],Troll:[.005,.006,.007,.008,.009,.01,.015,.02],Dragon:[.01,.015,.02,.025,.03,.05]};
-export const DWARF_UPGRADE_WEIGHTS={Goblin:[20,20,30,15,12,3],Troll:[27,25,20,12,6,6,3,1],Dragon:[45,30,12,10,2,1]};
-export function dwarfUpgradeTable(rate,monster){const raw=DWARF_UPGRADE_SCALES[monster].map(s=>Number((rate*s).toFixed(8)));return {values:raw,weights:[...DWARF_UPGRADE_WEIGHTS[monster]]};}
+export const DWARF_UPGRADE_MULTIPLIERS=[1.2,1.5,2,3];
+export const DWARF_UPGRADE_WEIGHTS={Goblin:[50,30,15,5],Troll:[30,30,30,10],Dragon:[20,30,30,20]};
+export function dwarfUpgradeTable(rate,monster){return {values:[...DWARF_UPGRADE_MULTIPLIERS],weights:[...DWARF_UPGRADE_WEIGHTS[monster]]};}
 function dwarfInitial(rate,rand){const {values,weights}=dwarfInitialTable(rate),selected=Math.min(values.length-1,Math.floor(rand()*values.length));return {selected,values,weights,amount:values[selected]};}
 function dwarfUpgrade(rate,monster,rand){const {values,weights}=dwarfUpgradeTable(rate,monster);let ticket=rand()*weights.reduce((a,b)=>a+b,0),selected=values.length-1;for(let i=0;i<weights.length;i++){ticket-=weights[i];if(ticket<0){selected=i;break;}}return {selected,values,weights,amount:values[selected]};}
 function* dwarfStream(r){
@@ -118,7 +118,7 @@ function* dwarfStream(r){
  const pays={s0:20,s2:7,s3:5,s1:3,s4:.5,s5:.4,s6:.3,s7:.2};
  let remaining=10,freePlayed=0;
  yield null;
- const stages={10:'Goblin',20:'Troll',40:'Dragon'};
+ const stages={10:'Goblin',20:'Troll',30:'Dragon'};
  function battle(monster){
   const m=DWARF_MONSTERS[monster];
   const choices=DWARF_ROULETTE[monster],weights=DWARF_WEIGHTS[monster],actions=[];
@@ -138,8 +138,8 @@ function* dwarfStream(r){
  while(remaining>0){remaining--;freePlayed++;const g=grid(9,pick);let raw=0,hits=[],chests=[];
   for(const line of [[0,1,2],[3,4,5],[6,7,8],[0,4,8],[2,4,6]])if(pays[g[line[0]]]&&line.every(j=>g[j]===g[line[0]])){raw+=pays[g[line[0]]];hits.push(...line);}
   for(let j=0;j<g.length;j++)if(g[j]==='s8'||g[j]==='s9'){const value=Number(pickChest());raw+=value;chests.push({pos:j,value});hits.push(j);}
-  const target=freePlayed<=10?10:freePlayed<=20?20:freePlayed<=40?40:null;
-  yield {grid:g,raw,cols:3,rows:3,hits:[...new Set(hits)],chests,freePlayed,remaining,note:target===null?'最終宝箱ラッシュ':({10:'ゴブリン',20:'トロール',40:'ドラゴン'}[target])+' まで '+Math.max(0,target-freePlayed)+' 回',total:freePlayed+remaining};
+  const target=freePlayed<=10?10:freePlayed<=20?20:freePlayed<=30?30:null;
+  yield {grid:g,raw,cols:3,rows:3,hits:[...new Set(hits)],chests,freePlayed,remaining,note:target===null?'最終宝箱ラッシュ':({10:'ゴブリン',20:'トロール',30:'ドラゴン'}[target])+' まで '+Math.max(0,target-freePlayed)+' 回',total:freePlayed+remaining};
   if(stages[freePlayed])yield battle(stages[freePlayed]);
  }
 }
@@ -152,7 +152,7 @@ export function* featureStream(game,{rate,rand=secureRandom,strategy='battle',do
  const cap=Math.floor(c.max*rate);let running=game==='gods'?3*initialUnit:0,paid=Math.floor(running),unit=initialUnit,played=0,freePlayed=0;
  if(entry)entry={...entry,win:paid};yield {entry,unit:initialUnit,cap,...(initialDraw?{initialDraw}:{})};
  for(const s of it){played++;if(!s.battle)freePlayed++;
-  if(game==='dwarf'){s.unit=unit;if(s.battle&&s.won){s.upgrade=dwarfUpgrade(rate,s.monster,rand);unit+=s.upgrade.amount;s.nextUnit=unit;}}
+  if(game==='dwarf'){s.unit=unit;if(s.battle&&s.won){s.upgrade=dwarfUpgrade(rate,s.monster,rand);unit=Number((unit*s.upgrade.amount).toFixed(8));s.nextUnit=unit;}}
   const before=running;running+=s.raw*(game==='dwarf'?s.unit:initialUnit);const next=Math.min(cap,Math.floor(running));s.win=next-paid;paid=next;
   if(game==='dwarf'&&s.chests?.length){let subtotal=before+(s.raw-s.chests.reduce((n,chest)=>n+chest.value,0))*unit,credited=Math.min(cap,Math.floor(subtotal));for(const [i,chest] of s.chests.entries()){subtotal+=chest.value*unit;const end=i===s.chests.length-1?next:Math.min(cap,Math.floor(subtotal));chest.win=Math.max(0,end-credited);credited=end;}}
   if(s.steps)for(const step of s.steps){step.win=Math.floor(step.value*initialUnit);step.groups=step.groups.map(g=>({...g,pay:g.base*initialUnit,base:g.base*initialUnit,mult:1}));step.credited=Math.min(s.win,Math.floor(step.tumbleTotal*initialUnit));}
