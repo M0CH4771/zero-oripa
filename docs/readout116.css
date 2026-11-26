@@ -57,3 +57,14 @@ body:has(#board) :is(.readouts,.hud)>div>:is(b,small){display:block;min-width:0;
 @keyframes dwarf-item-reveal{from{transform:scale(.7);opacity:.4}to{transform:scale(1);opacity:1}}
 @media(max-height:600px){.gm .dwarf-base:not([hidden]){padding:3px 5px!important;min-height:30px!important}.gm .dwarf-base>strong{font-size:25px!important}.gm .dwarf-inventory{min-height:23px;max-height:26px}.dwarf-inventory-item{width:24px;height:24px}.dwarf-reward-card{padding:8px}.dwarf-reward-window{width:min(48%,125px)}}
 @media(prefers-reduced-motion:reduce){.dwarf-item-art,.dwarf-activation{animation:none!important}}
+/* Actual independent attacker and damage rolls, without numerical odds. */
+.gm .attack-roulette.dual-stage{width:min(92%,520px);box-sizing:border-box;padding:8px 9px;border:2px solid #d8bd7c;border-radius:11px;background:linear-gradient(145deg,#271f17f5,#121b18f5);box-shadow:0 5px 18px #0009;overflow:hidden;}
+.gm .attack-roulette.dual-stage>strong{display:block;text-align:center;font-size:clamp(13px,3.5vw,17px);letter-spacing:.03em;color:#ffe5ac;margin:0 0 7px;}
+.gm .attack-roulette.dual-stage>div{display:grid!important;grid-template-columns:repeat(var(--choice-count),minmax(0,1fr))!important;gap:4px;}
+.gm .attack-roulette.dual-stage>div>span{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:43px;padding:4px 2px;box-sizing:border-box;border:1px solid #819485;border-radius:6px;text-align:center;}
+.gm .attack-roulette.dual-stage span>b{font-size:clamp(15px,4vw,23px);line-height:1.15;white-space:nowrap;}
+.gm .attack-roulette.dual-stage span[class*="dmg-"]>b{font-size:clamp(23px,6vw,34px)}
+.gm .attack-roulette.dual-stage span>small{font-size:clamp(8px,2.1vw,11px);line-height:1.1;white-space:nowrap;}
+.gm .attack-roulette.dual-stage span.active{border:2px solid #ffe190;box-shadow:0 0 10px #ffc957b0;background:#785d26!important;}
+.gm .attack-roulette.dual-stage span.chosen{color:#fff8cb;background:#94702a!important;}
+@media(max-height:600px){.gm .attack-roulette.dual-stage{padding:4px 5px}.gm .attack-roulette.dual-stage>strong{margin-bottom:3px}.gm .attack-roulette.dual-stage>div>span{min-height:32px;padding:2px}.gm .attack-roulette.dual-stage span[class*="dmg-"]>b{font-size:20px}}

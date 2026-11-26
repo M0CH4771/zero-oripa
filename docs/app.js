@@ -1,5 +1,5 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml,volatilityBadge} from './game-info.js?v=adventure127';
+import {gameInfoHtml,volatilityBadge} from './game-info.js?v=adventure128';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -441,7 +441,7 @@ const RULES = {
   gods:['6×5の盤面で同じ絵柄8個以上がそろうと消えて連鎖。','4スキャッターで15回。4/5/6個は基準ベットの3/5/100倍。フリースピン中は3個以上で5回追加。','×2〜500の新規オーブが当たりスピンに出た場合だけ累積倍率を加算・適用。ハズレ時のオーブは不発。',featureBounds('gods')],
   dogs:['6リール・各2〜7段。左から3リール以上の連続一致。最大117,649 WAYS。','3〜6個の肉球でSTICKY（7/12/15/20回）かRAINING（15/18/25/30回）を選択。','ワイルドは2〜5リールのみ。×1〜3の倍率は組み合わせごとに乗算。再トリガーなし。',featureBounds('dogs')],
   train:['6列・最大6段。開始時に2〜4段のコースを選択。コインが着地すると残り3回に戻ります。','上段のトロッコが、同じ列の新規コインを強化。爆弾で岩を除去し、下の宝箱を開けることも。','バッグ・チェスト・ドワーフの回収と、終了時の宝箱追加報酬を合計します。',featureBounds('train')],
-  dwarf:['初期10G。基準CはBETの1%。宝箱倍率を掛けて配当。','中央3個のバトルシンボル成立で戦闘。残り1Gは必ず揃う（上限到達時を除く）。敵の出現率はゴブリン50%、トロール30%、ドラゴン20%。','勝利でゴブリン＋5G、トロール＋10G、ドラゴン＋20Gとアイテム1個。途中敗北時は残りGがあれば継続。','16種類のアイテムで基準C・宝箱・バトル・追加Gを強化。',featureBounds('dwarf')],
+  dwarf:['初期10G。基準CはBETの1%。宝箱倍率を掛けて配当。','中央3個のバトルシンボル成立で戦闘。残り1Gは必ず揃う（上限到達時を除く）。敵の出現率はゴブリン50%、トロール30%、ドラゴン20%。','勝利でゴブリン＋5G、トロール＋10G、ドラゴン＋20Gとアイテム1個。途中敗北時は残りGがあれば継続。','ドワーフのHPは5。攻撃者を抽選した後、1〜5ダメージを抽選。16種類のアイテムで冒険を強化。',featureBounds('dwarf')],
   plinko:['ボールが12段のピンを左右に通過します。','最下段に表示されたコイン数を1球ごとに獲得します。BETに応じて表示が変わります。','全3設定で配当表還元率約97%。0 Cの着地枠もあり、全ボール合計が0Cの場合のみ1Cになります。配当上限なし。'],
   rush: ['テストコインのレートを選び、BONUSで10回のフリースピンを開始します', '6×5の盤面のどこでも、同じ宝石が8個以上あれば配当。消えたあと上から落ちてきて連鎖します',
     '魔法のオーブ（×2〜×100）が出現し、勝った連鎖の合計に倍率を適用します', '魔法の杖が3個以上で5回追加。4／5／6個以上の杖には3／5／100倍の配当（テスト版の最大120回）','1回のボーナス全体の配当は最低1C・最高50倍。還元率目標97%。'],
@@ -729,7 +729,7 @@ async function gameSpin() {
     if(p.game==='train'&&!daily){strategy=await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>LUCKY WAGON</strong><b>'+num(cost)+' C</b><small>開始時に開く段数を選択</small><div><button data-tier="train2">2段</button><button data-tier="train3">3段</button><button data-tier="train4">4段</button><button data-tier="">取消</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.tier)});});if(!strategy)return;}
     if(p.game==='dogs'){
       if(!daily&&!await new Promise(resolve=>{const panel=document.createElement('div');panel.className='dog-choice dog-confirm';panel.innerHTML='<strong>BUY FREE SPINS</strong><b>'+num(cost)+' C</b><small>1ゲームの消費C</small><div><button data-buy="no">取消</button><button data-buy="yes">確定</button></div>';$('#gm').append(panel);panel.querySelectorAll('button').forEach(b=>b.onclick=()=>{panel.remove();resolve(b.dataset.buy==='yes')});}))return;
-      const {dogsEntry}=await import('./test-games/features.js?v=adventure127');dogEntry=dogsEntry();strategy=await game.prepareDogs(dogEntry);if(!strategy)return;const demoLabel=$('.gm-demo');if(demoLabel)demoLabel.textContent=demoLabel.textContent.replace(/荒さ [0-9–]+\/5/,'荒さ '+(strategy==='raining'?5:4)+'/5');
+      const {dogsEntry}=await import('./test-games/features.js?v=adventure128');dogEntry=dogsEntry();strategy=await game.prepareDogs(dogEntry);if(!strategy)return;const demoLabel=$('.gm-demo');if(demoLabel)demoLabel.textContent=demoLabel.textContent.replace(/荒さ [0-9–]+\/5/,'荒さ '+(strategy==='raining'?5:4)+'/5');
     }
     const r = await api(`/api/packs/${p.id}/${daily?'daily':demo ? 'rush-demo' : 'rush'}`, { rate: rushRate,count,risk:gameCtx.risk,rows:gameCtx.rows,strategy,dogEntry });
     activeRound=r;

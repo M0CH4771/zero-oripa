@@ -1,6 +1,6 @@
 import {secureRandom} from './common.js';
 export const DWARF_CHEST_WEIGHTS={1:400,3:300,5:174,10:100,30:20,50:5,100:1};
-export const DWARF_CHEST_CHANCE=.0531;
+export const DWARF_CHEST_CHANCE=.0542;
 export const DWARF_BATTLE_CHANCE=1/12;
 export const DWARF_ENCOUNTER_WEIGHTS=[50,30,20];
 export const DWARF_MAX_SPINS=100;
@@ -28,8 +28,9 @@ export const DWARF_ITEMS=[
 const byKey=Object.fromEntries(DWARF_ITEMS.map(x=>[x.key,x]));
 const tiers=Array.from({length:5},(_,i)=>DWARF_ITEMS.filter(x=>x.rarity===i+1));
 const monsters=['Goblin','Troll','Dragon'],monsterIcons=['s1','s3','s2'];
-const choicesByMonster=[[1,2,-1,-2],[1,2,-1,-3],[1,2,-1,-4]];
-export const DWARF_ATTACK_WEIGHTS=[[2802,2802,2198,2198],[2791,2791,2209,2209],[2790,2790,2210,2210]];
+export const DWARF_HERO_HP=5;
+export const DWARF_HERO_DAMAGE=[400,300,180,90,30];
+export const DWARF_ENEMY_DAMAGE=[[494,270,140,70,26],[250,250,250,150,100],[70,120,192,250,368]];
 export const DWARF_BATTLE_REWARDS=[5,10,20];
 const chestValues=Object.keys(DWARF_CHEST_WEIGHTS).map(Number),chestWeights=Object.values(DWARF_CHEST_WEIGHTS);
 const symbolWeights=[4,7,5,8,16,17,18,20],linePay=[20,3,7,5,.5,.4,.3,.2],lines=[[0,1,2],[3,4,5],[6,7,8],[0,4,8],[2,4,6]];
@@ -65,16 +66,16 @@ export function* dwarfAdventureStream({rate,rand=secureRandom,chestChance=DWARF_
   yield {grid:g,raw,win,cols:3,rows:3,hits:[...new Set(hits)],chests,unit,freePlayed,remaining,total:Math.min(DWARF_MAX_SPINS,freePlayed+remaining),battleTriggered,forced,activated:all?['blast']:[],inventory:inventory(),note:battleTriggered?'BATTLE TRIGGER':'宝箱ラッシュ'};
   if(!battleTriggered)continue;
   played++;
-  const m=pick(DWARF_ENCOUNTER_WEIGHTS,rand),monster=monsters[m],choices=choicesByMonster[m],weights=DWARF_ATTACK_WEIGHTS[m],monsterHP=Math.max(1,m+3-whetstone),battleItems=[];
+  const m=pick(DWARF_ENCOUNTER_WEIGHTS,rand),monster=monsters[m],monsterHP=Math.max(1,m+3-whetstone),battleItems=[];
   if(whetstone)battleItems.push('whetstone');if(sword)battleItems.push('sword');if(pickaxe)battleItems.push('pickaxe');
-  let hp=4,enemy=monsterHP,boost=sword;
+  let hp=DWARF_HERO_HP,enemy=monsterHP,boost=sword;
   whetstone=sword=0;pickaxe=false;
   const attacks=[];
   while(hp>0&&enemy>0){
-   const selected=pick(weights,rand),roll=choices[selected],activated=[];
+   const attacker=rand()<.5?'hero':'enemy',damage=1+pick(attacker==='hero'?DWARF_HERO_DAMAGE:DWARF_ENEMY_DAMAGE[m],rand),roll=attacker==='hero'?damage:-damage,activated=[];
    if(roll>0){enemy=Math.max(0,enemy-roll-boost-(glove?1:0));if(glove){glove--;activated.push('glove');}}
    else if(shield){shield--;activated.push('shield');}else hp=Math.max(0,hp+roll);
-   attacks.push({selected,roll,heroHP:hp,enemyHP:enemy,activated});
+   attacks.push({attacker,damage,roll,heroHP:hp,enemyHP:enemy,activated});
   }
   let won=enemy===0,revived=false;
   if(!won&&revive){revive--;won=true;revived=true;}
@@ -105,7 +106,7 @@ export function* dwarfAdventureStream({rate,rand=secureRandom,chestChance=DWARF_
    remaining+=extra;
   }
   remaining=Math.min(remaining,DWARF_MAX_SPINS-freePlayed);
-  yield {grid:['s0','s7',monsterIcons[m],'s4','s7','s5','s6','s7','s8'],raw:0,win:0,cols:3,rows:3,battle:true,monster,monsterHP,heroMax:4,choices,weights,actions:attacks,won,revived,awarded,baseReward:DWARF_BATTLE_REWARDS[m],extra,reward,unit:beforeUnit,nextUnit:unit,freePlayed,remaining,total:freePlayed+remaining,activated:battleItems,inventory:inventory(),note:won?'勝利':remaining?'敗北・冒険継続':'冒険終了'};
+  yield {grid:['s0','s7',monsterIcons[m],'s4','s7','s5','s6','s7','s8'],raw:0,win:0,cols:3,rows:3,battle:true,monster,monsterHP,heroMax:DWARF_HERO_HP,actions:attacks,won,revived,awarded,baseReward:DWARF_BATTLE_REWARDS[m],extra,reward,unit:beforeUnit,nextUnit:unit,freePlayed,remaining,total:freePlayed+remaining,activated:battleItems,inventory:inventory(),note:won?'勝利':remaining?'敗北・冒険継続':'冒険終了'};
  }
  const score=Math.max(1,paid);return {score,played,freePlayed,guarantee:score-paid,capped:paid>=cap,unit:initialUnit,finalUnit:unit,entry:null,inventory:inventory()};
 }

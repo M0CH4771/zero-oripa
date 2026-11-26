@@ -9,7 +9,8 @@ for(let i=0;i<N;i++){
  assert.equal(entry.unit,100);let n,ledger=0,triggered=false;
  while(!(n=it.next()).done){
   const s=n.value;ledger+=s.win;
-  if(s.battle){assert.ok(triggered);triggered=false;totals.battles++;encounters[s.monster]++;
+  if(s.battle){assert.ok(triggered);triggered=false;totals.battles++;encounters[s.monster]++;assert.equal(s.heroMax,5);
+   for(const a of s.actions){assert.ok(a.attacker==='hero'||a.attacker==='enemy');assert.ok(Number.isInteger(a.damage)&&a.damage>=1&&a.damage<=5);assert.equal(a.roll,a.attacker==='hero'?a.damage:-a.damage);assert.ok(a.heroHP>=0&&a.heroHP<=5);}
    if(s.won){assert.equal(s.awarded,({Goblin:5,Troll:10,Dragon:20})[s.monster]);assert.ok(s.reward);totals.items++;seen.add(s.reward.key);}
    else assert.equal(s.reward,null);
   }else{assert.equal(s.grid.length,9);triggered=s.battleTriggered;if(s.activated.includes('blast'))assert.equal(s.chests.length,9);else if(s.battleTriggered)assert.deepEqual(s.grid.slice(3,6),['S','S','S']);assert.ok(s.chests.every(c=>c.value>=s.inventory.minimum));}

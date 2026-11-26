@@ -64,7 +64,7 @@
    if(duel){
     const region=opt.region(w,h),art=duel.run?escapeArt:arena;
     if(art)ctx.drawImage(art,region.x,region.y,region.w,region.h);
-    if(!duel.run){for(const [index,label,hp,max] of [[0,'ドワーフ',duel.hp,4],[1,foeNames[duel.monster],duel.enemyHP,duel.max]]){
+    if(!duel.run){for(const [index,label,hp,max] of [[0,'ドワーフ',duel.hp,duel.heroMax||5],[1,foeNames[duel.monster],duel.enemyHP,duel.max]]){
      const x=region.x+region.w*(index?.75:.25),y=region.y+25;
      ctx.fillStyle='#17141feb';ZG.rr(ctx,x-region.w*.22,y-19,region.w*.44,52,8);ctx.fill();
      text(ctx,label,x,y-4,Math.min(17,w/19),'#ffecbc',region.w*.41);const bw=region.w*.36;ctx.fillStyle='#353040';ZG.rr(ctx,x-bw/2,y+11,bw,15,5);ctx.fill();if(hp>0){ctx.fillStyle=index?'#df6665':'#54b58c';ZG.rr(ctx,x-bw/2,y+11,bw*hp/max,15,5);ctx.fill();}text(ctx,'HP '+hp+' / '+max,x,y+18,15,'#fff');
@@ -163,11 +163,34 @@
    for(const j of slots){const p=cellPoint(j);if(p)st.impact(p.x,p.y,Math.min(board?.cell||100,115)*.65,'#ffe09c',1.2);}
    await st.wait(270);await st.banner(['BATTLE',forced?'残り0G · 最終挑戦':'バトルシンボル成立'],{hold:450});
   }
-  async function attackRoulette(choices,selected,weights){
-   const panel=document.createElement('div');panel.className='attack-roulette';const r=opt.region(st.w,st.h);if(panel.style){panel.style.top=(r.y+r.h*.55)+'px';panel.style.maxHeight=Math.max(64,r.h*.43)+'px';}
-   panel.innerHTML='<strong>攻撃ルーレット</strong><div>'+choices.map((v,i)=>'<span class="'+(v>0?'attack':'damage')+'">'+(v>0?'⚔':'♥')+' '+Math.abs(v)+(v>0?' ダメージ':' 被ダメージ')+'<small>'+((weights?.[i]??2500)/100).toFixed(2)+'%</small></span>').join('')+'</div>';
+  async function attackRoulette(action,monster){
+   const panel=document.createElement('div');panel.className='attack-roulette dual-stage';const r=opt.region(st.w,st.h);panel.style.top=(r.y+r.h*.55)+'px';panel.style.maxHeight=Math.max(64,r.h*.43)+'px';
    canvas.parentElement.append(panel);
-   try{const cells=panel.querySelectorAll('span');const steps=12+selected;for(let i=0;i<=steps;i++){if(st.dead||st.skip)break;const cell=cells[i%4];if(!cell)continue;for(const c of cells)c.classList.remove('active');cell.classList.add('active');if(st.speed>=.45||i>=steps-2)ZG.sfx?.play('rouletteTick');await st.wait(45+Math.max(0,i-8)*24);}if(cells[selected]){for(const c of cells)c.classList.remove('active');cells[selected].classList.add('active');cells[selected].classList.add('chosen');}ZG.sfx?.play('rouletteLock');await st.wait(800);}finally{panel.remove();}
+   async function roll(title,options,selected,rounds){
+    panel.innerHTML='<strong>'+title+'</strong><div style="--choice-count:'+options.length+'">'+options.map(o=>'<span class="'+o.className+'"><b>'+o.label+'</b>'+(o.sub?'<small>'+o.sub+'</small>':'')+'</span>').join('')+'</div>';
+    const cells=[...panel.querySelectorAll('span')],steps=rounds*options.length+selected;
+    for(let i=0;i<=steps;i++){if(st.dead||st.skip)break;for(const c of cells)c.classList.remove('active');cells[i%cells.length].classList.add('active');if(st.speed>=.45||i>=steps-2)ZG.sfx?.play('rouletteTick');await st.wait(45+Math.max(0,i-steps+4)*23);}
+    for(const c of cells)c.classList.remove('active');cells[selected].classList.add('active','chosen');ZG.sfx?.play('rouletteLock');await st.wait(420);
+   }
+   try{
+    const hero=action.attacker==='hero',enemy=foeNames[monster];
+    await roll('STEP 1 · 攻撃者抽選',[{label:'ドワーフ',className:'attack'},{label:enemy,className:'damage'}],hero?0:1,4);
+    await roll('STEP 2 · '+(hero?'ドワーフ':enemy)+'のダメージ',[1,2,3,4,5].map(n=>({label:n,sub:'ダメージ',className:(hero?'attack':'damage')+' dmg-'+n})),action.damage-1,2);
+   }finally{panel.remove();}
+  }
+  async function battleMotion(actor,target,damage,hit,hero){
+   const home=actor.x,ay=actor.y,tx=target.x,ty=target.y,dir=Math.sign(tx-home),color=hero?'#ffe49a':'#ff977b',gap=Math.min(Math.abs(tx-home)*.24,36);
+   const tween=(x,y,motion,ms,sy=1,sx=1)=>st.tween(actor,{x,y,motion,sy,sx},ms,ZG.Ease.outCubic);
+   actor.pose=1;actor.motion=0;
+   if(damage===1){await tween(home-dir*5,ay,2,90);await tween(tx-dir*gap,ay,7,160);st.impact(tx,ty,29,color,.65);}
+   else if(damage===2){await tween(tx-dir*gap,ay,6,175);st.impact(tx,ty,32,color,.75);await tween(tx-dir*(gap+20),ay,3,100);await tween(tx-dir*gap,ay,8,135);st.impact(tx,ty,41,color,1);}
+   else if(damage===3){await tween(home-dir*12,ay+5,3,140,.9);await tween((home+tx)/2,ay-48,5,200);await tween(tx-dir*gap,ay,8,170);st.impact(tx,ty,54,color,1.25);st.shake(3,130);}
+   else if(damage===4){await tween(home-dir*20,ay,3,260,.87,1.08);st.sparkle(home,ay,35,10);st.beam(home,ay,tx,ty,color);await tween(tx-dir*gap,ay,9,180,1.08,1.08);st.impact(tx,ty,78,color,1.65);st.shake(5,200);}
+   else{await tween(home-dir*22,ay+8,3,290,.85,1.14);st.sparkle(home,ay,55,18);st.flash(color,.10);await tween((home+tx)/2,ay-58,5,230);st.beam(actor.x,actor.y,tx,ty,color);await tween(tx-dir*gap,ay,9,150,1.12,1.12);st.impact(tx,ty,108,color,2.2);st.shake(7,250);st.flash(color,.14);}
+   hit();actor.motion=9;
+   const recoil=damage===1?5:damage===2?8:damage===3?12:damage===4?16:20;
+   await Promise.all([tween(home,ay,13,damage>=4?300:230),st.tween(target,{x:tx+dir*recoil,motion:12},130,ZG.Ease.outCubic).then(()=>st.tween(target,{x:tx,motion:target.pose===3?15:13},170,ZG.Ease.outCubic))]);
+   actor.pose=0;actor.motion=0;actor.sx=actor.sy=1;if(target.pose!==3){target.pose=0;target.motion=0;}
   }
   async function tickets(values){
    if(!values?.length)return;
@@ -305,14 +328,17 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
      hooks.onFeatureMetric?.('バトル','対 '+foeNames[sp.monster]);
      await st.transition('gate');for(const key of sp.activated||[])if(key!=='pickaxe')await itemActivation(key);
      await monsterArrival(sp.monster,sp.monsterHP,sp.baseReward);
-     duel={monster:sp.monster,hp:4,enemyHP:sp.monsterHP,max:sp.monsterHP};
+     duel={monster:sp.monster,hp:sp.heroMax,heroMax:sp.heroMax,enemyHP:sp.monsterHP,max:sp.monsterHP};
      const fighter=(id,x,flip)=>{const region=opt.region(st.w,st.h),d=Math.min(165,st.w*.40,Math.max(36,region.h*.25)),n=st.add({x,y:region.y+Math.max(52+d/2,region.h*.34),z:25,motion:0});n.draw=(ctx)=>{if(drawCombat(ctx,flip===1?0:({Goblin:1,Troll:2,Dragon:3}[sp.monster]),n.motion||0,d))return;if(flip!==1&&sp.monster!=='Goblin'&&monsters){
        const sw=monsters.width/4,sh=monsters.height/2;
        ctx.drawImage(monsters,(n.pose||0)*sw,sp.monster==='Dragon'?sh:0,sw,sh,-d/2,-d/2,d,d);return;
       }if(actions&&(flip===1||sp.monster==='Goblin'||sp.monster==='Troll')){drawPose(ctx,flip===1?0:sp.monster==='Goblin'?1:2,n.pose||0,d);return;}ctx.scale(flip,1);if(atlas){const aw=atlas.width/4,ah=atlas.height/3;ctx.drawImage(atlas,id%4*aw,Math.floor(id/4)*ah,aw,ah,-d/2,-d/2,d,d);}else text(ctx,cfg.fallback[id],0,0,d*.65);};return n;};
      const hero=fighter(0,st.w*.25,1),enemy=fighter(Number(sp.grid[2].slice(1)),st.w*.75,-1);
-     let hp=4,enemyHP=sp.monsterHP;
-     try{for(const action of sp.actions||[]){await attackRoulette(sp.choices,action.selected,sp.weights);for(const key of action.activated||[])await itemActivation(key);const attack=action.roll>0,actor=attack?hero:enemy,target=attack?enemy:hero,home=actor.x,dir=Math.sign(target.x-home);note=attack?'ATTACK ×'+action.roll:'DAMAGE ×'+Math.abs(action.roll);actor.pose=1;actor.motion=0;await st.tween(actor,{x:home-dir*15,sy:.94,motion:3},210,ZG.Ease.outCubic);st.beam(home,actor.y,target.x,target.y,'#fae0a3');await st.tween(actor,{x:target.x-dir*36,sy:1,motion:7},320,ZG.Ease.inCubic);const damage=attack?enemyHP-action.enemyHP:hp-action.heroHP;duel.hp=action.heroHP;duel.enemyHP=action.enemyHP;st.popText(target.x,target.y-25,damage===0?'BLOCK':'−'+damage+' HP',{size:20,hold:380});target.pose=(attack?action.enemyHP:action.heroHP)<=0?3:2;target.motion=10;actor.motion=8;ZG.sfx?.play(attack?'attack':'damage');st.shake(3,170);st.impact(target.x,target.y,65,'#ffe0a2',1.8);await Promise.all([st.tween(actor,{x:home,motion:9},420,ZG.Ease.outCubic),st.tween(target,{x:target.x+dir*10,motion:12},180,ZG.Ease.outCubic).then(()=>st.tween(target,{x:target.x-dir*10,motion:target.pose===3?15:13},220,ZG.Ease.outCubic))]);actor.pose=0;actor.motion=0;if(target.pose===2){target.pose=0;target.motion=0;}hp=action.heroHP;enemyHP=action.enemyHP;await st.wait(200);}}finally{st.remove(hero);st.remove(enemy);}
+     let hp=sp.heroMax,enemyHP=sp.monsterHP;
+     try{for(const action of sp.actions||[]){await attackRoulette(action,sp.monster);for(const key of action.activated||[])await itemActivation(key);const attack=action.attacker==='hero',actor=attack?hero:enemy,target=attack?enemy:hero;note=(attack?'ATTACK ':'DAMAGE ')+action.damage;const damage=attack?enemyHP-action.enemyHP:hp-action.heroHP;
+      await battleMotion(actor,target,action.damage,()=>{duel.hp=action.heroHP;duel.enemyHP=action.enemyHP;st.popText(target.x,target.y-25,damage===0?'BLOCK':'−'+damage+' HP',{size:Math.min(30,17+action.damage*2),hold:380});target.pose=damage===0?0:(attack?action.enemyHP:action.heroHP)<=0?3:2;target.motion=damage===0?0:10;ZG.sfx?.play(attack?'attack':'damage');},attack);
+      hp=action.heroHP;enemyHP=action.enemyHP;await st.wait(150);
+     }}finally{st.remove(hero);st.remove(enemy);}
      if(sp.revived)await itemActivation('revive');if(sp.won){ZG.sfx?.play('featureWin');await st.transition('knockout');await st.wait(240);}else{ZG.sfx?.play('damage');await st.wait(300);}
      await reveal(sp.won?'勝利！':'敗北',sp.won?'フリースピン ＋'+sp.awarded+'回':(sp.remaining?'追加なし · 残り '+sp.remaining+' 回':'追加なし · ラッシュ終了'));
      hooks.onFeatureMetric?.('バトル結果',sp.won?'勝利 ＋'+sp.awarded+'回':'敗北');if(sp.awarded)await st.carry({x:st.w*.5,y:st.h*.45},st.anchor('#rSpin',{x:st.w*.85,y:st.h*.84}),'＋'+sp.awarded+'回','#ffe9a2',26);hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining);duel=null;if(sp.won){await rewardReel(sp.reward);currentUnit=sp.nextUnit;hooks.onBaseUnit?.(currentUnit);if(sp.extra)await reveal('＋'+sp.extra+' FREE SPINS',sp.reward.name);}hooks.onDwarfInventory?.(sp.inventory);await st.transition('gate','',true);note=sp.note;
