@@ -3,7 +3,7 @@ import * as rush from './rush.js?v=live113';
 import * as fruit from './fruit.js?v=live113';
 import * as mine from './mine.js?v=live113';
 import * as plinko from './plinko.js?v=live113';
-import {FEATURE_CONFIG,featureModule} from './features.js?v=dwarf117';
+import {FEATURE_CONFIG,featureModule} from './features.js?v=dwarf118';
 
 
 export const GAMES = {
