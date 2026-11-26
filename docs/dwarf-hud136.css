@@ -77,3 +77,8 @@
 }
 @media(max-width:360px){.gm.theme-dwarf .gm-ctl{gap:4px}.gm.theme-dwarf .gm-bet{padding:3px 4px!important}.gm.theme-dwarf .dwarf-base>span{font-size:10px}.gm.theme-dwarf .gm-box span{font-size:9px!important}}
 @media(max-height:600px){.gm.theme-dwarf .dwarf-base:not([hidden]){padding:3px 8px!important}.gm.theme-dwarf .gm-row .gm-box{padding:3px 5px!important}.gm.theme-dwarf .gm-status{margin:0 auto 2px}}
+
+/* Leave the text clear of the central crest on narrow readouts. */
+.gm.theme-dwarf .gm-round-win :is(.round-readout,.round-metric){border-image-width:5px 13px!important;padding:5px 9px!important}
+.gm.theme-dwarf .gm-row .gm-box{border-image-width:5px 11px!important;padding:6px 6px!important}
+@media(max-width:640px){.gm.theme-dwarf .gm-round-win :is(.round-readout,.round-metric){border-image-width:4px 10px!important;padding:4px 8px!important}.gm.theme-dwarf .gm-row .gm-box{border-image-width:4px 9px!important;padding:5px 5px!important}}
