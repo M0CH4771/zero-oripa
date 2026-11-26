@@ -114,3 +114,9 @@ body:has(#board) .hud b{font-size:clamp(15px,4.5vw,23px)!important;letter-spacin
 #gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay){border-image-width:4px 12px!important;padding:6px 12px!important}
 #gm .gm-row .gm-box{border-image-width:4px 11px!important}
 @media(max-width:640px){#gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay){border-image-width:3px 10px!important;padding:5px 9px!important}#gm .gm-row .gm-box{border-image-width:3px 9px!important}}
+
+/* The illustration's crest must remain in the border, never in the label area. */
+#gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay),#gm .gm-row .gm-box,#gm .gm-ctl #rPlay,body:has(#board) :is(.readouts,.hud)>div,body:has(#board) footer #buy{border-image-slice:72 145 61 145 fill!important}
+#gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay)>span,#gm .gm-row .gm-box>span{position:relative;z-index:1;text-shadow:0 1px 2px #000!important}
+body:has(#board) .readouts>div{width:auto!important;flex:1 1 0;min-width:0}
+@media(min-width:641px){#gm .gm-ctl{max-width:610px;grid-template-columns:52px minmax(0,1fr) 86px 64px;gap:8px}}
