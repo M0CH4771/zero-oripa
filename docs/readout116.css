@@ -1,0 +1,24 @@
+/* Readouts use a fixed two-line layout; values never compete with their labels. */
+.gm .gm-round-win{min-width:0;box-sizing:border-box}
+.gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay){
+  display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;
+  align-items:center!important;justify-content:center!important;gap:1px!important;
+  min-width:0!important;max-width:100%;box-sizing:border-box;padding:3px 8px!important;
+}
+.gm .gm-round-win [hidden]{display:none!important}
+.gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay)>:is(span,b,strong){
+  display:block!important;width:100%;min-width:0;max-width:100%;box-sizing:border-box;text-align:center;
+  white-space:nowrap!important;line-height:1.05!important;margin:0!important;letter-spacing:0!important;
+}
+.gm .gm-round-win #gmRoundMultiplier{font-family:system-ui,sans-serif!important;font-size:clamp(14px,4.3vw,24px)!important}
+.gm .gm-row .gm-box{min-width:0;box-sizing:border-box}
+.gm :is(#hCoin,#rScore,#hBet,#plinkoCost){display:block;min-width:0;max-width:100%;white-space:nowrap;box-sizing:border-box}
+.gm :is(.gm-tier,.gm-mode){max-width:44%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body:has(#board) :is(.readouts,.hud)>div{min-width:0;box-sizing:border-box}
+body:has(#board) :is(.readouts,.hud)>div>:is(b,small){display:block;min-width:0;max-width:100%;text-align:center;overflow-wrap:anywhere;line-height:1.15}
+@media(max-width:640px){
+  .gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay)>span{font-size:10px!important}
+  .gm .gm-round-win :is(b,strong){font-size:clamp(15px,5.1vw,23px)!important}
+  .gm .gm-round-win #gmRoundMultiplier{font-size:clamp(13px,4vw,19px)!important}
+  body:has(#board) :is(.readouts,.hud)>div>b{font-size:clamp(14px,4.5vw,22px)!important}
+}

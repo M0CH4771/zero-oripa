@@ -35,6 +35,12 @@
    return true;
   }
   let duel=null,arena=null,escapeArt=null,upgradeArt=null,arrivalArt=null,arrivalAlt=null,combatArt=null,combatAlt=null;
+  const chestReveals=new Map(),spinChestValues=new Map();
+  function drawSpinChest(ctx,value,frame,cx,cy,d){
+   if(upgradeArt){const sw=upgradeArt.width/6,sh=upgradeArt.height/3,row=value>=50?2:value>=10?1:0;ctx.drawImage(upgradeArt,sw*Math.min(3,Math.floor(frame)),sh*row,sw,sh,cx-d/2,cy-d/2,d,d);}
+   else if(atlas){const sw=atlas.width/4,sh=atlas.height/3,k=value>=20?8:9;ctx.drawImage(atlas,k%4*sw,Math.floor(k/4)*sh,sw,sh,cx-d/2,cy-d/2,d,d);}
+   else text(ctx,frame>=3?'✦':'🔒',cx,cy,d*.65);
+  }
   const foeNames={Goblin:'ゴブリン',Troll:'トロール',Dragon:'ドラゴン'};
   let expansion=null,trainOrder='',wagonEnhancers=[],wagonOpened=[],wagonCollected=0;
   let dogHeights=[4,4,4,4,4,4],dogVisualHeights=Array.from({length:6},()=>({heightSlots:4})),dogWays=4096,dogPositions=[],dogPrepared=false,dogPay=0;
@@ -98,6 +104,7 @@
     const k=id[0]==='s'?+id.slice(1):id[0]==='W'?6:id[0]==='B'?(mode==='gods'?10:8):mode==='dwarf'?11:mode==='gods'?9:7;
     const d=cell*.99,cy=yy+cell/2+(spinning?((st.t%75)/75-.5)*cell*.85:m.shift*cell)-(mode==='gods'?(fall.dist[j]||0)*cell*fall.v:0),cx=xx+cell/2;
     ctx.save();ctx.beginPath();if(mode==='gods'&&fall.v>0)ctx.rect(x,y,bw,bh);else ctx.rect(xx,yy,cell,cell);ctx.clip();
+    if(mode==='dwarf'&&!spinning&&spinChestValues.has(j)){const value=spinChestValues.get(j),state=chestReveals.get(j);if(!state?.active){drawSpinChest(ctx,value,state?3:0,cx,cy,d);if(state)ZG.multiplierLabel(ctx,value,cx,cy+d*.11,d*.88,d*.40);}ctx.restore();continue;}
     if(mode==='gods'&&id.startsWith('B'))ZG.emblemTrail(ctx,mode,Number(id.slice(1)),cx,cy,d,Math.max(fall.v&&fall.dist[j]?fall.v:0,Math.abs(m.shift)));
     if(mode==='train'&&typeof item==='object'&&!offset.locked?.has(j))ZG.emblemTrail(ctx,mode,item.value,cx,cy,d,Math.abs(m.shift));
     const usePlate=mode==='gods'&&id.startsWith('B')?drawPlate(ctx,Number(id.slice(1)),cx,cy,d):mode==='train'&&['coin','golden'].includes(item.kind)?drawPlate(ctx,item.value,cx,cy,d):false;
@@ -117,6 +124,7 @@
   const routineTime=ms=>st.speed>=1?Math.round(ms*.58):ms;
   function reset(){cols=cfg.cols;rows=cfg.rows;hits=[];note=cfg.title;trainTotal=0;trainRemaining=trainReset=3;trainSource=null;wagonEnhancers=[];wagonOpened=[];wagonCollected=0;godsMult=0;godsTumble='0 C';fall={v:0,dist:[]};dogHeights=[4,4,4,4,4,4];dogVisualHeights=Array.from({length:6},()=>({heightSlots:4}));dogWays=4096;dogPay=0;dogPrepared=false;grid=Array.from({length:cols*rows},(_,i)=>mode==='train'?(i>=12?{id:'s2',kind:'rock',value:0}:null):'s'+(i%(mode==='dogs'?6:9)));}
   async function reveal(title,subtitle,color=cfg.accent){
+   if(mode==='dwarf'&&title==='宝箱ラッシュ'){chestReveals.clear();spinChestValues.clear();}
    ZG.sfx?.play('free');st.flash(color,.15);st.impact(st.w/2,st.h/2,Math.min(st.w*.32,145),color,2);await st.banner([title,subtitle],{rainbow:false});
   }
   async function baseReel(draw,monster,nextUnit){
@@ -153,6 +161,7 @@
    let sum=0;try{for(const [i,v] of values.entries()){await st.wait(240);const card=panel.querySelectorAll('span')[i];card.textContent='+'+v;card.classList.add('revealed');sum+=v;panel.querySelector('b').textContent=sum+' SPINS';ZG.sfx?.play('land',i%5);}await st.wait(650);}finally{panel.remove();}
   }
   async function show(g,h=[],locked=[],routine=false){
+   chestReveals.clear();
    offset.locked=new Set(mode==='dogs'?grid.flatMap((item,j)=>typeof item==='string'&&item.startsWith('W')&&item===g[j]?[j]:[]):mode==='train'&&rows===3?g.flatMap((item,j)=>item&&typeof item==='object'&&grid[j]?.id===item.id&&grid[j]?.value===item.value?[j]:[]):[]);
    for(const j of locked)offset.locked.add(j);
    grid=g;hits=[];const base=routine?700:mode==='train'?320:530,stagger=routine?(ZG.SPIN_TIMING.reel-base)/Math.max(1,cols-1):mode==='train'?75:145;await reelSpin(base,stagger);hits=h;highlight(h);
@@ -277,7 +286,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
      await trainEvents(sp.events);cols=sp.cols;grid=sp.grid;trainTotal=sp.totalMultiple;trainRemaining=sp.remaining;trainReset=sp.resetValue;wagonOpened=sp.opened;wagonCollected=sp.collected;note=sp.note;hooks.onSpin(i+1,i+1+sp.remaining);hooks.onFeatureMetric?.('獲得見込',hooks.fmt(Math.min((r.rate||opt.getRate?.())*200,Math.floor(trainTotal*currentUnit)))+' C');
      hooks.onSpinWin?.(sp.win);score+=sp.win;hooks.onScore(score);await st.celebrateWin(sp.win,r.rate||opt.getRate?.(),hooks.fmt);await st.roundPause();continue;
     }
-    else if(!sp.battle){if(mode==='gods'){godsTumble='0 C';godsMult=sp.previousMult;hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(godsMult));}await show(sp.grid,sp.hits||[],[],true);}
+    else if(!sp.battle){if(mode==='gods'){godsTumble='0 C';godsMult=sp.previousMult;hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(godsMult));}spinChestValues.clear();for(const chest of sp.chests||[])spinChestValues.set(chest.pos,chest.value);await show(sp.grid,sp.hits||[],[],true);}
     if(sp.battle){
      hooks.onFeatureMetric?.('バトル','対 '+foeNames[sp.monster]);
      if(i===0||r.script[i-1]?.monster!==sp.monster)await st.transition('gate');
@@ -294,14 +303,12 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
      await reveal(sp.won?'勝利！':'敗北',sp.won?'フリースピン ＋'+sp.awarded+'回':(sp.remaining?'追加なし · 残り '+sp.remaining+' 回':'追加なし · ラッシュ終了'));
      hooks.onFeatureMetric?.('バトル結果',sp.won?'勝利 ＋'+sp.awarded+'回':'敗北');if(sp.awarded)await st.carry({x:st.w*.5,y:st.h*.45},st.anchor('#rSpin',{x:st.w*.85,y:st.h*.84}),'＋'+sp.awarded+'回','#ffe9a2',26);hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining);duel=null;if(sp.won){await baseReel(sp.upgrade,sp.monster,sp.nextUnit);currentUnit=sp.nextUnit;hooks.onBaseUnit?.(currentUnit);}await st.transition('gate','',true);note=sp.note;
     }
-    for(const chest of sp.chests||[]){hits=[chest.pos];ZG.sfx?.play('sparkle');const p=cellPoint(chest.pos);if(p&&trophies&&chest.value){
-      const index=[3,5,8,10,15,20,30,50,100,300].indexOf(chest.value);
-      if(index>=0||atlas){
-       const trophy=st.add({...p,z:33,sy:.7,sx:.7});
-       trophy.draw=ctx=>{const d=board.cell;if(atlas){const w=atlas.width/4,h=atlas.height/3,k=chest.value>=20?8:9;ctx.drawImage(atlas,k%4*w,Math.floor(k/4)*h,w,h,-d/2,-d/2,d,d);ZG.multiplierLabel(ctx,chest.value,0,d*.22,d*.88,d*.39);}else if(index>=0){const w=trophies.width/5,h=trophies.height/2;ctx.drawImage(trophies,index%5*w,Math.floor(index/5)*h,w,h,-d/2,-d/2,d,d);}};
-       try{await st.tween(trophy,{sy:1,sx:1,y:p.y-board.cell*.22},240,ZG.Ease.outCubic);await st.wait(160);await st.tween(trophy,{...st.anchor('#rScore',{x:st.w*.5,y:st.h*.82}),sx:.35,sy:.35},360,ZG.Ease.inOutCubic);}finally{st.remove(trophy);}
-      }
-     }if(p){st.impact(p.x,p.y,board.cell*.72,'#ffe9a2',1.6);st.sparkle(p.x,p.y,board.cell*.35,8);}await st.popText(p?.x??st.w/2,p?.y??st.h*.46,chest.add?'+'+chest.add+' FREE SPINS':mode==='dwarf'?'×'+chest.value+' · '+hooks.fmt(chest.win??Math.round(chest.value*currentUnit))+' C':'×'+chest.value,{size:Math.min(30,st.w*.08),hold:280});}
+    for(const chest of sp.chests||[]){hits=[chest.pos];const p=cellPoint(chest.pos);if(p&&chest.value){
+      const state={active:true};chestReveals.set(chest.pos,state);
+      const trophy=st.add({...p,z:33,sx:1,sy:1,frame:0,reveal:0});
+      trophy.draw=(ctx)=>{const d=board.cell;drawSpinChest(ctx,chest.value,trophy.frame,0,0,d);if(trophy.reveal>0){ctx.save();ctx.globalAlpha=trophy.reveal;ZG.multiplierLabel(ctx,chest.value,0,-d*.08,d*.94,d*.43);ctx.restore();}};
+      try{await st.tween(trophy,{sx:1.12,sy:1.12,frame:3.8},420,ZG.Ease.linear);ZG.sfx?.play('sparkle');st.impact(p.x,p.y,board.cell*.60,'#ffe9a2',1);st.sparkle(p.x,p.y,board.cell*.35,8);await st.tween(trophy,{reveal:1},180,ZG.Ease.outCubic);await st.wait(280);}finally{st.remove(trophy);state.active=false;}
+     }await st.popText(p?.x??st.w/2,p?.y??st.h*.46,chest.add?'+'+chest.add+' FREE SPINS':mode==='dwarf'?'×'+chest.value+' · '+hooks.fmt(chest.win??Math.round(chest.value*currentUnit))+' C':'×'+chest.value,{size:Math.min(24,st.w*.065),hold:280});}
     if(mode==='gods'){for(const step of sp.steps||[])await playGodsTumble(step,score);await godsOrbs(sp);if(sp.scatterRaw){hits=grid.flatMap((v,j)=>v==='S'?[j]:[]);await st.popText(st.w/2,st.h*.46,'SCATTER +'+hooks.fmt(sp.scatterRaw*currentUnit),{size:Math.min(30,st.w*.07),hold:300});}godsTumble=hooks.fmt(sp.win)+' C';}
     if(sp.add&&mode==='gods')await st.featureCue('追加スピン','＋'+sp.add+' 回',{hold:350,color:'#ffe6a0'});
     else if(sp.add)await reveal('+'+sp.add+' FREE SPINS','追加フリースピン');
