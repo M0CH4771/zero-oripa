@@ -140,6 +140,16 @@
   }
   const itemData=key=>(window.DWARF_ITEMS||[]).find(x=>x.key===key);
   const itemImage=item=>'<i class="dwarf-item-art" style="--ix:'+((item.icon%4)*100/3)+'%;--iy:'+(Math.floor(item.icon/4)*100/3)+'%"></i>';
+  // A continuous strip: the card passing the fixed index is the visible result.
+  async function spinStrip(view,options,selected,render,rounds,duration){
+   const track=document.createElement('div');track.className='deluxe-track';view.append(track);
+   const steps=rounds*options.length+selected,start=2,end=start+steps;
+   track.innerHTML=Array.from({length:end+3},(_,i)=>render(options[(i-start+options.length)%options.length])).join('');
+   const cards=Array.from(track.children),state={pos:0};let last=-1;
+   const paint=pos=>{const width=view.clientWidth/3;if(!width)return;track.style.transform='translate3d('+((1-start-pos)*width)+'px,0,0)';const index=start+Math.round(pos);if(index!==last){cards[last]?.classList.remove('center');cards[index]?.classList.add('center');if(last>=0&&!st.skip&&!st.dead)ZG.sfx?.play('rouletteTick');last=index;}};
+   Object.defineProperty(state,'pos',{get(){return this._pos||0},set(v){this._pos=v;paint(v)}});paint(0);
+   await st.tween(state,{pos:steps},duration,t=>1-Math.pow(1-t,3));paint(steps);return cards[end];
+  }
   async function itemActivation(key,detail={}){
    const item=itemData(key);if(!item)return;
    const growing=Number.isFinite(detail.before)&&Number.isFinite(detail.after)&&detail.after>detail.before,format=v=>Number(v).toLocaleString('ja-JP',{maximumFractionDigits:3})+' C';
@@ -150,12 +160,12 @@
    if(!reward?.pool?.length||reward.pool[reward.selected]?.key!==reward.key)throw Error('報酬抽選データが一致しません');
    const el=document.createElement('div');el.className='dwarf-reward-layer';el.innerHTML='<section class="dwarf-reward-card"><small>VICTORY REWARD</small><h2>宝箱アイテム抽選</h2><div class="dwarf-reward-window"></div><strong class="dwarf-reward-stars"></strong><b class="dwarf-reward-name">抽選中…</b><p class="dwarf-reward-desc">冒険を強化するアイテムを獲得</p></section>';canvas.parentElement.append(el);
    const card=el.querySelector('section'),slot=el.querySelector('.dwarf-reward-window');
-   function draw(item){slot.innerHTML=itemImage(item);}
    try{
     ZG.sfx?.play('chest');await st.wait(250);
     const pool=reward.pool;
-    for(let k=0;k<14;k++){draw(pool[k%pool.length]);ZG.sfx?.play('land',k%5);await st.wait(55+k*6);}
-    draw(reward);card.classList.add('locked','tier-'+reward.rarity);el.querySelector('.dwarf-reward-stars').textContent='★'.repeat(reward.rarity);el.querySelector('.dwarf-reward-name').textContent=reward.name;el.querySelector('.dwarf-reward-desc').textContent=reward.description;
+    slot.classList.add('reward-strip');slot.innerHTML='<i class="deluxe-pointer"></i><i class="deluxe-index"></i>';
+    await spinStrip(slot,pool,reward.selected,item=>'<article class="tier-'+item.rarity+'">'+itemImage(item)+'<b>'+item.name+'</b></article>',1,1800);
+    card.classList.add('locked','tier-'+reward.rarity);el.querySelector('.dwarf-reward-stars').textContent='★'.repeat(reward.rarity);el.querySelector('.dwarf-reward-name').textContent=reward.name;el.querySelector('.dwarf-reward-desc').textContent=reward.description;
     ZG.sfx?.play('rouletteLock');st.flash(reward.rarity>=4?'#ffd678':'#91e1b9',.12);await st.wait(reward.rarity>=4?1400:900);
    }finally{el.remove();}
   }
@@ -165,19 +175,17 @@
    await st.wait(270);await st.banner(['BATTLE',forced?'残り0G · 最終挑戦':'バトルシンボル成立'],{hold:450});
   }
   async function attackRoulette(action,monster){
-   const panel=document.createElement('div');panel.className='attack-roulette dual-stage deluxe-reel';const r=opt.region(st.w,st.h);panel.style.top=(r.y+r.h*.55)+'px';panel.style.maxHeight=Math.max(78,r.h*.43)+'px';
+   const panel=document.createElement('div');panel.className='attack-roulette dual-stage deluxe-reel';const r=opt.region(st.w,st.h);panel.style.top=(r.y+r.h*.76)+'px';panel.style.maxHeight=Math.max(78,r.h*.38)+'px';
    canvas.parentElement.append(panel);
    async function roll(title,options,selected,rounds){
-    panel.classList.remove('locked');panel.innerHTML='<strong>'+title+'</strong><div class="deluxe-viewport"><i class="deluxe-pointer"></i><div class="deluxe-track"></div></div>';
-    const track=panel.querySelector('.deluxe-track'),steps=rounds*options.length+selected;
-    const art=o=>o.portrait!==undefined?'<i class="deluxe-portrait" style="--ix:'+(o.portrait%4)*100/3+'%;--iy:'+Math.floor(o.portrait/4)*50+'%"></i>':'<i class="deluxe-damage-art" style="--dx:'+(o.damage-1)*25+'%"></i>';
-    const draw=index=>{track.innerHTML=[-1,0,1].map((j)=>{const o=options[(index+j+options.length)%options.length];return '<article class="'+o.className+(j===0?' center':'')+'">'+art(o)+'<b>'+o.label+'</b></article>';}).join('');};
-    for(let i=0;i<=steps;i++){if(st.dead||st.skip)break;draw(i%options.length);if(st.speed>=.45||i>=steps-2)ZG.sfx?.play('rouletteTick');await st.wait(58+Math.max(0,i-steps+4)*27);}
-    draw(selected);panel.classList.add('locked');ZG.sfx?.play('rouletteLock');st.flash('#ffdf8b',.07);await st.wait(500);
+    panel.classList.remove('locked');panel.innerHTML='<strong>'+title+'</strong><div class="deluxe-viewport"><i class="deluxe-pointer"></i><i class="deluxe-index"></i></div><small class="deluxe-result">抽選中</small>';
+    const art=o=>o.portrait?'<img class="deluxe-portrait" src="./assets/anime/dwarf/'+o.portrait+'.webp" alt="">':'<i class="deluxe-damage-art" style="--dx:'+(o.damage-1)*25+'%"></i>';
+    await spinStrip(panel.querySelector('.deluxe-viewport'),options,selected,o=>'<article class="'+o.className+'">'+art(o)+'<b>'+o.label+'</b></article>',rounds,options.length===2?1100:1500);
+    panel.classList.add('locked');panel.querySelector('.deluxe-result').textContent=options[selected].damage?options[selected].damage+' ダメージ':options[selected].label+' の攻撃';ZG.sfx?.play('rouletteLock');await st.wait(500);
    }
    try{
     const hero=action.attacker==='hero',enemy=foeNames[monster];
-    await roll('STEP 1 · 攻撃者抽選',[{label:'ドワーフ',portrait:0,className:'attack'},{label:enemy,portrait:{Goblin:1,Troll:3,Dragon:2}[monster],className:'damage'}],hero?0:1,4);
+    await roll('STEP 1 · 攻撃者抽選',[{label:'ドワーフ',portrait:'hero',className:'attack'},{label:enemy,portrait:monster,className:'damage'}],hero?0:1,4);
     await roll('STEP 2 · '+(hero?'ドワーフ':enemy)+'のダメージ',[1,2,3,4,5].map(n=>({label:n,damage:n,className:(hero?'attack':'damage')+' dmg-'+n})),action.damage-1,2);
    }finally{panel.remove();}
   }
@@ -187,8 +195,8 @@
    n.draw=(ctx,o)=>{const sw=battleFxArt.width/4,sh=battleFxArt.height/5,f=Math.min(3,Math.floor(o.frame));ctx.save();ctx.globalCompositeOperation='screen';ctx.drawImage(battleFxArt,sw*f,sh*(damage-1),sw,sh,-size/2,-size/2,size,size);ctx.restore();};
    try{await st.tween(n,{frame:3.99,sx:1.25,sy:1.25},260+damage*78,ZG.Ease.linear);}finally{st.remove(n);}
   }
-  async function battleMotion(actor,target,damage,hit,hero){
-   const home=actor.x,ay=actor.y,tx=target.x,ty=target.y,dir=Math.sign(tx-home),color=hero?'#ffe49a':'#ff977b',gap=Math.min(Math.abs(tx-home)*.24,36),jump=Math.min(92,st.h*.13);
+  async function battleMotion(actor,target,damage,hit,hero,blocked=false){
+   const home=actor.x,ay=actor.y,tx=target.x,ty=target.y,dir=Math.sign(tx-home),color=hero?'#ffe49a':'#ff977b',gap=Math.min(Math.abs(tx-home)*.34,68),jump=Math.min(92,st.h*.13);
    const tween=(x,y,motion,ms,sy=1,sx=1)=>st.tween(actor,{x,y,motion,sy,sx},ms,ZG.Ease.outCubic);
    actor.pose=1;actor.motion=0;
    if(damage===1){await tween(home-dir*10,ay,2,100);await tween(tx-dir*gap,ay,7,180);st.impact(tx,ty,35,color,.8);}
@@ -197,9 +205,10 @@
    else if(damage===4){await tween(home-dir*28,ay+4,3,300,.82,1.15);st.sparkle(home,ay,55,18);await tween(home-dir*16,ay-18,5,160,1.12,1.1);st.beam(home,ay,tx,ty,color);await tween(tx-dir*gap,ay,9,210,1.18,1.18);st.impact(tx,ty,98,'#ffa167',1.9);st.shake(7,250);}
    else{await tween(home-dir*30,ay+10,3,330,.78,1.18);st.sparkle(home,ay,75,26);await tween(home,ay-jump*.65,5,190,1.2,1.2);st.flash(color,.09);await tween((home+tx)/2,ay-jump,6,220,1.25,1.25);st.beam(actor.x,actor.y,tx,ty,color);await tween(tx-dir*gap,ay,9,215,1.28,1.28);st.impact(tx,ty,138,'#ffe287',2.4);st.shake(9,300);st.flash(color,.12);}
    hit();actor.motion=9;
-   const recoil=damage===1?6:damage===2?12:damage===3?18:damage===4?25:34;
-   st.burst(tx,ty,{n:5+damage*6,colors:[color,'#fff5d2','#f9ce7e'],speed:1.6+damage*.6,life:230+damage*70});
-   await Promise.all([magicalImpact(damage,tx,ty),tween(home,ay,13,damage>=4?380:280),st.tween(target,{x:tx+dir*recoil,y:ty-(damage>=3?recoil*.55:0),motion:12},140,ZG.Ease.outCubic).then(()=>st.tween(target,{x:tx,y:ty,motion:target.pose===3?15:13},200,ZG.Ease.outCubic))]);
+   const recoil=blocked?0:damage===1?6:damage===2?12:damage===3?18:damage===4?25:34;
+   st.burst(tx,ty,{n:blocked?10:5+damage*6,colors:blocked?['#a9dcff','#ffffff']:[color,'#fff5d2','#f9ce7e'],speed:1.6+damage*.6,life:230+damage*70});
+   if(blocked)st.impact(tx,ty,48,'#9fdaff',.9);
+   await Promise.all([blocked?Promise.resolve():magicalImpact(damage,tx,ty),tween(home,ay,13,damage>=4?380:280),blocked?Promise.resolve():st.tween(target,{x:tx+dir*recoil,y:ty-(damage>=3?recoil*.55:0),motion:12},140,ZG.Ease.outCubic).then(()=>st.tween(target,{x:tx,y:ty,motion:target.pose===3?15:13},200,ZG.Ease.outCubic))]);
    actor.pose=0;actor.motion=0;actor.sx=actor.sy=1;if(target.pose!==3){target.pose=0;target.motion=0;}
   }
   async function tickets(values){
@@ -346,7 +355,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
      const hero=fighter(0,st.w*.25,1),enemy=fighter(Number(sp.grid[2].slice(1)),st.w*.75,-1);
      let hp=sp.heroMax,enemyHP=sp.monsterHP;
      try{for(const action of sp.actions||[]){await attackRoulette(action,sp.monster);for(const key of action.activated||[])await itemActivation(key);const attack=action.attacker==='hero',actor=attack?hero:enemy,target=attack?enemy:hero;note=(attack?'ATTACK ':'DAMAGE ')+action.damage;const damage=attack?enemyHP-action.enemyHP:hp-action.heroHP;
-      await battleMotion(actor,target,action.damage,()=>{duel.hp=action.heroHP;duel.enemyHP=action.enemyHP;st.popText(target.x,target.y-25,damage===0?'BLOCK':'−'+damage+' HP',{size:Math.min(30,17+action.damage*2),hold:380});target.pose=damage===0?0:(attack?action.enemyHP:action.heroHP)<=0?3:2;target.motion=damage===0?0:10;ZG.sfx?.play(attack?'attack':'damage');},attack);
+      await battleMotion(actor,target,action.damage,()=>{duel.hp=action.heroHP;duel.enemyHP=action.enemyHP;st.popText(target.x,target.y-25,damage===0?'BLOCK':'−'+damage+' HP',{size:Math.min(30,17+action.damage*2),hold:380});target.pose=damage===0?0:(attack?action.enemyHP:action.heroHP)<=0?3:2;target.motion=damage===0?0:10;ZG.sfx?.play(attack?'attack':'damage');},attack,damage===0);
       hp=action.heroHP;enemyHP=action.enemyHP;await st.wait(150);
      }}finally{st.remove(hero);st.remove(enemy);}
      if(sp.revived)await itemActivation('revive');if(sp.won){ZG.sfx?.play('featureWin');await st.transition('knockout');await st.wait(240);}else{ZG.sfx?.play('damage');await st.wait(300);}
