@@ -41,23 +41,27 @@
     const tier=multiplierTier(theme,n);
     const sw=multiplierArt.width/3,sh=multiplierArt.height/6;
     ctx.save();ctx.drawImage(multiplierArt,tier*sw,row*sh,sw,sh,x-size/2,y-size/2,size,size);
-    const label='×'+n.toLocaleString('en-US'),ty=y+size*(theme==='mine'?.19:theme==='dogs'?.12:theme==='gems'?.05:.04);
-    ctx.font='1000 '+Math.max(9,size*.46)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
-    ctx.lineWidth=Math.max(1.5,size*.045);ctx.strokeStyle='#130c1c';ctx.strokeText(label,x,ty,size*.73);
-    ctx.fillStyle=tier===2?'#fff2b4':'#fff';ctx.fillText(label,x,ty,size*.73);ctx.restore();return true;
+    const ty=y+size*(theme==='mine'?.19:theme==='dogs'?.12:theme==='gems'?.05:.04);
+    ZG.engravedMultiplier(ctx,n,x,ty,size*.77,size*.39,tier);ctx.restore();return true;
+  };
+
+  // Engraved numerals, with a metallic face and a dark bevel instead of a sticker.
+  ZG.engravedMultiplier=(ctx,n,x,y,width,height,tier= n>=50?2:n>=10?1:0)=>{
+    const label='×'+Number(n).toLocaleString('en-US');
+    const colors=[['#f4fbff','#a7d9fa','#edf7ff','#172b4e'],['#fff4ff','#dfb5ff','#a989e6','#36204f'],['#fff9d7','#ffd788','#c88635','#49230e']][tier];
+    ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
+    ctx.font='bold '+Math.max(8,height)+'px Georgia, serif';
+    const measured=ctx.measureText(label).width;if(measured>width)ctx.font='bold '+Math.max(6,height*width/measured)+'px Georgia, serif';
+    ctx.shadowBlur=0;ctx.strokeStyle=colors[3];ctx.lineWidth=Math.max(1.5,height*.19);ctx.strokeText(label,x,y,width);
+    ctx.strokeStyle=colors[2];ctx.lineWidth=Math.max(.55,height*.065);ctx.strokeText(label,x,y,width);
+    const g=ctx.createLinearGradient(x,y-height*.5,x,y+height*.5);g.addColorStop(0,colors[0]);g.addColorStop(.37,colors[0]);g.addColorStop(.55,colors[1]);g.addColorStop(.87,colors[2]);g.addColorStop(1,colors[0]);ctx.fillStyle=g;ctx.fillText(label,x,y,width);ctx.restore();
   };
 
   // Draw exact multiplier values as text, independent of the artwork resolution.
   ZG.multiplierLabel = (ctx,value,x,y,width,height=width*.42) => {
     const n=Number(value);if(!Number.isFinite(n)||n<0||width<=0||height<=0)return;
     const label='×'+n.toLocaleString('en-US'),high=n>=50,medium=n>=10;
-    ctx.save();ctx.shadowBlur=0;ctx.globalAlpha=1;
-    ZG.rr(ctx,x-width/2,y-height/2,width,height,Math.min(7,height*.2));
-    ctx.fillStyle=high?'#47250e':medium?'#352047':'#141d35';ctx.fill();
-    ctx.strokeStyle=high?'#ffe39a':medium?'#e3b9ff':'#b9d7f9';ctx.lineWidth=Math.max(1,Math.min(2,height*.07));ctx.stroke();
-    ctx.font='900 '+Math.max(8,height*.81)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.lineJoin='round';ctx.lineWidth=Math.max(1,height*.1);ctx.strokeStyle='#090812';ctx.strokeText(label,x,y,width*.91);
-    ctx.fillStyle=high?'#fff0ab':'#fff';ctx.fillText(label,x,y,width*.91);ctx.restore();
+    ZG.engravedMultiplier(ctx,n,x,y,width*.94,height*.95,high?2:medium?1:0);
   };
 
   const Ease = {

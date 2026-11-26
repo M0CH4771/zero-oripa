@@ -104,7 +104,7 @@
           const p = pos(i);
           n = spotNodes[i] = st.add({ x: p.x, y: p.y, z: 2, v: 0 });
           n.badge=st.add({x:p.x,y:p.y,z:3,v:0,clip:true});
-          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell;ctx.save();ctx.globalAlpha*=.55;ctx.font='900 '+Math.max(9,s*.36)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#572750';ctx.fillText('×'+nd.v,0,s*.30,s*.92);ctx.restore();};
+          n.badge.draw=(ctx,nd)=>{if(nd.v<2)return;const s=L.cell;ctx.save();ctx.globalAlpha*=.55;ctx.font='bold '+Math.max(9,s*.36)+'px Georgia, serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#572750';ctx.fillText('×'+nd.v,0,s*.30,s*.92);ctx.restore();};
           n.draw = (ctx, nd) => {
             if (!nd.v) return;
             const s = L.cell - 3;

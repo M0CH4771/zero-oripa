@@ -1,0 +1,21 @@
+/* In-world readouts: shared geometry, distinct material palettes. */
+.gm.theme-gems{--hud-metal:#d7b1ff;--hud-hi:#fff0c8;--hud-mid:#8153bc;--hud-dark:#20113b;--hud-deep:#100923;--hud-glow:#cf87ff}
+.gm.theme-fruit{--hud-metal:#ffc7df;--hud-hi:#fff6db;--hud-mid:#d46b9d;--hud-dark:#842653;--hud-deep:#4b1538;--hud-glow:#ffacda}
+.gm.theme-mine{--hud-metal:#e7b36c;--hud-hi:#ffe9ad;--hud-mid:#976038;--hud-dark:#482a19;--hud-deep:#24160f;--hud-glow:#ffae4d}
+.gm.theme-gods{--hud-metal:#e8c17c;--hud-hi:#fff3b1;--hud-mid:#8262a9;--hud-dark:#352151;--hud-deep:#170e2c;--hud-glow:#e8c46f}
+.gm.theme-dogs{--hud-metal:#f4c48b;--hud-hi:#fff1cc;--hud-mid:#b66e46;--hud-dark:#673925;--hud-deep:#351e18;--hud-glow:#ffb16e}
+.gm.theme-dwarf{--hud-metal:#a7d8b1;--hud-hi:#f5f3bb;--hud-mid:#508b68;--hud-dark:#244a38;--hud-deep:#10281e;--hud-glow:#8cf6bb}
+.gm.theme-plinko{--hud-metal:#8cdcf4;--hud-hi:#e5fbff;--hud-mid:#4479b4;--hud-dark:#1b3e62;--hud-deep:#101e3c;--hud-glow:#72caff}
+body:has(#board){--hud-metal:#f4cd85;--hud-hi:#fff3c4;--hud-mid:#348f9c;--hud-dark:#16515c;--hud-deep:#0a3447;--hud-glow:#70e4e6}
+.gm .gm-round-win .round-readout,.gm .gm-round-win .round-metric,.gm .gm-round-win .plinko-result-mult,.gm .gm-round-win .plinko-result-pay,body:has(#board) .readouts>div{border:2px solid var(--hud-metal)!important;border-radius:4px!important;overflow:hidden;position:relative;isolation:isolate;background:radial-gradient(ellipse at 50% -60%,var(--hud-mid),transparent 75%),linear-gradient(180deg,var(--hud-dark),var(--hud-deep) 85%)!important;box-shadow:inset 0 0 0 2px var(--hud-deep),inset 0 0 0 3px var(--hud-mid),0 4px 10px #0009!important}
+.gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay)::before,body:has(#board) .readouts>div::before{content:'';position:absolute;inset:0;z-index:-1;border:0;border-radius:0;background:linear-gradient(135deg,var(--hud-hi) 0 5px,transparent 6px) top left,linear-gradient(225deg,var(--hud-hi) 0 5px,transparent 6px) top right,linear-gradient(45deg,var(--hud-hi) 0 5px,transparent 6px) bottom left,linear-gradient(315deg,var(--hud-hi) 0 5px,transparent 6px) bottom right;background-size:14px 14px;background-repeat:no-repeat;pointer-events:none}
+.gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay)>span,body:has(#board) .readouts small{font-size:11px!important;letter-spacing:.12em!important;color:var(--hud-hi)!important;text-shadow:0 1px 2px #000;font-weight:800}
+.gm .gm-round-win :is(b,strong),body:has(#board) .readouts b{font-family:Georgia,'Times New Roman',serif!important;font-weight:900!important;color:var(--hud-hi)!important;text-shadow:0 1px 0 var(--hud-mid),0 2px 2px #000,0 0 8px color-mix(in srgb,var(--hud-glow) 35%,transparent)!important;letter-spacing:.02em!important;font-variant-numeric:lining-nums tabular-nums}
+.gm .gm-round-win .round-metric,.gm .gm-round-win .plinko-result-mult{border-color:var(--hud-hi)!important}
+.gm .gm-tier,.gm .gm-mode{border:1px solid var(--hud-metal)!important;border-radius:4px!important;background:linear-gradient(180deg,var(--hud-dark),var(--hud-deep))!important;color:var(--hud-hi)!important;box-shadow:inset 0 0 0 1px #ffffff20,0 2px 5px #0008!important;text-shadow:0 1px 2px #000}
+.gm .gm-demo{color:var(--hud-hi)!important;text-shadow:0 1px 3px #000,0 1px 4px #000}
+.gm .fruit-detail{border:1px solid var(--hud-metal)!important;border-radius:3px!important;background:linear-gradient(90deg,var(--hud-deep),var(--hud-dark) 48%,var(--hud-deep))!important;box-shadow:inset 0 0 0 2px #0004,0 3px 7px #0007;color:var(--hud-hi)!important}
+.gm .fruit-detail>div span{background:transparent!important;border-radius:0!important;border:0!important;border-left:1px solid var(--hud-metal)!important}
+.gm .fruit-detail>div:empty::after{color:var(--hud-hi);opacity:.72}
+body:has(#board) .rush-header{color:var(--hud-hi);text-shadow:0 2px 3px #07313e,0 0 10px #124b5b}
+@media(max-width:640px){.gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay)>span{font-size:10px!important;letter-spacing:.03em!important}.gm .gm-round-win :is(b,strong){font-size:clamp(16px,5.3vw,25px)!important}}
