@@ -570,7 +570,7 @@ async function viewGame(id, demo, daily=false) {
   hud();
   $('#gmBack').onclick = () => { if (gameCtx?.busy) return; location.hash = daily?'#bonus':'#pack-' + p.id; };
   $('#gmSound').onclick = () => { const on = ZG.sfx.toggle(); $('#gmSound').textContent = on ? '🔊' : '🔇'; if (on) { ZG.sfx.unlock(); ZG.sfx.bgm(theme); } else ZG.sfx.stopBgm(); };
-  $('#gmTurbo').onclick = () => { const {quick,turbo}=ZG.SPIN_TIMING;rushSpeed = rushSpeed===normalSpeed?quick:rushSpeed===quick?turbo:normalSpeed; $('#gmTurbo').classList.toggle('on', rushSpeed !== normalSpeed);$('#gmTurbo small').textContent=rushSpeed===normalSpeed?'NORMAL':rushSpeed===quick?'QUICK':'TURBO';game && game.setSpeed(rushSpeed); ZG.sfx.play('click'); };
+  $('#gmTurbo').onclick = () => { rushSpeed = ZEROGameUI.nextSpeed(rushSpeed); $('#gmTurbo').classList.toggle('on', rushSpeed !== normalSpeed);$('#gmTurbo small').textContent=ZEROGameUI.speedName(rushSpeed);game && game.setSpeed(rushSpeed); ZG.sfx.play('click'); };
   $('#gmInfo').onclick = () => {
     const s=sheet(`<h3>${esc(p.name)} の遊び方</h3>${gameInfoHtml(p.game,rushRate,p.volatility)}${p.game==='plinko'?'<h3>着地枠の配当表</h3>'+plinkoInfo(gameCtx.rows,gameCtx.risk):''}<div class="btns"><button class="btn ghost" id="infoClose">閉じる</button></div>`);
     $('#infoClose',s).onclick=closeSheet;
@@ -619,13 +619,13 @@ async function viewGame(id, demo, daily=false) {
       const label=p.game==='plinko'?num(spins??gameCtx.count)+' BALLS':p.game==='mine'?num(spins??5)+' SPINS':num(spins??10)+' FREE SPINS';
       const artIndex=({rush:0,fruit:1,mine:2,plinko:3,gods:4,dogs:5,dwarf:6,train:2})[p.game]??0;
       const accents={rush:'#ab70ff',fruit:'#ff7da8',mine:'#f1ba65',plinko:'#4bc9ff',gods:'#ae9aff',dogs:'#f5c584',dwarf:'#65d69c',train:'#e8ad60'};
-      panel.style.setProperty('--intro-accent',accents[p.game]||'#f6df9b');panel.classList.add('intro-'+p.game);
+      panel.style.setProperty('--intro-accent',ZEROGameUI.meta[p.game]?.accent||accents[p.game]||'#f6df9b');panel.classList.add('intro-'+p.game);
       const count=spins??(p.game==='plinko'?gameCtx.count:p.game==='mine'?5:10);
       const unit=p.game==='plinko'?'BALLS':p.game==='mine'?'SPINS':'FREE SPINS';
       const title=p.game==='dogs'?(choice==='sticky'?'STICKY WILDS':'RAINING WILDS'):p.game==='plinko'?'PLINKO CHALLENGE':p.game==='mine'?'MINING EXPEDITION':'BONUS START';
       panel.innerHTML=`<div class="bonus-intro-card"><div class="bonus-intro-logo">${titleHtml(p.game,95)}</div><div class="bonus-intro-hero"><div class="bonus-intro-count"><span>${title}</span><strong>${num(count)}</strong><b>${unit}</b></div><div class="bonus-intro-art" aria-hidden="true" style="background-position:${artIndex%4*100/3}% ${Math.floor(artIndex/4)*100}%"></div></div><h2>ボーナスの遊び方</h2><ol>${(descriptions[p.game]||descriptions.rush).map((line,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span><b>'+esc(line)+'</b></li>').join('')}</ol><button type="button" class="bonus-intro-start">タップしてスタート</button><small class="intro-footnote">無料テストコイン専用</small></div>`;
-      root.append(panel);const button=panel.querySelector('button');button.focus();
-      await new Promise(resolve=>{let timer;const done=()=>{clearInterval(timer);panel.remove();resolve();};button.addEventListener('click',done,{once:true});timer=setInterval(()=>{if(!panel.isConnected)done();},100);});
+      root.append(panel);$('#gmStatus').textContent='開始待機中';const button=panel.querySelector('button');button.focus();
+      await new Promise(resolve=>{let timer;const done=()=>{clearInterval(timer);panel.remove();if($('#gmStatus'))$('#gmStatus').textContent='プレイ中';resolve();};button.addEventListener('click',done,{once:true});timer=setInterval(()=>{if(!panel.isConnected)done();},100);});
     },
     fmt: (v) => num(v),
     onScore: (v, speed) => { rushCountTo(v, speed); setRushTier(p, v); },
@@ -787,12 +787,9 @@ function rushCountTo(to, speed = rushSpeed) {
 }
 function showRushResult(p, r, demo) {
   const c = r.card;
-  const ratio = r.score / r.rate;
   const col = c ? RANK_COLOR[c.rank] : '#999';
   const big = c && ['S', 'A'].includes(c.rank);
-  const s = sheet(`<h3>${demo ? 'お試し結果' : `${gameName(gameCtx && gameCtx.p && gameCtx.p.game)} 結果`}</h3>
-    <div class="result-score"><div class="muted">獲得コイン（確定）</div><div class="sc">${num(r.score)} <small style="font-size:14px">C</small></div>
-      <div class="muted">基準消費Cの ${ratio.toFixed(2)} 倍・${r.freePlayed??r.played}${p.game==='plinko'?'球':p.game==='dwarf'?'フリースピン':'スピン'}</div></div>
+  const s = sheet(`<div class="zero-result-heading">プレイ結果</div>${ZEROGameUI.result(p.game,{score:r.score,cost:r.cost,played:r.freePlayed??r.played,base:p.game==='plinko'?r.rate*(r.played||1):r.rate})}
     ${r.guarantee?`<p class="muted">最終配当0Cのため1Cを付与しました。</p>`:''}${r.capped?'<p class="muted">最大配当の上限に到達したため終了しました。</p>':''}
     <div class="result-breakdown"><div><span>消費</span><b>${num(r.cost)} C</b></div><div><span>獲得</span><b>${num(r.score)} C</b></div><div><span>差引</span><b class="${r.score-r.cost<0?'negative':''}">${r.score-r.cost>0?'+':''}${num(r.score-r.cost)} C</b></div></div>
     ${c ? `<div class="result-card"><div class="cardart" style="border-color:${col};background:${['S'].includes(c.rank) ? 'conic-gradient(#ff4fd8,#ffd54a,#4aa8ff,#4ee0a0,#ff4fd8)' : col}">${c.rank}</div>
