@@ -101,3 +101,16 @@ body:has(#board) footer #speed{width:100%;font:800 12px/1.2 system-ui;white-spac
 body:has(#board) footer #info,body:has(#board) footer #speed,body:has(#board) footer label{border:1px solid #c5a86c!important;border-radius:6px!important;background:#10323b!important;color:#fff0ce!important}
 body:has(#board) .refill{grid-row:7}
 @media(max-height:590px){body:has(#board) main{gap:3px!important}body:has(#board) footer #buy{height:46px!important;min-height:46px!important}}
+
+/* The indicator and status intentionally share one explicit grid cell. */
+body:has(#board) main> :is(header,.readouts,.board,.status,.hud,footer,.refill,.rush-header){grid-column:1!important;min-width:0}
+body:has(#board) main{grid-template-columns:minmax(0,1fr)!important}
+body[data-mode="idle"]:has(#board) .readouts{grid-template-columns:minmax(0,1fr)!important}
+body:has(#board) .board{width:100%;max-height:100%;height:auto;aspect-ratio:1.06;align-self:center;justify-self:center}
+body:has(#board) .status{width:100%;justify-self:stretch;text-align:center}
+body:has(#board) .rush-header{justify-self:end!important;align-self:center!important}
+body:has(#board) :is(.readouts,.hud)>div{border-image-width:4px 10px!important;padding:7px 8px!important}
+body:has(#board) .hud b{font-size:clamp(15px,4.5vw,23px)!important;letter-spacing:-.045em}
+#gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay){border-image-width:4px 12px!important;padding:6px 12px!important}
+#gm .gm-row .gm-box{border-image-width:4px 11px!important}
+@media(max-width:640px){#gm .gm-round-win :is(.round-readout,.round-metric,.plinko-result-mult,.plinko-result-pay){border-image-width:3px 10px!important;padding:5px 9px!important}#gm .gm-row .gm-box{border-image-width:3px 9px!important}}

@@ -44,3 +44,8 @@ if(s.continuation){const c=s.continuation;status(c.extra?'SUPER RUSHへ移行':c
 Object.assign(r,next.value);balance+=r.score;$('#balance').textContent=fmt(balance);$('#total').textContent=fmt(r.score);$('#remain').textContent='0';$('#topRemaining').textContent='0';$('#flower').classList.remove('lit');status(r.capped?'MAX WIN · 50倍':'プレイ終了');await modal(r.capped?'MAX WIN · 50倍':'プレイ結果',ZEROGameUI.result('tropical',{score:r.score,cost:bet,played})+'<div class="zero-result-actions"><a href="./#home">ゲーム一覧へ</a></div>','閉じる');
 }finally{busy=false;for(const id of ['buy','bet','refill','info'])$('#'+id).disabled=false;}};
 render(Array.from({length:9},(_,j)=>REELS[j%3][Math.floor(j/3)]));
+
+// Size live numerical text to the available readout width without truncation.
+const fitCabinetNumbers=()=>{for(const id of ['balance','total','remain','win','mode']){const el=document.getElementById(id);if(!el||!el.getClientRects().length)continue;el.style.removeProperty('font-size');const range=document.createRange();range.selectNodeContents(el);const width=el.clientWidth,size=parseFloat(getComputedStyle(el).fontSize),actual=range.getBoundingClientRect().width;if(width>0&&actual>width-2)el.style.setProperty('font-size',Math.max(9,Math.floor(size*(width-2)/actual))+'px','important');}};
+let cabinetFrame=0;const queueCabinetFit=()=>{if(cabinetFrame)return;cabinetFrame=requestAnimationFrame(()=>{cabinetFrame=0;fitCabinetNumbers()})};
+const cabinetObserver=new MutationObserver(queueCabinetFit);for(const id of ['balance','total','remain','win','mode'])cabinetObserver.observe(document.getElementById(id),{childList:true,characterData:true,subtree:true});window.addEventListener('resize',queueCabinetFit);queueCabinetFit();
