@@ -151,7 +151,7 @@
    await st.tween(state,{pos:steps},duration,t=>1-Math.pow(1-t,3));paint(steps);return cards[end];
   }
   async function itemActivation(key,detail={}){
-   const item=itemData(key);if(!item)return;
+   const item=detail.item||itemData(key);if(!item)return;
    const growing=Number.isFinite(detail.before)&&Number.isFinite(detail.after)&&detail.after>detail.before,format=v=>Number(v).toLocaleString('ja-JP',{maximumFractionDigits:3})+' C';
    const el=document.createElement('div');el.className='dwarf-activation-layer tier-'+item.rarity;el.innerHTML='<section class="dwarf-activation-card"><small>ITEM ACTIVATE</small><div class="dwarf-item-halo">'+itemImage(item)+'</div><div class="dwarf-activation-stars">'+'★'.repeat(item.rarity)+'</div><h2>'+item.name+' 発動！</h2><p>'+item.description+'</p>'+(growing?'<div class="dwarf-growth"><small>基準C POWER UP</small><span class="dwarf-growth-old">'+format(detail.before)+'</span><b class="dwarf-growth-value">'+format(detail.before)+'</b></div>':detail.message?'<strong class="dwarf-effect-value">'+detail.message+'</strong>':'')+'</section>';canvas.parentElement.append(el);
    ZG.sfx?.play('sparkle');try{st.flash(item.rarity>=4?'#ffe2a0':'#a9ffcb',.10);await st.wait(200);if(growing){const v=el.querySelector('.dwarf-growth-value');for(let i=1;i<=14;i++){v.textContent=format(detail.before+(detail.after-detail.before)*i/14);if(i%3===0)ZG.sfx?.play('land',i%5);await st.wait(42);}v.textContent=format(detail.after);ZG.sfx?.play('rouletteLock');}await st.wait(growing||item.rarity>=4?850:620);}finally{el.remove();}
@@ -344,7 +344,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
     }
     else if(!sp.battle){if(mode==='dwarf'){for(const key of sp.activated||[])await itemActivation(key);hooks.onDwarfInventory?.(sp.inventory);}if(mode==='gods'){godsTumble='0 C';godsMult=sp.previousMult;hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(godsMult));}spinChestValues.clear();for(const chest of sp.chests||[])spinChestValues.set(chest.pos,chest.value);await show(sp.grid,sp.hits||[],[],true);}
     if(sp.battle){
-     hooks.onFeatureMetric?.('バトル','対 '+foeNames[sp.monster]);
+     hooks.onFeatureMetric?.(sp.forced?'最終バトル':'バトル','対 '+foeNames[sp.monster]);
      await st.transition('gate');for(const key of sp.activated||[])if(key!=='pickaxe')await itemActivation(key);
      await monsterArrival(sp.monster,sp.monsterHP,sp.baseReward);
      duel={monster:sp.monster,hp:sp.heroMax,heroMax:sp.heroMax,enemyHP:sp.monsterHP,max:sp.monsterHP};
@@ -360,7 +360,7 @@ await st.atNormalSpeed(()=>new Promise(resolve=>{const panel=document.createElem
      }}finally{st.remove(hero);st.remove(enemy);}
      if(sp.revived)await itemActivation('revive');if(sp.won){ZG.sfx?.play('featureWin');await st.transition('knockout');await st.wait(240);}else{ZG.sfx?.play('damage');await st.wait(300);}
      await reveal(sp.won?'勝利！':'敗北',sp.won?'フリースピン ＋'+sp.awarded+'回':(sp.remaining?'追加なし · 残り '+sp.remaining+' 回':'追加なし · ラッシュ終了'));
-     hooks.onFeatureMetric?.('バトル結果',sp.won?'勝利 ＋'+sp.awarded+'回':'敗北');if(sp.awarded)await st.carry({x:st.w*.5,y:st.h*.45},st.anchor('#rSpin',{x:st.w*.85,y:st.h*.84}),'＋'+sp.awarded+'回','#ffe9a2',26);hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining);duel=null;if(sp.won){if(sp.reward.sageUsed)await itemActivation('sage',{message:'★3以上確定'});await rewardReel(sp.reward);if(sp.nextUnit>currentUnit)await itemActivation(sp.reward.key,{before:currentUnit,after:sp.nextUnit});else if(sp.extra)await itemActivation(sp.reward.key,{message:'＋'+sp.extra+' G'});else if(sp.reward.key==='evolution')await itemActivation('evolution',{message:'最低宝箱 ×'+sp.inventory.minimum});else if(sp.reward.key==='pickaxe')await itemActivation('pickaxe',{message:'宝箱出現率 ×1.5'});currentUnit=sp.nextUnit;hooks.onBaseUnit?.(currentUnit);}hooks.onDwarfInventory?.(sp.inventory);await st.transition('gate','',true);note=sp.note;
+     hooks.onFeatureMetric?.('バトル結果',sp.won?'勝利 ＋'+sp.awarded+'回':'敗北');if(sp.awarded)await st.carry({x:st.w*.5,y:st.h*.45},st.anchor('#rSpin',{x:st.w*.85,y:st.h*.84}),'＋'+sp.awarded+'回','#ffe9a2',26);hooks.onSpin(sp.freePlayed,sp.freePlayed+sp.remaining);duel=null;if(sp.won){await rewardReel(sp.reward);if(sp.nextUnit>currentUnit)await itemActivation(sp.reward.key,{before:currentUnit,after:sp.nextUnit});else if(sp.extra)await itemActivation(sp.reward.key,{message:'＋'+sp.extra+' G'});else if(sp.reward.key==='evolution')await itemActivation('evolution',{item:sp.reward,message:'最低宝箱 ×'+sp.inventory.minimum});else if(sp.reward.key==='pickaxe')await itemActivation('pickaxe',{message:'宝箱出現率 ×1.5'});currentUnit=sp.nextUnit;hooks.onBaseUnit?.(currentUnit);}hooks.onDwarfInventory?.(sp.inventory);await st.transition('gate','',true);note=sp.note;
     }
     for(const chest of sp.chests||[]){hits=[chest.pos];const p=cellPoint(chest.pos);if(p&&chest.value){
       const state={active:true},tier=chestTier(chest.value),color=chestColors[tier];chestReveals.set(chest.pos,state);
