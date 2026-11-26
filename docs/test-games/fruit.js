@@ -5,16 +5,17 @@
 import { picker, secureRandom, MAX_SPINS, BONUS_BUY_MULT, bonusEntry, FRUIT_AWARDS } from './common.js';
 
 export const SIZE = 7, CELLS = SIZE * SIZE;
-export const PAY_UNIT_FACTOR=.08214;
-export const PAYS = { // 5〜15+個、基準ベット倍率
-  f1: [.2,.25,.3,.4,.5,1,1.5,2.5,5,10,20],
-  f2: [.25,.3,.4,.5,.75,1.25,2,3,6,12,25],
-  f3: [.3,.4,.5,.75,1,1.5,2.5,3.5,8,15,30],
-  f4: [.4,.5,.75,1,1.25,2,3,5,10,20,40],
-  f5: [.5,.75,1,1.25,1.5,3,4.5,10,20,40,60],
-  f6: [.75,1,1.25,1.5,2,4,6,12.5,30,60,100],
-  f7: [1,1.5,1.75,2,2.5,5,7.5,15,35,70,150],
+export const PAY_UNIT_FACTOR=.004726;
+const RAW_PAYS = { // 5〜15+個、基準ベット倍率
+  f1: [.65,.75,.9,1,1.15,1.4,1.8,2.5,5,10,20],
+  f2: [.7,.8,1,1.15,1.3,1.6,2.2,3,6,12,25],
+  f3: [.75,.9,1.1,1.3,1.5,1.8,2.5,3.5,8,15,30],
+  f4: [.8,1,1.2,1.4,1.65,2,3,5,10,20,40],
+  f5: [.9,1.15,1.35,1.6,1.8,3,4.5,10,20,40,60],
+  f6: [1,1.3,1.5,1.75,2,4,6,12.5,30,60,100],
+  f7: [1.2,1.5,1.75,2,2.5,5,7.5,15,35,70,150],
 };
+export const PAYS=Object.fromEntries(Object.entries(RAW_PAYS).map(([k,v])=>[k,v.map((x,i)=>i<4?x*1.25:Math.max(v[3]*1.25,x*.65))]));
 const bucket = n => Math.min(10,n-5);
 
 export const VOLATILITY = {
@@ -64,7 +65,7 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
   while (left > 0 && played < MAX_SPINS && paid < cap) {
     left--; played++;
     const scatterColumns=new Array(SIZE).fill(false);
-    let grid=Array.from({length:CELLS},(_,i)=>{const c=i%SIZE,s=scatterColumns[c]?pickOrdinary():pick();if(s==='S')scatterColumns[c]=true;return s;});
+    let grid=[];for(let i=0;i<CELLS;i++){const c=i%SIZE,above=grid[i-SIZE];const s=PAYS[above]&&rand()<.12?above:scatterColumns[c]?pickOrdinary():pick();if(s==='S')scatterColumns[c]=true;grid.push(s);}
     const first = grid.slice();
     const startSpots = spots.slice();
     const steps = [];
