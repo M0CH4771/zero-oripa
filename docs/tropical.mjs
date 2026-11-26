@@ -11,7 +11,10 @@ export function evaluate(grid,phase=0){return (phase===2?[[0,1,2]]:LINES).flatMa
 export function round(bet,{rand=Math.random,tier=null,unit=UNIT}={}){
  if(!Number.isInteger(bet)||bet<=0)throw Error('BET');
  const q=rand(),initialTier=tier??(q<.8?0:q<.98?1:2);let mode=initialTier,remain=mode===2?1:8,played=0,raw=0,previous=0,set=1;const steps=[];
- const entry=Array.from({length:9},()=>draw(rand));force(entry,TIERS[mode].seven);
+ const entry=Array.from({length:9},()=>draw(rand));
+ // The two adjacent seven positions are display-only on entry; never change the sampled tier or payout.
+ const entryLine=mode===1?LINES[1]:LINES[0];
+ if(mode!==2){entry[0]=entry[1]=1;entry[3]=entry[4]=2;entry[entryLine[2]]=TIERS[mode].seven;}else force(entry,0);
  while(remain>0&&played<MAX_SPINS&&previous<bet*CAP){
   const phase=mode,setBefore=set;remain--;played++;let add=0,continuation=null,grid;
   if(phase===2){grid=Array.from({length:3},()=>12+Math.floor(rand()*3));if(rand()<.9)grid.fill(12+Math.floor(rand()*3));else if(grid.every(x=>x===grid[0]))grid[2]=12+(grid[2]-11)%3;}
@@ -22,5 +25,5 @@ export function round(bet,{rand=Math.random,tier=null,unit=UNIT}={}){
   if(total===bet*CAP||played===MAX_SPINS)remain=0;
   steps.push({grid,wins,win,total,remain,played,add,continuation,mode,phase,set:setBefore});
  }
- return {entry,tier:initialTier,entryWin:0,steps,score:Math.max(1,previous),raw};
+ return {entry,entryLine,tier:initialTier,entryWin:0,steps,score:Math.max(1,previous),raw};
 }
