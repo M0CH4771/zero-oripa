@@ -603,6 +603,24 @@ async function viewGame(id, demo, daily=false) {
   const showMetric=(label,value)=>{const metric=$('#gmMetric');if(!metric)return;$('#gmMetricLabel').textContent=label;$('#gmRoundMultiplier').textContent=value;metric.hidden=false;};
   const roundLabel=label=>{const el=$('#gmRoundLabel');if(el)el.textContent=label;};
   game = ZG.createGame($('#gcanvas'), { game: p.game, plinko:p.game==='plinko'?window.plinkoConfig(gameCtx.rows,gameCtx.risk):null, region: gameRegion, getRate:()=>rushRate }, {
+    onBonusIntro: async ({spins,choice}={}) => {
+      const root=$('#gm');if(!root)return;
+      const descriptions={
+        rush:['同じ宝石が8個以上で配当・連鎖','オーブの倍率を配当に適用','スキャッターでスピン追加'],
+        fruit:['同じお菓子が縦横5個以上つながると配当','消えた場所の倍率が育つ','スキャッターでスピン追加'],
+        mine:['つるはしで真下の鉱石を掘る','列を掘り切ると宝箱が開く','宝箱倍率は最後の配当に適用'],
+        gods:['同じ宝石が8個以上で配当・連鎖','当たりとオーブが重なると累積倍率が増える','スキャッターでスピン追加'],
+        dogs:[choice==='sticky'?'固定WILDが最後まで残る':'各スピンで降下WILDが出現','左から3リール以上の一致で配当','リールの高さに応じてWAYSが変化'],
+        dwarf:['宝箱の倍率に基準Cを掛けて配当','ゴブリン・トロール・ドラゴンと順に戦う','勝利でスピン追加・基準C強化'],
+        plinko:['12段のピンを通過して着地','着地枠の表示Cを獲得','設定：'+String(gameCtx.risk).toUpperCase()],
+        train:['コイン着地でリスピン回数が回復','宝箱・強化・回収で配当を獲得']
+      };
+      const panel=document.createElement('section');panel.className='bonus-intro-overlay';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','ボーナス開始');
+      const label=p.game==='plinko'?num(spins??gameCtx.count)+' BALLS':p.game==='mine'?num(spins??5)+' SPINS':num(spins??10)+' FREE SPINS';
+      panel.innerHTML=`<div class="bonus-intro-card"><div class="bonus-intro-logo">${titleHtml(p.game,95)}</div><small>ゲーム開始</small><h2>${label}</h2><ul>${(descriptions[p.game]||descriptions.rush).map(line=>'<li>'+esc(line)+'</li>').join('')}</ul><button type="button" class="bonus-intro-start">タップしてスタート</button></div>`;
+      root.append(panel);const button=panel.querySelector('button');button.focus();
+      await new Promise(resolve=>{let timer;const done=()=>{clearInterval(timer);panel.remove();resolve();};button.addEventListener('click',done,{once:true});timer=setInterval(()=>{if(!panel.isConnected)done();},100);});
+    },
     fmt: (v) => num(v),
     onScore: (v, speed) => { rushCountTo(v, speed); setRushTier(p, v); },
     onRoundWin: async (v, speed = rushSpeed) => {const el=$('#gmRoundWin');if(!el)return;const total=$('#rScore')?.closest('.gm-box');if(p.game!=='plinko')$('#gmRoundAmount').textContent=num(Math.round(v*100)/100)+' C';el.classList.add('settled');await sleep((v>0?320:70)*speed);el.classList.remove('settled');total?.classList.add('settled');setTimeout(()=>total?.classList.remove('settled'),350);},
