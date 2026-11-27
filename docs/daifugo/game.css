@@ -45,3 +45,15 @@ details{padding:4px 8px;margin:0;font-size:12px;background:#0719159c}#notice{mar
 #revivalArt[data-actor="1"]{background-image:url('./comic-leon8.webp')}#revivalArt[data-actor="2"]{background-image:url('./comic-ruby8.webp')}#revivalArt[data-actor="3"]{background-image:url('./comic-selene8.webp')}
 #revivalArt[data-actor][data-panel="2"]{background-size:300% auto;background-position:right center}
 .comic-context{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:6px 0;color:#d7c9a7;font-size:11px}.comic-context span{border:1px solid #92784b;border-radius:5px;padding:5px 3px;background:#071b19}.comic-context b{display:block;color:#ffedbf;font-size:14px}
+
+/* Story captions and separate reward promotion screen */
+#revivalArt{height:clamp(230px,70vw,350px);position:relative}
+.comic-bubble{position:absolute!important;bottom:8px;left:10px;right:10px;margin:0!important;padding:10px 11px;background:#fff9e9f5;border:2px solid #17140e;border-radius:12px 12px 12px 2px;color:#1a211c;font-weight:800;font-size:clamp(14px,4.5vw,20px)!important;line-height:1.4!important;box-shadow:3px 4px 0 #0009}
+.comic-narration{font-size:15px!important;line-height:1.6!important;text-align:left;background:#102a24;border-left:3px solid #d7b46b;padding:9px 11px;margin:8px 0;color:#fff1d4}
+.comic-line{margin:3px 0!important;color:#e8cc93!important;font-size:13px!important;letter-spacing:.08em}.revival-copy h2{margin:5px 0}.revival-label{font-size:12px!important;margin:3px 0!important}
+#revivalArt[data-panel="3"]{background-image:url('./decree7.webp');background-size:cover;background-position:center 22%;height:clamp(250px,80vw,390px)}
+#promotionArt{position:absolute;inset:0;display:grid;align-content:center;justify-items:center;gap:1px;background:radial-gradient(ellipse,#08251beb 0%,#081c17b0 45%,transparent 85%);color:#fff0b0;text-shadow:0 3px 2px #2f1b08,0 0 17px #f4aa37}
+#promotionArt span{font-size:15px;letter-spacing:.3em}#promotionArt strong{font-size:clamp(60px,19vw,108px);line-height:1.12;letter-spacing:.08em;animation:promotion-pop .6s cubic-bezier(.12,.8,.2,1.2) both}#promotionArt b{font-size:clamp(32px,10vw,58px);line-height:1.1;animation:promotion-pop .65s .1s both}
+.promotion-mode .comic-context,.promotion-mode .revival-copy h2,.promotion-mode #comicLine,.promotion-mode .revival-kicker{display:none}.promotion-mode .revival-ranks{margin:8px 0}.promotion-mode .comic-narration{text-align:center;border:0;background:none;color:#ffe9b0}
+@keyframes promotion-pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@media(max-height:700px){#revivalArt{height:clamp(185px,55vw,265px)}#revivalArt[data-panel="3"]{height:230px}.revival-copy{padding:8px 10px 12px}.comic-narration{font-size:13px!important;padding:6px 8px}.comic-context{margin:3px 0}.revival-copy h2{font-size:25px}}
