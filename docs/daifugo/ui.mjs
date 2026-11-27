@@ -1,5 +1,5 @@
 import {start,legal,step,cpu,label,VERSION,CPU_VERSION,verify} from './engine.mjs';
-import {bank} from './bank.mjs?v=4';
+import {bank} from './bank.mjs?v=13';
 const $=s=>document.querySelector(s);let state=null,scenario=null,selected=new Set(),busy=false,history=[],ticket=0;
 const names=['あなた','CPU 1','CPU 2','CPU 3'];
 const cards=a=>a.map(label).join(' ');

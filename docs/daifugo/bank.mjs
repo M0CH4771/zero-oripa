@@ -1,3 +1,4 @@
+import {expanded} from './bank-extra13.mjs';
 // Each exact player hand has one verified scenario for each rank.
 export const bank=[
   {
@@ -5400,4 +5401,5 @@ export const bank=[
     },
     "family": "7,11,15,21,24,25,31,39"
   }
+  ,...expanded
 ];
