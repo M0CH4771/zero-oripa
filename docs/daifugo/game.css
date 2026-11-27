@@ -102,3 +102,6 @@ details{padding:4px 8px;margin:0;font-size:12px;background:#0719159c}#notice{mar
 .reel-marker:after{left:auto;right:-4px;border-left-color:transparent;border-right-color:#f6d776}
 .reel-stopped .reel-shell{box-shadow:0 0 0 2px #7f5224,0 0 16px #e9bd67}
 @media(prefers-reduced-motion:reduce){#revival.cinematic-mode #revivalArt.comic-enter{animation:none!important}}
+
+/* 13-card layout */
+#hand{flex-wrap:wrap;justify-content:center;max-width:100%;gap:4px}#hand .card{flex:0 0 auto;max-width:calc((100% - 24px)/7)}.backs .back{min-width:0;flex-shrink:1}

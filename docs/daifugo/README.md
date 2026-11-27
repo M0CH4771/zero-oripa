@@ -1,4 +1,6 @@
 # ZERO DAIFUGO — standalone prototype
+
+**Current v15 demo:** 52 cards, 13 per player, no joker; single-game adapted JDA rules: groups, stairs, revolution, 8-cut, suit lock and illegal finish. `engine13.mjs`, `bank13.mjs`, `test13.mjs`. 50 scenarios per target rank, verified by three sample strategies (not exhaustive). For rank 3, player has 1–2 cards when the second opponent finishes; for rank 4, 1–2 cards at match end on these routes. Actual rank and pre-drawn free-demo rewards are separate. The following notes cover the archived eight-card engine.
 No money, no credits, no redemption. Nothing changes the main ZERO ORIPA games.
  
 ## Rules
