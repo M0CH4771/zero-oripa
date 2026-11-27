@@ -1,10 +1,10 @@
-import {start,legal,step,cpu,label,rank,shape,VERSION,CPU_VERSION} from './engine13.mjs?v=18';
-import {bank} from './bank13-certified.mjs?v=18';
+import {start,legal,step,cpu,label,rank,shape,VERSION,CPU_VERSION} from './engine13.mjs?v=19';
+import {bank} from './bank13-certified.mjs?v=19';
 import {drawReward,RTP} from './reward.mjs?v=5';
 const $=s=>document.querySelector(s),names=['あなた','レオン','ルビー','セレーネ'],suits=['♠','♥','♦','♣'],ranks=['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
 let state=null,scenario=null,reward=null,selected=new Set(),busy=false,history=[],ticket=0,settled=false,bet=1000,credits=100000;
 const storyImages=['comic-leon10.webp','comic-ruby10.webp','comic-selene10.webp','decree7.webp'].map(src=>{const img=new Image();img.src='./'+src;return img});
-const allowed=bank.filter(x=>x.cap?.status==='certified'&&x.version===VERSION&&x.cpu===CPU_VERSION);const ready=[1,2,3,4].every(r=>allowed.filter(x=>x.target===r).length===50);
+const allowed=bank.filter(x=>x.cap?.status==='certified'&&x.version===VERSION&&x.cpu===CPU_VERSION);const ready=[1,2,3,4].every(r=>allowed.filter(x=>x.target===r).length===100);
 const pause=ms=>new Promise(r=>setTimeout(r,ms)),fmt=n=>n.toLocaleString('ja-JP'),random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
 $('#rtp').textContent=(RTP*100).toFixed(2)+'%';$('#balance').textContent=fmt(credits);
 function card(c,interactive=false){let b=document.createElement(interactive?'button':'div');b.dataset.card=String(c);b.className='card'+([1,2].includes(c%4)?' red':'');b.innerHTML='<span class="corner">'+ranks[rank(c)]+'<small>'+suits[c%4]+'</small></span><strong><span>'+ranks[rank(c)]+'</span>'+suits[c%4]+'</strong><span class="corner bottom">'+ranks[rank(c)]+'<small>'+suits[c%4]+'</small></span>';if(interactive){b.setAttribute('aria-label',label(c));b.classList.toggle('selected',selected.has(c));b.setAttribute('aria-pressed',String(selected.has(c)));b.onclick=()=>{if(busy||state.turn!==0)return;selected.has(c)?selected.delete(c):selected.add(c);draw()};}return b}
