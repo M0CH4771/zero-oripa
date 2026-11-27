@@ -1,6 +1,6 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {MILD_PAY} from './test-games/mine.js?v=mine150';
-import {gameInfoHtml,volatilityBadge} from './game-info.js?v=mine150';
+import {MILD_PAY} from './test-games/mine.js?v=mine151';
+import {gameInfoHtml,volatilityBadge} from './game-info.js?v=mine151';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -260,7 +260,7 @@ const GAME_NOTE = {
   dwarf:()=>['アイテムで成長する冒険・最大100スピン',featureBounds('dwarf')],
   rush: (p) => ['最初から10回のフリースピン', `6×5・8個以上で連鎖・RTP目標97%・最低1C・最高50倍`],
   fruit: (p) => ['スキャッター3〜7個で10〜30回のフリースピン', `7×7・5個以上のクラスター・倍率スポット最大128倍・RTP目標97%・最低1C・最高50倍`],
-  mine: (p) => ['初期4スピンの合計で、もらえるカードが決まる', `荒さ ${esc(p.volatility_label)}・還元率 約97%・最低1C・最高 ベットの${p.max_mult}倍`],
+  mine: (p) => ['初期5スピンの合計で、もらえるカードが決まる', `荒さ ${esc(p.volatility_label)}・還元率 約97%・最低1C・最高 ベットの${p.max_mult}倍`],
   plinko:()=>['12段のピンを通るボールの行き先でスコアが決まる','球数を選択・配当表RTP約97%・配当上限なし'],
 };
 
@@ -453,7 +453,7 @@ const RULES = {
   fruit: ['BONUSでスキャッター3〜7個が確定し、10／12／15／20／30回のフリースピンを開始します。追加時も同じ回数です', '7×7の盤面で、同じお菓子が縦横に5個以上つながると配当。消えて落ちてきて連鎖します',
     '消えたマスには印が付き、もう一度そこで消えると倍率スポット（×2→×4→…→×128）に。上で消えたつながりの配当に倍率の合計が掛かります',
     '金のりんごが3〜7個で10／12／15／20／30フリースピン追加。フリースピン中は倍率スポットがリセットされません（テスト版の最大120回）','1回のボーナス全体の配当は最低1C・最高50倍。還元率目標97%。'],
-  mine: ['テストコインのレートを選び、BONUSから直接採掘を開始。最初の採掘＋3スピン（4回）で1プレイです',
+  mine: ['テストコインのレートを選び、BONUSから直接採掘を開始。最初の採掘＋4スピン（5回）で1プレイです',
     '上のスロット枠（5×3）にアイテムが止まり、つるはしはそれぞれ真下の列のブロックを上から削ります。数字は削れる回数（1・2・3・5・7回）で、壊れたら次のブロックへ進みます',
     '強化の書／超強化の書：同じ列のつるはしを5／7回に。ダイナマイト：全ブロックに2ダメージ。巨大ドリル：同じ列を全破壊。連鎖爆弾：ランダムな3マスに2ダメージ。宝箱強化結晶：全宝箱の倍率＋1。スター：＋1スピン。',
     'ブロックを壊すと配当。石→石炭→鉄→金→ダイヤ→虹鉱石の順に高く、硬くなります。爆発鉱石は壊れると周り8マスに2ダメージ（連鎖）。ハテナは壊すと中身の配当が出ます',
@@ -546,7 +546,7 @@ async function viewGame(id, demo, daily=false) {
         <div class="gm-row">
           <div class="gm-box"><span>${demo ? 'デモ残高' : 'コイン残高'}</span><b id="hCoin">0</b></div>
           <div class="gm-box win"><span>${p.game==='mine'?'獲得見込':'累計獲得'}</span><b id="rScore">0</b></div>
-          <div class="gm-box"><span>${p.game==='plinko'?'残り球数':p.game==='train'?'残りリスピン':'残りスピン'}</span><b id="rSpin">${p.game==='mine'?4:p.game==='plinko'?1:p.game==='tropical'?8:FEATURE_CONFIG[p.game]?.initial??10}</b></div>
+          <div class="gm-box"><span>${p.game==='plinko'?'残り球数':p.game==='train'?'残りリスピン':'残りスピン'}</span><b id="rSpin">${p.game==='mine'?5:p.game==='plinko'?1:p.game==='tropical'?8:FEATURE_CONFIG[p.game]?.initial??10}</b></div>
         </div>
         ${p.game==='plinko'? `<div class="plinko-options"><div class="plinko-settings"><label>荒さ<select id="plinkoRisk"><option value="low">LOW・低変動</option><option value="medium" selected>MEDIUM・中変動</option><option value="high">HIGH・高変動</option></select></label><label class="plinko-rtp">配当表RTP<b>約97%</b></label></div><div class="plinko-label">落とす球数</div><div class="plinko-counts"><button data-count="1" class="selected">1</button><button data-count="10">10</button><button data-count="100">100</button><button data-count="custom">自由入力</button></div><input id="plinkoCustom" type="number" min="1" max="1000" value="1" inputmode="numeric" aria-label="球数" hidden><div class="plinko-cost">合計消費 <b id="plinkoCost">0 C</b></div></div>` : ''}
         <div class="gm-ctl">
@@ -631,7 +631,7 @@ async function viewGame(id, demo, daily=false) {
       const artIndex=p.game==='tropical'?({blue:11,red:10,gold:9}[choice]??11):({rush:0,fruit:1,mine:2,plinko:3,gods:4,dogs:5,dwarf:6,train:2})[p.game]??0;
       const accents={rush:'#ab70ff',fruit:'#ff7da8',mine:'#f1ba65',plinko:'#4bc9ff',gods:'#ae9aff',dogs:'#f5c584',dwarf:'#65d69c',train:'#e8ad60'};
       panel.style.setProperty('--intro-accent',ZEROGameUI.meta[p.game]?.accent||accents[p.game]||'#f6df9b');panel.classList.add('intro-'+p.game);
-      const count=spins??(p.game==='plinko'?gameCtx.count:p.game==='mine'?4:10);
+      const count=spins??(p.game==='plinko'?gameCtx.count:p.game==='mine'?5:10);
       const unit=p.game==='plinko'?'BALLS':p.game==='mine'?'SPINS':'FREE SPINS';
       const title=p.game==='tropical'?({blue:'青7',red:'赤7',gold:'金7'}[choice]||'HIBISCUS'):p.game==='dogs'?(choice==='sticky'?'STICKY WILDS':'RAINING WILDS'):p.game==='plinko'?'PLINKO CHALLENGE':p.game==='mine'?'MINING EXPEDITION':'BONUS START';
       panel.innerHTML=`<div class="bonus-intro-card"><div class="bonus-intro-logo">${titleHtml(p.game,95)}</div><div class="bonus-intro-hero"><div class="bonus-intro-count"><span>${title}</span><strong>${count===Infinity?'∞':num(count)}</strong><b>${count===Infinity?'ULTIMATE':unit}</b></div><div class="bonus-intro-art" aria-hidden="true" style="background-position:${artIndex%4*100/3}% ${Math.floor(artIndex/4)*100/(p.game==='tropical'?3:1)}%"></div></div><h2>ボーナスの遊び方</h2><ol>${(descriptions[p.game]||descriptions.rush).map((line,i)=>'<li><span>'+String(i+1).padStart(2,'0')+'</span><b>'+esc(line)+'</b></li>').join('')}</ol><button type="button" class="bonus-intro-start">タップしてスタート</button><small class="intro-footnote">無料テストコイン専用</small></div>`;

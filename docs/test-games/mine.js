@@ -11,11 +11,11 @@
 //   スタークリスタル … 1個につきスピンが1回増える
 // ブロックを壊すと配当（賭けに対する倍率）。爆発鉱石は壊れると周り8マスに2ダメージ（連鎖する）。
 // 1列を下まで掘り切るとその列の宝箱が開き、開いた宝箱の倍率は掛け算（×2 と ×4 なら ×8）で、最後に配当の合計に掛かる。
-// 最初の採掘＋3スピン（＝4回）。盤面の掘れ具合は最後まで引き継ぐ。
+// 最初の採掘＋4スピン（＝5回）。盤面の掘れ具合は最後まで引き継ぐ。
 import { picker, secureRandom } from './common.js';
 
 export const COLS = 5, ROWS = 6, REEL_ROWS = 3;
-export const FIRST_SPINS = 4, MAX_SPINS = 20;
+export const FIRST_SPINS = 5, MAX_SPINS = 20;
 export const MIN_PAY = 1; // 1ゲームあたりの最低配当C
 
 // hp：何回削ると壊れるか / v：賭け（1プレイの消費コイン）に対する配当
@@ -50,7 +50,7 @@ const ROW_ORES = [
 export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
-    cells: { 0: 77.47, p1: 6, p2: 4, p3: 2, p5: 1, p7: .15, b: 4, g: 1, n: .05, s: .6, d: 1.04, l: 1.4, m: 1.29 },
+    cells: { 0: 78.41, p1: 6, p2: 4, p3: 2, p5: 1, p7: .15, b: 4, g: 1, n: .05, s: .6, d: 1.04, l: 1.4, m: .35 },
     chests: { 2: 99.2, 3: .4, 4: .15, 5: .1, 6: .06, 7: .04, 8: .025, 9: .015, 10: .01 }, scale: 1,
   },
   normal: {

@@ -1,7 +1,7 @@
 import {PAYS as tropicalPays,SYMBOLS as tropicalSymbols,UNIT as tropicalUnit,TIER_PAY_FACTORS as tropicalFactors} from './tropical.mjs?v=cap119';
 import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=cap119';
 import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live113';
-import {BLOCKS,MILD_PAY,MILD_Q_PAY,VOLATILITY as mineVolatility} from './test-games/mine.js?v=mine150';
+import {BLOCKS,MILD_PAY,MILD_Q_PAY,VOLATILITY as mineVolatility} from './test-games/mine.js?v=mine151';
 import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,DWARF_ITEMS} from './test-games/features.js?v=adventure131';
 const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:4});
 const coin=n=>fmt(n)+' C';
@@ -14,7 +14,7 @@ const rules={
  tropical:['青7・赤7は8スピン','3リール5ラインで同じ絵柄が3個揃うと配当。花が点灯すると最終スピンの7揃いが確定。金7は3×1の専用リール。'],
  rush:['10フリースピン','同じ宝石が盤面のどこでも8個以上で配当。消えた後に落ちてくる宝石でも連鎖します。'],
  fruit:['10〜30フリースピン','同じお菓子が縦・横に5個以上つながると配当。消えたマスの倍率が育ちます。'],
- mine:['4回の採掘から開始','つるはしで真下の鉱石を削り、壊した鉱石の配当を獲得。列を掘り切ると宝箱が開きます。'],
+ mine:['5回の採掘から開始','つるはしで真下の鉱石を削り、壊した鉱石の配当を獲得。列を掘り切ると宝箱が開きます。'],
  plinko:['1〜1,000球','12段固定。リスク、球数、1球の消費Cを設定します。ボールが落ちた枠の表示Cが配当です。'],
  gods:['15フリースピン','同じ宝石が8個以上で配当・連鎖。倍率オーブを当たりスピンで集めると累積倍率が上昇します。'],
  dogs:['2種類のボーナス','左端から隣接する3リール以上で同じ絵柄がそろうと配当。リールの高さは毎回変わります。'],
