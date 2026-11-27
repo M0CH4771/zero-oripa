@@ -73,3 +73,32 @@ details{padding:4px 8px;margin:0;font-size:12px;background:#0719159c}#notice{mar
 .revival-copy .comic-bubble{position:relative!important;inset:auto!important;max-width:none;margin:0 0 9px!important;text-align:center;padding:8px 9px;box-shadow:2px 3px 0 #0007}.revival-copy .comic-bubble:before{content:'';position:absolute;top:-9px;left:23px;width:13px;height:13px;background:#fff9e9;transform:rotate(45deg);border-left:2px solid #17140e;border-top:2px solid #17140e}.promotion-mode .revival-copy .comic-bubble{display:none}
 
 .intro-art .intro-logo{margin:3px 0;line-height:0}.intro-logo img{display:block;width:clamp(180px,61vw,340px);max-height:170px;object-fit:contain;filter:drop-shadow(0 5px 12px #000a)}
+
+/* Large animated comic panels, no dialogue overlays */
+#revival.cinematic-mode{max-width:min(96vw,560px);padding:0;background:#071612;border:2px solid #d0ac67;overflow:auto}
+#revival.cinematic-mode #revivalArt[data-actor][data-panel]{width:100%;height:auto;aspect-ratio:1;margin:0;border:0;max-height:none}
+#revival.cinematic-mode .comic-bubble,#revival.cinematic-mode .revival-kicker,#revival.cinematic-mode .comic-context,#revival.cinematic-mode #comicLine,#revival.cinematic-mode #comicNarration,#revival.cinematic-mode #revivalTitle,#revival.cinematic-mode .revival-label{display:none!important}
+#revival.cinematic-mode .revival-copy{padding:8px 12px 12px;margin:0}
+#revival.cinematic-mode #revivalDisclosure{font-size:11px!important;color:#d4cbb5;margin:0 0 6px;line-height:1.3}
+#revival.cinematic-mode #revivalContinue{min-height:42px;font-size:15px;padding:6px}
+#revival.cinematic-mode #revivalArt[data-panel="0"].comic-enter{animation:comic-impact .55s cubic-bezier(.14,.8,.2,1) both}
+#revival.cinematic-mode #revivalArt[data-panel="1"].comic-enter{animation:comic-slide .58s cubic-bezier(.18,.8,.2,1) both}
+#revival.cinematic-mode #revivalArt[data-panel="2"].comic-enter{animation:comic-shock .55s ease-out both}
+#revival.cinematic-mode #revivalArt[data-panel="3"].comic-enter{animation:comic-gold .8s ease-out both}
+@keyframes comic-impact{0%{opacity:0;transform:scale(1.18)}40%{opacity:1;transform:scale(.98)}100%{transform:scale(1)}}
+@keyframes comic-slide{0%{opacity:0;transform:translateX(18%)}100%{opacity:1;transform:none}}
+@keyframes comic-shock{0%{filter:brightness(1.6);transform:scale(1.04)}20%{transform:translateX(-5px) rotate(-.5deg)}40%{transform:translateX(5px) rotate(.5deg)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}100%{filter:brightness(1);transform:none}}
+@keyframes comic-gold{0%{opacity:.2;filter:brightness(1.9);transform:scale(1.07)}100%{opacity:1;filter:brightness(1);transform:none}}
+.promotion-mode #comicNarration,.promotion-mode .revival-label{display:none!important}
+#revival.promotion-mode #revivalContinue{min-height:48px}
+#result #wheel{display:grid;grid-template-columns:1fr;gap:5px;justify-items:center;margin:10px 0}
+#result #wheel .reel-caption{font-size:12px;letter-spacing:.08em;color:#dfcca0}
+.reel-shell{position:relative;width:min(75%,250px);padding:5px;border:2px solid #f1d48c;border-radius:12px;background:linear-gradient(135deg,#9b692c,#ffdf8b,#573318);box-shadow:0 0 0 2px #4d3017,0 3px 14px #0008}
+.reel-window{height:clamp(72px,19vw,102px);overflow:hidden;background:linear-gradient(#071914,#1b493b,#071914);border-radius:7px;position:relative}
+#reelStrip{will-change:transform}
+.reel-cell{height:clamp(72px,19vw,102px);display:grid;place-items:center;font:bold clamp(42px,12vw,66px)/1 Georgia,serif;color:#ffe9a1;text-shadow:0 3px #533712}
+.reel-marker{position:absolute;inset:5px;pointer-events:none;border-block:2px solid #ffe8a9;border-radius:7px;box-shadow:inset 0 8px 12px #0008,inset 0 -8px 12px #0008}
+.reel-marker:before,.reel-marker:after{content:'';position:absolute;top:50%;transform:translateY(-50%);border:8px solid transparent;border-left-color:#f6d776;left:-4px}
+.reel-marker:after{left:auto;right:-4px;border-left-color:transparent;border-right-color:#f6d776}
+.reel-stopped .reel-shell{box-shadow:0 0 0 2px #7f5224,0 0 16px #e9bd67}
+@media(prefers-reduced-motion:reduce){#revival.cinematic-mode #revivalArt.comic-enter{animation:none!important}}
