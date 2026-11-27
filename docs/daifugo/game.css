@@ -57,3 +57,17 @@ details{padding:4px 8px;margin:0;font-size:12px;background:#0719159c}#notice{mar
 .promotion-mode .comic-context,.promotion-mode .revival-copy h2,.promotion-mode #comicLine,.promotion-mode .revival-kicker{display:none}.promotion-mode .revival-ranks{margin:8px 0}.promotion-mode .comic-narration{text-align:center;border:0;background:none;color:#ffe9b0}
 @keyframes promotion-pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
 @media(max-height:700px){#revivalArt{height:clamp(185px,55vw,265px)}#revivalArt[data-panel="3"]{height:230px}.revival-copy{padding:8px 10px 12px}.comic-narration{font-size:13px!important;padding:6px 8px}.comic-context{margin:3px 0}.revival-copy h2{font-size:25px}}
+
+/* Four-panel comic v10: exact 2x2 atlas */
+#revivalArt[data-actor="1"]{background-image:url('./comic-leon10.webp')}#revivalArt[data-actor="2"]{background-image:url('./comic-ruby10.webp')}#revivalArt[data-actor="3"]{background-image:url('./comic-selene10.webp')}
+#revivalArt[data-actor][data-panel]{height:auto;aspect-ratio:1;max-height:none;background-size:200% 200%;background-position:left top;background-repeat:no-repeat}
+#revivalArt[data-actor][data-panel="1"]{background-position:right top}
+#revivalArt[data-actor][data-panel="2"]{background-position:left bottom}
+#revivalArt[data-actor][data-panel="3"]{background-position:right bottom}
+#revivalArt[data-actor][data-panel="4"]{background-image:url('./decree7.webp');background-size:cover;background-position:center 22%;aspect-ratio:1.35}
+#revivalArt[data-panel="3"] .revival-rays{display:block}
+#revivalArt .comic-bubble{bottom:9px;left:12px;right:12px;max-width:calc(100% - 24px);font-size:clamp(14px,4.4vw,19px)!important}
+#revival{max-width:min(92vw,430px)}.comic-narration{font-size:14px!important;line-height:1.6!important}
+@media(max-height:750px){#revivalArt[data-actor][data-panel]{width:min(100%,290px);margin-inline:auto}.revival-copy{padding:5px 10px 10px}.comic-context{margin:2px 0}.comic-narration{font-size:12px!important;padding:5px 7px;margin:4px 0}.revival-copy h2{margin:2px 0;font-size:23px}.revival-copy>p:last-of-type{margin:4px 0;font-size:11px}}
+
+.revival-copy .comic-bubble{position:relative!important;inset:auto!important;max-width:none;margin:0 0 9px!important;text-align:center;padding:8px 9px;box-shadow:2px 3px 0 #0007}.revival-copy .comic-bubble:before{content:'';position:absolute;top:-9px;left:23px;width:13px;height:13px;background:#fff9e9;transform:rotate(45deg);border-left:2px solid #17140e;border-top:2px solid #17140e}.promotion-mode .revival-copy .comic-bubble{display:none}

@@ -3,6 +3,7 @@ import {bank} from './bank.mjs?v=4';
 import {drawReward,RTP} from './reward.mjs?v=5';
 const $=s=>document.querySelector(s),names=['あなた','レオン','ルビー','セレーネ'],suits=['♠','♥','♦','♣'],ranks=['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
 let state=null,scenario=null,reward=null,selected=new Set(),busy=false,history=[],ticket=0,settled=false,bet=1000,credits=100000;
+const storyImages=['comic-leon10.webp','comic-ruby10.webp','comic-selene10.webp','decree7.webp'].map(src=>{const img=new Image();img.src='./'+src;return img});
 const allowed=bank.filter(x=>x.playability?.reachable&&x.proof.complete&&x.proof.version===VERSION&&x.proof.cpu===CPU_VERSION);
 const pause=ms=>new Promise(r=>setTimeout(r,ms)),fmt=n=>n.toLocaleString('ja-JP'),random=()=>crypto.getRandomValues(new Uint32Array(1))[0]/4294967296;
 $('#rtp').textContent=(RTP*100).toFixed(2)+'%';$('#balance').textContent=fmt(credits);
@@ -27,28 +28,28 @@ $('#result').addEventListener('cancel',e=>e.preventDefault());
 function royalDecree(actual,assigned){
 const d=$('#revival'),art=$('#revivalArt'),b=$('#revivalContinue'),first=state.finish[0],target=state.finish[assigned-1];
 const tales={
-1:{titles:['王子の勝利','隠し札発見','王子の謝罪'],proof:'レオンの袖から、使われていないはずのカードが落ちた。',bubble:'「しまった……！」',end:'「王家の名において、恩賞を認めよう。」',verdict:'隠し札が見つかったレオンは、物語の中で責任を認め、王家の印章を差し出す。'},
-2:{titles:['騎士の勝利','二重のカード','騎士の誓い'],proof:'ルビーの黄金の盾に、同じカードが二枚映っている。もう一枚の札が発見された。',bubble:'「同じ札が二枚！？」',end:'「騎士の誓いにかけて、恩賞を認めよう。」',verdict:'異変に気づいたルビーは、物語の中で判定を受け入れ、名誉の勲章を差し出す。'},
-3:{titles:['魔導師の勝利','幻影の正体','魔導師の裁定'],proof:'セレーネの場札が青い光とともに消えた。魔法で作られた幻影の札だった。',bubble:'「幻影が解けた……！」',end:'「王宮の印章により、恩賞を授けます。」',verdict:'幻影が消えたセレーネは、物語の中で王家の裁定を受け入れ、恩賞の勅令を掲げる。'}
+1:{titles:['王子の勝利','袖から落ちた札','隠し札の発覚','王子の謝罪'],proof:'レオンが立ち上がった瞬間、袖の内側に残していたカードが卓上へ落ちた。',clue:'「待て！ 袖から札が落ちたぞ！」',discovery:'女騎士が落ちた札を拾い、全員に見せる。物語では、隠し札を残したまま上がったことが発覚する。',accuse:'「手札を隠したまま上がったのか！」',end:'「私の落ち度だ。王家の印章を受け取ってくれ。」',verdict:'レオンは物語上の非を認め、王家の恩賞を授ける。'},
+2:{titles:['騎士の勝利','盾が映した証拠','隠し札の発覚','騎士の誓い'],proof:'ルビーの黄金の盾に手元が映る。表から見えない位置に、もう一枚のカードが隠されていた。',clue:'「盾に映っている札は何だ！？」',discovery:'王子が盾の映り込みを指摘し、隠されていたカードを取り出す。物語では、手札を隠していたことが発覚する。',accuse:'「まだ手札が残っているではないか！」',end:'「騎士の誓いにかけて、恩賞を認めよう。」',verdict:'ルビーは物語上の判定を受け入れ、名誉の勲章を授ける。'},
+3:{titles:['魔導師の勝利','消えゆく幻影','幻の札の発覚','魔導師の裁定'],proof:'セレーネの出した札が、青い光を放ち、目の前で魔法の粒子に崩れ始めた。',clue:'「この札が……消えていく！」',discovery:'王子と女騎士は本物の札が残っていることを確認する。物語では、幻影で作られた札を出していたことが発覚する。',accuse:'「偽物の札だったのか！」',end:'「王宮の印章により、恩賞を授けます。」',verdict:'セレーネは物語上の裁定を受け入れ、恩賞の勅令を掲げる。'}
 };
 const firstStory=tales[first],targetStory=tales[target];let panel=0;
 $('#comicWinner').textContent=names[first];$('#comicTarget').textContent=names[target]+'（実際'+assigned+'着）';
 $('#revivalActual').textContent=actual+'着';$('#revivalRank').textContent=assigned+'着相当';$('#promotionRank').textContent=assigned+'着';
 function paint(){
-const promotion=panel===3,actor=panel===0?first:target;
+const promotion=panel===4,actor=panel===0?first:target;
 art.dataset.actor=String(actor);art.dataset.panel=String(panel);d.classList.toggle('promotion-mode',promotion);
-$('#comicNumber').textContent=promotion?'恩賞確定':(panel+1)+' / 3';
+$('#comicNumber').textContent=promotion?'恩賞確定':(panel+1)+' / 4';
 $('#comicBubble').hidden=promotion;
-$('#comicBubble').textContent=panel===0?'「決着……か？」':panel===1?targetStory.bubble:targetStory.end;
-$('#comicLine').textContent=panel===0?'対戦終了':panel===1?'イカサマ発覚（物語）':panel===2?'王家の裁定':'報酬ランク昇格';
-$('#comicNarration').textContent=panel===0?names[first]+'が1着、あなたは'+actual+'着。'+(first===target?'しかし、勝者の札に異変が……。':names[target]+'（'+assigned+'着）の席で異変が起きる。'):panel===1?targetStory.proof:panel===2?targetStory.verdict:'事前抽選の'+assigned+'着相当の報酬が適用されます。';
-$('#revivalTitle').textContent=panel===0?firstStory.titles[0]:panel===1?targetStory.titles[1]:panel===2?targetStory.titles[2]:'昇格';
+$('#comicBubble').textContent=['「勝負は決まった……！」',targetStory.clue,targetStory.accuse,targetStory.end,''][panel];
+$('#comicLine').textContent=['対戦終了','証拠発見','イカサマ発覚（物語）','王家の裁定','報酬ランク昇格'][panel];
+$('#comicNarration').textContent=[names[first]+'が1着、あなたは'+actual+'着。'+(first===target?'しかし、勝者の札に異変が起きる。':names[target]+'（'+assigned+'着）の席で異変が起きる。'),targetStory.proof,targetStory.discovery,targetStory.verdict,'事前抽選の'+assigned+'着相当の報酬が適用されます。'][panel];
+$('#revivalTitle').textContent=panel===0?firstStory.titles[0]:promotion?'昇格':targetStory.titles[panel];
 $('.revival-label').textContent=promotion?'事前抽選報酬の適用':'漫画の物語演出';
 $('#revivalRanks').hidden=!promotion;$('#promotionArt').hidden=!promotion;
 $('#revivalDisclosure').textContent=promotion?'実際の対戦順位は'+actual+'着のままです。報酬は対戦開始時に確定しています。':'漫画のフィクション演出です。実際の対戦に不正はありません。';
-b.textContent=promotion?'報酬を確認':panel===2?'昇格を確認':'次のコマ';
+b.textContent=promotion?'報酬を確認':panel===3?'昇格を確認':'次のコマ';
 art.classList.remove('comic-enter');void art.offsetWidth;art.classList.add('comic-enter');
 }
-paint();d.showModal();return new Promise(resolve=>{b.onclick=()=>{if(panel<3){panel++;paint();return}b.onclick=null;d.close();resolve()};b.focus()});
+paint();d.showModal();return new Promise(resolve=>{b.onclick=()=>{if(panel<4){panel++;paint();return}b.onclick=null;d.close();resolve()};b.focus()});
 }
 $('#revival').addEventListener('cancel',e=>e.preventDefault());
