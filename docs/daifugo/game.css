@@ -71,3 +71,5 @@ details{padding:4px 8px;margin:0;font-size:12px;background:#0719159c}#notice{mar
 @media(max-height:750px){#revivalArt[data-actor][data-panel]{width:min(100%,290px);margin-inline:auto}.revival-copy{padding:5px 10px 10px}.comic-context{margin:2px 0}.comic-narration{font-size:12px!important;padding:5px 7px;margin:4px 0}.revival-copy h2{margin:2px 0;font-size:23px}.revival-copy>p:last-of-type{margin:4px 0;font-size:11px}}
 
 .revival-copy .comic-bubble{position:relative!important;inset:auto!important;max-width:none;margin:0 0 9px!important;text-align:center;padding:8px 9px;box-shadow:2px 3px 0 #0007}.revival-copy .comic-bubble:before{content:'';position:absolute;top:-9px;left:23px;width:13px;height:13px;background:#fff9e9;transform:rotate(45deg);border-left:2px solid #17140e;border-top:2px solid #17140e}.promotion-mode .revival-copy .comic-bubble{display:none}
+
+.intro-art .intro-logo{margin:3px 0;line-height:0}.intro-logo img{display:block;width:clamp(180px,61vw,340px);max-height:170px;object-fit:contain;filter:drop-shadow(0 5px 12px #000a)}
