@@ -1,11 +1,11 @@
-import {start,legal,step,cpu,label,shape,simulate,VERSION,CPU_VERSION} from './engine13.mjs?v=19';
-import {bank} from './bank13-certified.mjs?v=19';
-import {proof} from './proof13.mjs?v=19';
+import {start,legal,step,cpu,label,shape,simulate,VERSION,CPU_VERSION} from './engine13.mjs?v=20';
+import {bank} from './bank13-certified.mjs?v=20';
+import {proof} from './proof13.mjs?v=20';
 const $=s=>document.querySelector(s);let state=null,scenario=null,selected=new Set(),busy=false,history=[],ticket=0;
 const names=['あなた','CPU 1','CPU 2','CPU 3'];
 const cards=a=>a.map(label).join(' ');
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
-const approved=bank.filter(x=>x.cap?.status==='certified'&&x.version===VERSION&&x.cpu===CPU_VERSION);
+const approved=bank.filter(x=>x.cap?.status==='certified'&&x.version===VERSION&&x.cpu===CPU_VERSION&&x.strict?.runs===100&&x.strict?.matches===100&&x.strict?.seed===48871&&x.strict?.deviation===.25&&x.robust?.score===1&&x.robust?.policies?.length===3&&x.robust.policies.every(Boolean));
 const families=[...new Set(approved.map(x=>x.family).filter(Boolean))];
 function refreshFamilies(){const select=$('#family');select.replaceChildren(new Option('ランダム',''));for(const x of approved.filter(x=>x.target===Number($('#target').value))){select.append(new Option('手札 '+(families.indexOf(x.family)+1)+'：'+cards(x.hands[0]),x.family));}}
 $('#target').addEventListener('change',refreshFamilies);refreshFamilies();
