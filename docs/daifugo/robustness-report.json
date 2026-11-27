@@ -1,0 +1,72 @@
+{
+  "before": [
+    {
+      "rank": 1,
+      "oneMove": 0.6521660203595772,
+      "standard": 1,
+      "random12": 0.8435,
+      "random25": 0.7125,
+      "distinctRankPatterns": 20
+    },
+    {
+      "rank": 2,
+      "oneMove": 0.439379016097345,
+      "standard": 0.8166666666666667,
+      "random12": 0.8605,
+      "random25": 0.724,
+      "distinctRankPatterns": 5
+    },
+    {
+      "rank": 3,
+      "oneMove": 0.07548619611043117,
+      "standard": 0.9666666666666667,
+      "random12": 0.645,
+      "random25": 0.4305,
+      "distinctRankPatterns": 5
+    },
+    {
+      "rank": 4,
+      "oneMove": 1,
+      "standard": 1,
+      "random12": 1,
+      "random25": 1,
+      "distinctRankPatterns": 5
+    }
+  ],
+  "after": [
+    {
+      "rank": 1,
+      "oneMove": 0.9975294117647058,
+      "standard": 1,
+      "random12": 0.9855,
+      "random25": 0.9575,
+      "distinctRankPatterns": 15
+    },
+    {
+      "rank": 2,
+      "oneMove": 0.7369545302951227,
+      "standard": 0.9333333333333333,
+      "random12": 0.9355,
+      "random25": 0.853,
+      "distinctRankPatterns": 9
+    },
+    {
+      "rank": 3,
+      "oneMove": 0.9897595704948646,
+      "standard": 1,
+      "random12": 0.991,
+      "random25": 0.9805,
+      "distinctRankPatterns": 13
+    },
+    {
+      "rank": 4,
+      "oneMove": 1,
+      "standard": 1,
+      "random12": 1,
+      "random25": 1,
+      "distinctRankPatterns": 5
+    }
+  ],
+  "nodes": 5008623,
+  "scenarios": 80
+}

@@ -1,5 +1,5 @@
-import {start,legal,step,cpu,label,rank,shape,VERSION,CPU_VERSION} from './engine13.mjs?v=16';
-import {bank} from './bank13-certified.mjs?v=16';
+import {start,legal,step,cpu,label,rank,shape,VERSION,CPU_VERSION} from './engine13.mjs?v=17';
+import {bank} from './bank13-certified.mjs?v=17';
 import {drawReward,RTP} from './reward.mjs?v=5';
 const $=s=>document.querySelector(s),names=['あなた','レオン','ルビー','セレーネ'],suits=['♠','♥','♦','♣'],ranks=['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
 let state=null,scenario=null,reward=null,selected=new Set(),busy=false,history=[],ticket=0,settled=false,bet=1000,credits=100000;
