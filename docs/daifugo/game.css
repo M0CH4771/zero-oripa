@@ -41,3 +41,7 @@ details{padding:4px 8px;margin:0;font-size:12px;background:#0719159c}#notice{mar
 .revival-copy{margin-top:0;padding-top:12px}.comic-line{font-weight:bold;font-size:clamp(16px,4.6vw,21px)!important;color:#fff5d5;margin:8px 0}.revival-copy h2{font-size:clamp(25px,7vw,38px)}#revivalArt[data-panel="2"]{background-image:url('./decree7.webp');background-size:cover;background-position:center 24%}
 
 #revivalArt[data-panel="2"]{background-image:url('./comic7.webp');background-size:300% auto;background-position:right center}#revival:has(#revivalArt[data-panel="2"]) .revival-copy{background:linear-gradient(#071b19ed,#071b19fc),url('./decree7.webp') center 40%/cover}
+
+#revivalArt[data-actor="1"]{background-image:url('./comic-leon8.webp')}#revivalArt[data-actor="2"]{background-image:url('./comic-ruby8.webp')}#revivalArt[data-actor="3"]{background-image:url('./comic-selene8.webp')}
+#revivalArt[data-actor][data-panel="2"]{background-size:300% auto;background-position:right center}
+.comic-context{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:6px 0;color:#d7c9a7;font-size:11px}.comic-context span{border:1px solid #92784b;border-radius:5px;padding:5px 3px;background:#071b19}.comic-context b{display:block;color:#ffedbf;font-size:14px}

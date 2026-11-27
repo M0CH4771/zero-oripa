@@ -24,5 +24,28 @@ $('#info').onclick=()=>$('#rules').showModal();$('#closeRules').onclick=()=>$('#
 
 $('#result').addEventListener('cancel',e=>e.preventDefault());
 
-function royalDecree(actual,assigned){const d=$('#revival'),art=$('#revivalArt'),b=$('#revivalContinue');let panel=0;const lines=['「……待て！ 袖の中に何かあるぞ！」','「そのカードは何だ！？ 王宮の掟に反する！」','「王家の恩賞を授けよう。」'];$('#revivalActual').textContent=actual+'着';$('#revivalRank').textContent=assigned+'着相当';function paint(){art.dataset.panel=String(panel);$('#comicNumber').textContent=(panel+1)+' / 3';$('#comicLine').textContent=lines[panel];$('#revivalTitle').textContent=['異変','イカサマ発覚','王家の恩賞'][panel];$('.revival-label').textContent=panel===2?'事前抽選報酬の適用':'漫画の物語演出';$('#revivalRanks').hidden=panel!==2;$('#revivalDisclosure').textContent=panel===2?'対戦開始時に確定した報酬を付与します。実際の着順は変わりません。':'漫画のフィクション演出です。実際の対戦に不正はありません。';b.textContent=panel===2?'報酬を確認':'次のコマ';art.classList.remove('comic-enter');void art.offsetWidth;art.classList.add('comic-enter')}paint();d.showModal();return new Promise(resolve=>{b.onclick=()=>{if(panel<2){panel++;paint();return}b.onclick=null;d.close();resolve()};b.focus()})}
+function royalDecree(actual,assigned){
+const d=$('#revival'),art=$('#revivalArt'),b=$('#revivalContinue'),first=state.finish[0],target=state.finish[assigned-1];
+const tales={
+1:{titles:['王子の勝利','隠された一枚','王家の裁定'],line:'「袖から落ちた一枚……これは何だ？」',end:'「王家の名において、恩賞を授けよう。」'},
+2:{titles:['騎士の勝利','鏡の証言','騎士の誓い'],line:'「盾に映ったカードが……二枚ある！？」',end:'「騎士の誓いにかけて、恩賞を認めよう。」'},
+3:{titles:['魔導師の勝利','解けた幻影','魔導師の裁定'],line:'「幻影が消える……この札は！？」',end:'「王宮の印章により、恩賞を授けます。」'}
+};
+const firstStory=tales[first],targetStory=tales[target];let panel=0;
+$('#comicWinner').textContent=names[first];$('#comicTarget').textContent=names[target]+'（実際'+assigned+'着）';
+$('#revivalActual').textContent=actual+'着';$('#revivalRank').textContent=assigned+'着相当';
+function paint(){
+const actor=panel===0?first:target;
+art.dataset.actor=String(actor);art.dataset.panel=String(panel);
+$('#comicNumber').textContent=(panel+1)+' / 3';
+$('#comicLine').textContent=panel===0?(first===target?'「'+names[first]+'の勝利……と思われたその時！」':'「'+names[first]+'が首位！ だが、'+names[target]+'の席で異変が……」'):panel===1?targetStory.line:targetStory.end;
+$('#revivalTitle').textContent=panel===0?firstStory.titles[0]:targetStory.titles[panel];
+$('.revival-label').textContent=panel===2?'事前抽選報酬の適用':'漫画の物語演出';
+$('#revivalRanks').hidden=panel!==2;
+$('#revivalDisclosure').textContent=panel===2?'対戦開始時に確定した報酬を付与します。実際の着順は変わりません。':'漫画のフィクション演出です。実際の対戦に不正はありません。';
+b.textContent=panel===2?'報酬を確認':'次のコマ';
+art.classList.remove('comic-enter');void art.offsetWidth;art.classList.add('comic-enter');
+}
+paint();d.showModal();return new Promise(resolve=>{b.onclick=()=>{if(panel<2){panel++;paint();return}b.onclick=null;d.close();resolve()};b.focus()});
+}
 $('#revival').addEventListener('cancel',e=>e.preventDefault());
