@@ -1,11 +1,14 @@
 import {start,legal,step,cpu,label,VERSION,CPU_VERSION,verify} from './engine.mjs';
-import {bank} from './bank.mjs?v=13';
+import {bank} from './bank-ranked.mjs?v=14';
+import {targetHint} from './normal-play.mjs?v=14';
 const $=s=>document.querySelector(s);let state=null,scenario=null,selected=new Set(),busy=false,history=[],ticket=0;
 const names=['あなた','CPU 1','CPU 2','CPU 3'];
 const cards=a=>a.map(label).join(' ');
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 const approved=bank.filter(x=>x.playability?.reachable&&x.proof.complete&&x.proof.version===VERSION&&x.proof.cpu===CPU_VERSION&&x.proof.best===Math.min(...x.proof.ranks));
-const families=[...new Set(approved.map(x=>x.family).filter(Boolean))];for(const [i,f] of families.entries()){let opt=document.createElement('option');opt.value=f;opt.textContent='手札 '+(i+1)+'：'+cards(f.split(',').map(Number));$('#family').append(opt);}
+const families=[...new Set(approved.map(x=>x.family).filter(Boolean))];
+function refreshFamilies(){const select=$('#family');select.replaceChildren(new Option('ランダム',''));for(const x of approved.filter(x=>x.proof.best===Number($('#target').value))){select.append(new Option('手札 '+(families.indexOf(x.family)+1)+'：'+cards(x.hands[0]),x.family));}}
+$('#target').addEventListener('change',refreshFamilies);refreshFamilies();
 $('#bankSummary').textContent=[1,2,3,4].map(r=>r+'着: '+approved.filter(x=>x.proof.best===r).length+'件').join(' ／ ');
 function draw(){if(!state)return;$('#turn').textContent=state.finish.length===4?'対戦終了':names[state.turn]+'の番';$('#rule').textContent=(state.rev?'革命中':'通常')+' ／ '+(state.lock?'縛り '+['♠','♥','♦','♣'].filter((_,i)=>state.lock&(1<<i)).join(''):'縛りなし');$('#field').textContent=state.field?cards(state.field.cards):'場なし';$('#cpu').replaceChildren(...[1,2,3].map(i=>{let d=document.createElement('div');d.textContent=names[i]+'：'+(state.finish.includes(i)?(state.finish.indexOf(i)+1)+'着':state.h[i].length+'枚');return d}));
 let can=state.turn===0&&!busy&&state.finish.length<4, moves=can?legal(state):[],match=moves.some(a=>a.length&&a.length===selected.size&&a.every(c=>selected.has(c)));
@@ -18,6 +21,6 @@ async function advance(t){busy=true;draw();while(state&&state.finish.length<4&&s
 $('#start').onclick=()=>{let cap=Number($('#target').value),pool=approved.filter(x=>x.proof.best===cap&&(!$('#family').value||x.family===$('#family').value));if(!pool.length){$('#result').textContent='検証済み手札なし';return;}ticket++;scenario=pool[Math.floor(Math.random()*pool.length)];state=start(scenario.hands,scenario.starter);selected.clear();history=[];$('#result').textContent='事前指定：'+cap+'着相当（テスト報酬）';$('#proof').textContent='検証済み '+scenario.id+' ／ 可能着順 '+scenario.proof.ranks.join('・')+' ／ 手札 '+(families.indexOf(scenario.family)+1)+' ／ ペア・8切りが可能なルートあり';advance(ticket)};
 $('#play').onclick=()=>{if(!busy&&state?.turn===0){act([...selected]);advance(ticket)}};
 $('#pass').onclick=()=>{if(!busy&&state?.turn===0){act([]);advance(ticket)}};
-$('#hint').onclick=()=>{if(!busy&&state?.turn===0){selected=new Set(cpu(state));draw()}};
+$('#hint').onclick=()=>{if(!busy&&state?.turn===0){selected=new Set(targetHint(state,scenario.proof.best));draw()}};
 $('#sort').onchange=draw;
 $('#verify').onclick=async()=>{if(!scenario)return;$('#verify').disabled=true;$('#proof').textContent='再検証中…';await pause(20);let v=verify(scenario.hands,scenario.starter);$('#proof').textContent=v.complete?'再検証完了：'+v.ranks.join('・')+'着 ／ '+v.nodes.toLocaleString()+'状態 ／ '+v.edges.toLocaleString()+'遷移':'検証未完了';$('#verify').disabled=false};

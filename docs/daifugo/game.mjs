@@ -1,6 +1,7 @@
 import {start,legal,step,cpu,label,rank,VERSION,CPU_VERSION} from './engine.mjs';
-import {bank} from './bank.mjs?v=13';
+import {bank} from './bank-ranked.mjs?v=14';
 import {drawReward,RTP} from './reward.mjs?v=5';
+import {targetHint} from './normal-play.mjs?v=14';
 const $=s=>document.querySelector(s),names=['あなた','レオン','ルビー','セレーネ'],suits=['♠','♥','♦','♣'],ranks=['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
 let state=null,scenario=null,reward=null,selected=new Set(),busy=false,history=[],ticket=0,settled=false,bet=1000,credits=100000;
 const storyImages=['comic-leon10.webp','comic-ruby10.webp','comic-selene10.webp','decree7.webp'].map(src=>{const img=new Image();img.src='./'+src;return img});
@@ -18,7 +19,7 @@ async function finish(t){let actual=state.finish.indexOf(0)+1;$('#result').datas
 $('#start').onclick=()=>{if(state&&!settled)return;bet=Number($('#base').value);if(credits<bet){$('#notice').textContent='テスト残高不足。補充を押してください。';return}reward=drawReward(random);let pool=allowed.filter(x=>x.proof.best===reward.rank);if(!pool.length){$('#notice').textContent='検証済みシナリオがありません';return}ticket++;scenario=pool[Math.floor(random()*pool.length)];state=start(scenario.hands,scenario.starter);credits-=bet;settled=false;selected.clear();history=[];$('#balance').textContent=fmt(credits);$('#assigned').textContent=reward.rank+'着相当';$('#notice').textContent='事前抽選済み・抽選ランクを上回らない対戦シナリオ';$('#last').textContent='配札完了';$('#intro').hidden=true;$('#table').hidden=false;document.body.classList.add('in-match');$('#table').classList.remove('deal');void $('#table').offsetWidth;$('#table').classList.add('deal');setTimeout(()=>$('#table').classList.remove('deal'),400);advance(ticket)};
 $('#play').onclick=()=>{if(!busy&&state?.turn===0){try{act([...selected]);advance(ticket)}catch(e){$('#notice').textContent=e.message}}};
 $('#pass').onclick=()=>{if(!busy&&state?.turn===0&&state.field){act([]);advance(ticket)}};
-$('#hint').onclick=()=>{if(!busy&&state?.turn===0){selected=new Set(cpu(state));draw()}};
+$('#hint').onclick=()=>{if(!busy&&state?.turn===0){selected=new Set(targetHint(state,reward.rank));draw()}};
 $('#sort').onchange=draw;$('#again').onclick=()=>{$('#result').close();$('#start').disabled=false;$('#base').disabled=false;$('#intro').hidden=false;$('#table').hidden=true;document.body.classList.remove('in-match')};
 $('#refill').onclick=()=>{if(!state||settled){credits+=100000;$('#balance').textContent=fmt(credits);$('#notice').textContent='無料テストコインを補充しました'}};
 $('#info').onclick=()=>$('#rules').showModal();$('#closeRules').onclick=()=>$('#rules').close();
