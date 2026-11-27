@@ -1,7 +1,7 @@
 import {PAYS as tropicalPays,SYMBOLS as tropicalSymbols,UNIT as tropicalUnit,TIER_PAY_FACTORS as tropicalFactors} from './tropical.mjs?v=cap119';
 import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=cap119';
 import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live113';
-import {BLOCKS,MILD_PAY,MILD_Q_PAY,VOLATILITY as mineVolatility} from './test-games/mine.js?v=mine151';
+import {BLOCKS,MILD_PAY,MILD_Q_PAY,VOLATILITY as mineVolatility} from './test-games/mine.js?v=mine152';
 import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,DWARF_ITEMS} from './test-games/features.js?v=adventure131';
 const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:4});
 const coin=n=>fmt(n)+' C';
