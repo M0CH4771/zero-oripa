@@ -48,8 +48,8 @@ const ROW_ORES = [
 export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
-    cells: { 0: 60, p1: 13, p2: 11, p3: 6, p5: 1, p7: .15, b: 4, g: 1, n: .35, s: .6, d: .4, l: 2, m: .5 },
-    chests: { 1.1: 75, 1.2: 25 }, scale: 1.752,
+    cells: { 0: 75, p1: 8, p2: 5, p3: 2, p5: 1, p7: .15, b: 4, g: 1, n: .35, s: .6, d: .4, l: 2, m: .5 },
+    chests: { 1.1: 75, 1.2: 25 }, scale: 3.4224,
   },
   normal: {
     label: '通常', bolt: 3,
