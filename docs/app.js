@@ -1,6 +1,6 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {MILD_PAY} from './test-games/mine.js?v=mine147';
-import {gameInfoHtml,volatilityBadge} from './game-info.js?v=mine147';
+import {MILD_PAY} from './test-games/mine.js?v=mine148';
+import {gameInfoHtml,volatilityBadge} from './game-info.js?v=mine148';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
