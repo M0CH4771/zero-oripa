@@ -415,7 +415,7 @@ async function viewHome() {
     </div>
     <div class="toolbar"><span><b>${shown.length}</b> 件</span>
       <select id="sortSel">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}" ${k === homeSort ? 'selected' : ''}>${v.label}</option>`).join('')}</select></div>
-    ${rushes.length ? `<section class="rush-sec"><h4><span>ZERO ORIGINALS · ${rushes.length} GAMES</span>オリジナルゲーム</h4><div class="plist">${rushes.map(packCard).join('')}</div></section>` : ''}
+    ${rushes.length ? `<section class="rush-sec"><h4><span>ZERO ORIGINALS · ${rushes.length+1} GAMES</span>オリジナルゲーム</h4><div class="plist">${rushes.map(packCard).join('')}<a class="pcard game-card game-dwarf" href="./daifugo/index.html?v=5"><div class="ptags"><span class="tg red">ZERO DAIFUGO</span><span class="tg game-rtp">無料デモ</span></div><div class="pimg"><div class="art brand-game-cover" style="min-height:140px;background:linear-gradient(#10201a33,#10201a77),url('./daifugo/hall5.webp') center/cover;display:grid;place-items:center"><img src="./daifugo/logo5.webp" alt="ZERO DAIFUGO" style="max-width:88%;height:100px;object-fit:contain"></div></div><div class="pinfo"><div class="pprice">4人対戦<small>・8枚ずつ</small></div><div class="premain">手動プレイ・換金不可</div></div><span class="pcta">ZERO DAIFUGOに挑戦する</span></a></div></section>` : ''}
     ${rest.length ? `${featureOn?'<div class="catalog-heading"><span>ORIPA COLLECTION</span><h2>オリパ一覧</h2></div>':''}<div class="plist">${rest.map(packCard).join('')}</div>` : rushes.length ? '' : '<div class="empty">条件に合うオリパはありません</div>'}
     ${siteFooter()}`;
   document.querySelectorAll('.cats button').forEach((b) => (b.onclick = () => { homeCat = b.dataset.c; viewHome(); }));
