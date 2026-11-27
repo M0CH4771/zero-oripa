@@ -1,0 +1,8 @@
+import * as e from './engine13.mjs';
+import {robustness,varied} from './robust13.mjs';
+import {proof} from './proof13.mjs';
+import {bank} from './bank13-certified.mjs';
+import {writeFileSync} from 'node:fs';
+const r=Number(process.argv[2]),out=process.argv[3],goal=Number(process.argv[4]||500);const base=bank.filter(x=>x.target===r),rows=base.slice(),seen=new Set(rows.map(x=>x.family));
+function perms(a){return a.length?a.flatMap((v,i)=>perms(a.filter((_,j)=>i!==j)).map(p=>[v,...p])):[[]]}
+let attempts=0;const tried=new Set();for(const [i,x] of base.entries()){for(const m of perms([0,1,2,3])){if(rows.length>=goal)break;const hands=x.hands.map(h=>h.map(c=>(c&~3)|m[c&3]).sort((a,b)=>a-b)),family=hands[0].join(','),key=hands.flat().join(',')+'|'+x.starter;if(seen.has(family)||tried.has(key))continue;tried.add(key);attempts++;const s=e.simulate(hands,x.starter);if(s.rank!==r||s.penalties||s.plays<3||(r===3&&s.close>2)||(r===4&&(s.remaining<1||s.remaining>2)))continue;const t={id:`strict-suit-${r}-${i}-${m.join('')}`,hands,starter:x.starter,family,target:r,version:e.VERSION,cpu:e.CPU_VERSION,samples:[s]};if(varied(t,{runs:12,seed:48871,deviation:.25})!==12)continue;const robust=robustness(t);if(robust.score!==1||!robust.policies.every(Boolean)||varied(t,{runs:100,seed:48871,deviation:.25})!==100)continue;const cap=proof(hands,t.starter,r,200000);if(cap.status!=='certified')continue;seen.add(family);rows.push({...t,robust,cap,stress:varied(t),strict:{runs:100,matches:100,seed:48871,deviation:.25}});writeFileSync(out,JSON.stringify(rows));if(rows.length%10===0)console.log({r,count:rows.length,attempts});}if(rows.length>=goal)break;}console.log({r,count:rows.length,attempts});
