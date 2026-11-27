@@ -1,5 +1,5 @@
 // DIG（採掘）
-// 盤面：5列×6段のブロック。いちばん下に宝箱が5つ（倍率は抽選設定に従う。開ける前から色で倍率がわかる）。
+// 盤面：5列×5段のブロック。いちばん下に宝箱が5つ（倍率は抽選設定に従う。開ける前から色で倍率がわかる）。
 // 上に 5列×3段 のスロット枠があり、スピンごとにアイテムが止まる。
 //   つるはし（1・2・3・5・7回）… 同じ列の真下のブロックを、数字の回数ぶん上から削る（壊れたら次のブロックへ）
 //   強化の書 … 同じ列のつるはしを全部 5回 に
@@ -14,36 +14,35 @@
 // 最初の採掘＋4スピン（＝5回）。盤面の掘れ具合は最後まで引き継ぐ。
 import { picker, secureRandom } from './common.js';
 
-export const COLS = 5, ROWS = 6, REEL_ROWS = 3;
+export const COLS = 5, ROWS = 5, REEL_ROWS = 3;
 export const FIRST_SPINS = 5, MAX_SPINS = 20;
 export const MIN_PAY = 1; // 1ゲームあたりの最低配当C
 
 // hp：何回削ると壊れるか / v：賭け（1プレイの消費コイン）に対する配当
 export const BLOCKS = {
-  D: { name: '土', hp: 1, v: 0 },
-  T: { name: '石', hp: 2, v: 0.001 },
-  C: { name: '石炭', hp: 4, v: 0.006 },
-  I: { name: '鉄', hp: 4, v: 0.015 },
-  G: { name: '金', hp: 5, v: 0.04 },
-  X: { name: 'ダイヤ', hp: 6, v: 0.08 },
-  R: { name: '虹鉱石', hp: 7, v: 0.16 },
+  D: { name: '土', hp: 1, v: .001 },
+  T: { name: '石', hp: 2, v: .005 },
+  I: { name: '鉄', hp: 3, v: .01 },
+  G: { name: '金', hp: 4, v: .03 },
+  X: { name: 'ダイヤ', hp: 5, v: .05 },
+  R: { name: '虹鉱石', hp: 6, v: .25 },
   E: { name: '爆発鉱石', hp: 2, v: 0.005 },
   Q: { name: 'ハテナ', hp: 4, v: 0 },
 };
 // ハテナの中身（賭けに対する倍率）
-export const MILD_PAY = {D:0,T:.001,C:.005,I:.01,G:.03,X:.05,R:.25,E:.005,Q:0};
-export const MILD_Q_PAY={.005:35,.01:30,.02:20,.03:12,.05:3};
-const Q_PAY = { 0.02: 35, 0.04: 30, 0.06: 20, 0.1: 12, 0.16: 3 };
+export const MILD_PAY = {D:.001,T:.005,I:.01,G:.03,X:.05,R:.25,E:.005,Q:0};
+export const MILD_Q_PAY={.005:35,.01:30,.03:20,.05:12,.25:0.1};
+
 
 // 段ごとの出やすさ（上 → 下）
-const ROW_ORES = [{"D":100},{"T":15,"C":40,"I":25,"G":12,"E":8},{"T":5,"C":25,"I":35,"G":20,"E":10,"Q":5},{"C":15,"I":35,"G":32,"E":10,"Q":8},{"I":30,"G":32,"C":14,"E":8,"Q":8,"X":8},{"G":34,"X":32,"I":19,"R":1,"Q":8,"E":6}];
+const ROW_ORES = [{D:100},{T:100},{I:55,G:15,E:30},{I:42,G:26,X:8,E:16,Q:8},{I:28,G:30,X:24,R:0.2,E:9.8,Q:8}];
 
 // スロット枠に止まるもの（1マスごと）
 //   0=空き p1..p7=つるはし b/g=強化の書 n=ダイナマイト s=スター d=巨大ドリル l=連鎖爆弾 m=宝箱強化
 export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
-    cells: {"0":64.44,"p1":14,"p2":9,"p3":4,"p5":1,"p7":0.15,"b":4,"g":1,"n":0.05,"s":0.6,"d":0.3,"l":1.4,"m":0.06},
+    cells: {"0":78.78,"p1":6.8,"p2":4,"p3":2,"p5":1,"p7":0.15,"b":4,"g":1,"n":0.05,"s":0.6,"d":0.2,"l":1.4,"m":0.02},
     chests: { 2: 99.2, 3: .4, 4: .15, 5: .1, 6: .06, 7: .04, 8: .025, 9: .015, 10: .01 }, scale: 1,
   },
   normal: {
@@ -65,9 +64,14 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
   const unit = mild?rate:rate * v.scale * .994;
   const pickCell = picker(v.cells, rand);
   const pickChest = picker(v.chests, rand);
-  const pickQ = picker(mild?MILD_Q_PAY:Q_PAY, rand);
+  const valueAt=[];
   // board[c][r]（r=0 がいちばん上）
-  const board = Array.from({ length: COLS }, () => ROW_ORES.map((w) => picker(w, rand)()));
+  const board = Array.from({length:COLS},(_,c)=>{let prev=0;valueAt[c]=[];return ROW_ORES.map(w=>{
+    const eligible=Object.fromEntries(Object.entries(w).filter(([b])=>b==='Q'?Object.keys(MILD_Q_PAY).some(v=>Number(v)>=prev):MILD_PAY[b]>=prev));
+    const b=picker(Object.keys(eligible).length?eligible:{R:1},rand)();
+    const pay=b==='Q'?Number(picker(Object.fromEntries(Object.entries(MILD_Q_PAY).filter(([v])=>Number(v)>=prev)),rand)()):MILD_PAY[b];
+    prev=pay;valueAt[c].push(pay);return b;
+  });});
   const hp = board.map((col) => col.map((b) => BLOCKS[b].hp));
   const alive = board.map((col) => col.map(() => true));
   const chests = Array.from({ length: COLS }, () => Number(pickChest()));
@@ -88,7 +92,7 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
     if (hp[c][r] > 0) { ev.push(by ? { t: 'hit', c, r, hp: hp[c][r], by } : { t: 'hit', c, r, hp: hp[c][r] }); return; }
     alive[c][r] = false;
     const b = board[c][r];
-    const pay = (b === 'Q' ? parseFloat(pickQ()) : (mild?MILD_PAY[b]:BLOCKS[b].v)) * unit;
+    const pay = valueAt[c][r] * unit;
     base += pay;
     ev.push(by ? { t: 'break', c, r, b, pay: r2(pay), by } : { t: 'break', c, r, b, pay: r2(pay) });
     checkChest(c, ev);

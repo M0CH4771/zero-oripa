@@ -277,12 +277,12 @@
   }
 
   // ---------- 採掘（DIG） ----------
-  // 上に 5×3 のスロット枠、下に 5列×6段のブロックと宝箱5つ。
+  // 上に 5×3 のスロット枠、下に 5列×5段のブロックと宝箱5つ。
   // スロットに止まったつるはしが真下の列へ落ちて、数字の回数ぶん上からブロックを削る。
   // 列を掘り切ると宝箱が開き、倍率（×2〜×10）は掛け算で最後に配当の合計へ掛かる。
   function mineGame(canvas, opt, hooks) {
-    const COLS = 5, ROWS = 6, RR = 3;
-    const HP = { D: 1, T: 2, C: 4, I: 4, G: 5, X: 6, R: 7, E: 2, Q: 4 };
+    const COLS = 5, ROWS = 5, RR = 3;
+    const HP = { D: 1, T: 2, I: 3, G: 4, X: 5, R: 6, E: 2, Q: 4 };
     const TIER = { 1: '#c8803e', 2: '#e8edf4', 3: '#ffc21a', 5: '#4ee8ff', 7: '#9a5aff' };
     const CHEST = { 2: '#1f4fe0', 3: '#2a86ea', 4: '#19b8cf', 5: '#18c27c', 6: '#46d23a', 7: '#b4dc26', 8: '#f0b41c', 9: '#f07a1a', 10: '#e8283a' };
     const ITEM = { b:'book',g:'book',n:'N',s:'dyn',d:'goldbook',l:'N',m:'H' };
@@ -590,7 +590,7 @@
       await Promise.all([st.tween(line, { a: 0 }, 220), st.tween(shade, { a: 0 }, 220)]);
       st.remove(line); st.remove(shade);
     }
-    const IDLE_ROWS = [['D'], ['T', 'T', 'E'], ['T', 'C'], ['C', 'I', 'Q'], ['I', 'G'], ['G', 'X']];
+    const IDLE_COLS = [['D','T','E','I','G'],['D','T','I','G','X'],['D','T','I','I','G'],['D','T','G','G','X'],['D','T','E','Q','R']];
     return {
       st,
       async warm(cb) {
@@ -600,7 +600,7 @@
         await ZG.art.preload('mine', ['pick', 'book', 'goldbook', 'N', 'dyn', 'H'], L.rc * 0.86, (k) => cb && cb(0.7 + k * 0.3));
       },
       idle() {
-        build(Array.from({ length: COLS }, () => IDLE_ROWS.map((ids) => pick(ids))), [2, 3, 2, 3, 2]);
+        build(IDLE_COLS.map(col=>[...col]), [2, 3, 2, 3, 2]);
         setSpinWin(0);
       },
       async play(r) {
