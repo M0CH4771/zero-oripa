@@ -1,4 +1,4 @@
-import { streamGame, tierFor, GAME_VOLATILITY } from './test-games/index.js?v=mine149';
+import { streamGame, tierFor, GAME_VOLATILITY } from './test-games/index.js?v=mine150';
 import { plinkoConfig } from './test-games/plinko.js?v=live113';
 import {FEATURE_CONFIG,DWARF_ITEMS} from './test-games/features.js?v=adventure131';
 import {createEarnState,earnView,earnAction} from './earn.js?v=earn52';
@@ -110,4 +110,4 @@ const original=window.fetch.bind(window);
 window.fetch=async(input,opt)=>{if(typeof input!=='string'||!input.startsWith('/api/'))return original(input,opt);try{const result=await api(input,opt?.body?JSON.parse(opt.body):undefined);save();return Response.json(result);}catch(e){return Response.json({error:e.message},{status:400});}};
 window.testRefill=()=>{tx(1000000,'admin');save();location.reload();};
 window.testReset=()=>{if(confirm('テスト履歴と獲得商品をリセットしますか？')){s=fresh();preparePacks();try{localStorage.removeItem(key+'-daily')}catch{}save();location.hash='#home';location.reload();}};
-await import('./app.js?v=mine149');
+await import('./app.js?v=mine150');
