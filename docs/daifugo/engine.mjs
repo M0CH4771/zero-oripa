@@ -22,3 +22,12 @@ export function cpu(s){let moves=legal(s).filter(a=>a.length);if(!moves.length)r
 export function key(s){return [s.h.map(h=>h.join('.')).join('/'),s.turn,+s.rev,s.field? [s.field.r,s.field.n,s.field.m,s.field.owner].join('.'):'-',s.lock,s.passed,s.finish.join('.')].join('|')}
 export function verify(hands,starter=0,{limit=500000}={}){let memo=new Map(),nodes=0,edges=0,terminals=0;try{function walk(s){const pos=s.finish.indexOf(0);if(pos>=0){terminals++;return 1<<pos;}const k=key(s);if(memo.has(k))return memo.get(k);if(++nodes>limit)throw Error('budget');let choices=s.turn===0?legal(s):[cpu(s)],bits=0;for(let a of choices){edges++;bits|=walk(step(s,a));}memo.set(k,bits);return bits;}let bits=walk(start(hands,starter)),ranks=[1,2,3,4].filter(r=>bits&(1<<(r-1)));return {complete:true,ranks,best:ranks[0],nodes,edges,terminals,version:VERSION,cpu:CPU_VERSION};}catch(e){if(e.message!=='budget')throw e;return {complete:false,nodes,edges,terminals,version:VERSION,cpu:CPU_VERSION};}}
 export function deal(rand=Math.random){let d=Array.from({length:52},(_,i)=>i);for(let i=51;i>0;i--){let j=Math.floor(rand()*(i+1));[d[i],d[j]]=[d[j],d[i]];}return Array.from({length:4},(_,i)=>d.slice(i*8,i*8+8).sort((a,b)=>a-b));}
+
+// Additional acceptance criterion for an enjoyable fixed-hand demo:
+// at least one legal path contains a player multiplet and an 8-cut.
+export function verifyPlayability(hands,starter,{limit=100000}={}){
+ const visited=new Set();let nodes=0,exhausted=false;
+ function walk(s,flags){if(s.finish.includes(0))return flags===3;if(++nodes>limit){exhausted=true;return false;}let k=key(s)+'|'+flags;if(visited.has(k))return false;visited.add(k);let p=s.turn,choices=p===0?legal(s):[cpu(s)];choices.sort((a,b)=>(b.length>=2?2:0)+(b.some(c=>rank(c)===5)?1:0)-(a.length>=2?2:0)-(a.some(c=>rank(c)===5)?1:0));for(let a of choices){let f=flags;if(p===0){if(a.length===2)f|=1;if(a.some(c=>rank(c)===5))f|=2;}if(walk(step(s,a),f))return true;if(exhausted)return false;}return false;}
+ const h=hands[0],pair=h.some((c,i)=>h.some((d,j)=>j!==i&&rank(c)===rank(d))),eight=h.some(c=>rank(c)===5);
+ return {pair,eight,reachable:pair&&eight&&walk(start(hands,starter),0),nodes,exhausted};
+}
