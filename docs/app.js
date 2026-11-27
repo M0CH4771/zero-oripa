@@ -1,5 +1,6 @@
 // ゼロ円オリパ フロントエンド（ビルド不要の素のJS）
-import {gameInfoHtml,volatilityBadge} from './game-info.js?v=mine145';
+import {MILD_PAY} from './test-games/mine.js?v=mine146';
+import {gameInfoHtml,volatilityBadge} from './game-info.js?v=mine146';
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (n) => Number(n || 0).toLocaleString();
@@ -454,10 +455,10 @@ const RULES = {
     '金のりんごが3〜7個で10／12／15／20／30フリースピン追加。フリースピン中は倍率スポットがリセットされません（テスト版の最大120回）','1回のボーナス全体の配当は最低1C・最高50倍。還元率目標97%。'],
   mine: ['テストコインのレートを選び、BONUSから直接採掘を開始。最初の採掘＋4スピン（5回）で1プレイです',
     '上のスロット枠（5×3）にアイテムが止まり、つるはしはそれぞれ真下の列のブロックを上から削ります。数字は削れる回数（1・2・3・5・7回）で、壊れたら次のブロックへ進みます',
-    '強化の書／超強化の書：同じ列のつるはしを5／7回に。ダイナマイト：全ブロックに2ダメージ。巨大ドリル：同じ列を全破壊。連鎖爆弾：ランダムな3マスに2ダメージ。宝箱強化結晶：全宝箱の倍率＋0.1。スター：＋1スピン。',
+    '強化の書／超強化の書：同じ列のつるはしを5／7回に。ダイナマイト：全ブロックに2ダメージ。巨大ドリル：同じ列を全破壊。連鎖爆弾：ランダムな3マスに2ダメージ。宝箱強化結晶：全宝箱の倍率＋1。スター：＋1スピン。',
     'ブロックを壊すと配当。石→石炭→鉄→金→ダイヤ→虹鉱石の順に高く、硬くなります。爆発鉱石は壊れると周り8マスに2ダメージ（連鎖）。ハテナは壊すと中身の配当が出ます',
     '掘れ具合は最後まで引き継ぎ。1列を下まで掘り切ると、その列の宝箱が開きます。宝箱の倍率は開封前にも数字で確認できます',
-    '開いた宝箱の倍率は掛け算（×1.1 と ×1.2 なら ×1.32）で、最後に配当の合計に掛かります',
+    '開いた宝箱の倍率は掛け算（×2 と ×3 なら ×6）で、最後に配当の合計に掛かります',
     '最終配当が0Cの場合のみ1Cになります。最大はベットの50倍です'],
 };
 const FEATURES = {
@@ -611,7 +612,7 @@ async function viewGame(id, demo, daily=false) {
   const showMetric=(label,value)=>{const metric=$('#gmMetric');if(!metric)return;$('#gmMetricLabel').textContent=label;$('#gmRoundMultiplier').textContent=value;metric.hidden=false;};
   const roundLabel=label=>{const el=$('#gmRoundLabel');if(el)el.textContent=label;};
   if(p.game==='tropical')await import('./game/tropical-player141.mjs');
-  game = ZG.createGame($('#gcanvas'), { game: p.game, plinko:p.game==='plinko'?window.plinkoConfig(gameCtx.rows,gameCtx.risk):null, region: gameRegion, getRate:()=>rushRate }, {
+  game = ZG.createGame($('#gcanvas'), { game: p.game, plinko:p.game==='plinko'?window.plinkoConfig(gameCtx.rows,gameCtx.risk):null, region: gameRegion, minePay:MILD_PAY, getRate:()=>rushRate }, {
     onBonusIntro: async ({spins,choice}={}) => {
       const root=$('#gm');if(!root)return;
       const descriptions={

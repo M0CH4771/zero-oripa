@@ -7,7 +7,7 @@
 //   ダイナマイト … 全ブロックへ2ダメージ
 //   巨大ドリル … 同列の残存ブロックを破壊
 //   連鎖爆弾 … ランダムな残存3ブロックに2ダメージ
-//   宝箱強化結晶 … 全宝箱の倍率を+0.1（開封済みも含む）
+//   宝箱強化結晶 … 全宝箱の倍率を+1（開封済みも含む）
 //   スタークリスタル … 1個につきスピンが1回増える
 // ブロックを壊すと配当（賭けに対する倍率）。爆発鉱石は壊れると周り8マスに2ダメージ（連鎖する）。
 // 1列を下まで掘り切るとその列の宝箱が開き、開いた宝箱の倍率は掛け算（×2 と ×4 なら ×8）で、最後に配当の合計に掛かる。
@@ -31,8 +31,8 @@ export const BLOCKS = {
   Q: { name: 'ハテナ', hp: 4, v: 0 },
 };
 // ハテナの中身（賭けに対する倍率）
-export const MILD_PAY = {D:0,T:.003,C:.02,I:.05,G:.135,X:.27,R:.55,E:.02,Q:0};
-export const MILD_Q_PAY={.07:35,.14:30,.2:20,.34:12,.55:3};
+export const MILD_PAY = {D:0,T:.001,C:.0015,I:.003,G:.0045,X:.007,R:.015,E:.0015,Q:0};
+export const MILD_Q_PAY={.004:35,.007:30,.01:20,.015:12,.025:3};
 const Q_PAY = { 0.02: 35, 0.04: 30, 0.06: 20, 0.1: 12, 0.16: 3 };
 
 // 段ごとの出やすさ（上 → 下）
@@ -51,7 +51,7 @@ export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
     cells: { 0: 75, p1: 8, p2: 5, p3: 2, p5: 1, p7: .15, b: 4, g: 1, n: .35, s: .6, d: .4, l: 2, m: .5 },
-    chests: { 1.1: 75, 1.2: 25 }, scale: 1,
+    chests: { 2: 99.2, 3: .4, 4: .15, 5: .1, 6: .06, 7: .04, 8: .025, 9: .015, 10: .01 }, scale: 1,
   },
   normal: {
     label: '通常', bolt: 3,
@@ -138,7 +138,7 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
         const item=col[k];
         ev.push({t:'mineItem',c,k,r:at,item});
         if(item==='m'){
-          for(let j=0;j<COLS;j++)chests[j]=Math.min(10,Math.round((chests[j]+.1)*10)/10);
+          for(let j=0;j<COLS;j++)chests[j]=Math.min(10,chests[j]+1);
           mult=chests.reduce((p,x,j)=>opened[j]?p*x:p,1);
           ev.push({t:'chestBoost',chests:[...chests],total:mult});
         }else if(item==='d'){

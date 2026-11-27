@@ -286,23 +286,24 @@
     const TIER = { 1: '#c8803e', 2: '#e8edf4', 3: '#ffc21a', 5: '#4ee8ff', 7: '#9a5aff' };
     const CHEST = { 2: '#1f4fe0', 3: '#2a86ea', 4: '#19b8cf', 5: '#18c27c', 6: '#46d23a', 7: '#b4dc26', 8: '#f0b41c', 9: '#f07a1a', 10: '#e8283a' };
     const ITEM = { b:'book',g:'book',n:'N',s:'dyn',d:'goldbook',l:'N',m:'H' };
-    const ITEM_LABEL={b:'強化5',g:'強化7',n:'全体2',d:'全列破壊',l:'連鎖3',m:'全宝箱+0.1',s:'+1G'};
+    const ITEM_LABEL={b:'強化 5',g:'強化 7',n:'全体 −2',d:'列破壊',l:'3マス −2',m:'全箱 +1',s:'+1 G'};
     const ITEM_COLOR={b:'#c7b1ff',g:'#ffe18e',n:'#ff9b65',d:'#ffc862',l:'#9ce3ff',m:'#99ffcc',s:'#f8df80'};
-    const chestTier=m=>Math.max(2,Math.min(10,2+Math.round((m-1.1)*10)));
+    const chestTier=m=>Math.max(2,Math.min(10,Math.round(m)));
     const chestColor=m=>CHEST[chestTier(m)]||'#ffe1a0';
     const L = { cell: 40, ox: 0, oy: 0, rc: 34, rx: 0, ry: 0 };
-    let dug = [], mult = 1, chestM = [];
+    let dug = [], mult = 1, chestM = [], itemArt=null;
+    const artIndex={b:0,g:1,n:2,d:3,l:4,m:5,s:6};
     const st = makeStage(canvas, 'mine', { ...opt, aspect: 5 / 10.9 }, (ctx, w, h, t) => {
       const bw = L.cell * COLS, bh = L.cell * (ROWS + 1);
-      ZG.scene.character(ctx, 'mine', w, h, t, { x: L.rx, y: L.ry, w: L.rc * COLS, h: L.oy + bh - L.ry });
+      ZG.scene.character(ctx, 'mine', w, h, t, { x: L.rx, y: L.ry, w: L.cell * COLS, h: L.oy + bh - L.ry });
       // 掘削アイテム用の独立した金属製トレー。
-      ZG.rr(ctx,L.rx-5,L.ry-5,L.rc*COLS+10,L.rc*RR+10,8);ctx.fillStyle='#54403a';ctx.fill();ctx.strokeStyle='#ecd6b8';ctx.lineWidth=2;ctx.stroke();
+      ZG.rr(ctx,L.rx-5,L.ry-5,L.cell*COLS+10,L.rc*RR+10,8);ctx.fillStyle='#1d1511';ctx.fill();ctx.strokeStyle='#d2a361';ctx.lineWidth=2;ctx.stroke();
       for(let r=0;r<RR;r++)for(let c=0;c<COLS;c++){
-        const x=L.rx+c*L.rc,y=L.ry+r*L.rc;const g=ctx.createLinearGradient(x,y,x,y+L.rc);g.addColorStop(0,'#d3c1b7');g.addColorStop(1,'#887b78');ctx.fillStyle=g;ctx.fillRect(x+1,y+1,L.rc-2,L.rc-2);ctx.strokeStyle='#685a54';ctx.strokeRect(x+1,y+1,L.rc-2,L.rc-2);
+        const x=L.rx+c*L.cell,y=L.ry+r*L.rc;const g=ctx.createLinearGradient(x,y,x,y+L.rc);g.addColorStop(0,'#49372b');g.addColorStop(1,'#211915');ctx.fillStyle=g;ZG.rr(ctx,x+2,y+2,L.cell-4,L.rc-4,5);ctx.fill();ctx.strokeStyle='#816243';ctx.stroke();
       }
       ctx.strokeStyle = 'rgba(255,220,160,.16)'; ctx.lineWidth = 1;
-      for (let c = 1; c < COLS; c++) { ctx.beginPath(); ctx.moveTo(L.rx + c * L.rc, L.ry); ctx.lineTo(L.rx + c * L.rc, L.ry + L.rc * RR); ctx.stroke(); }
-      for (let r = 1; r < RR; r++) { ctx.beginPath(); ctx.moveTo(L.rx, L.ry + r * L.rc); ctx.lineTo(L.rx + L.rc * COLS, L.ry + r * L.rc); ctx.stroke(); }
+      for (let c = 1; c < COLS; c++) { ctx.beginPath(); ctx.moveTo(L.rx + c * L.cell, L.ry); ctx.lineTo(L.rx + c * L.cell, L.ry + L.rc * RR); ctx.stroke(); }
+      for (let r = 1; r < RR; r++) { ctx.beginPath(); ctx.moveTo(L.rx, L.ry + r * L.rc); ctx.lineTo(L.rx + L.cell * COLS, L.ry + r * L.rc); ctx.stroke(); }
       // 盤面
       // 破壊済みのマスは背景まで抜けて、残った鉱石がそのまま見える。
       const cy = L.oy + ROWS * L.cell;
@@ -317,15 +318,15 @@
       L.cell = Math.max(6,Math.floor(Math.min((R.w - pad * 2) / COLS, (R.h - pad * 2) / (RR*.82 + 0.3 + ROWS + 1))));
       L.rc = L.cell*.82;
       L.ox = Math.round(R.x + (R.w - L.cell * COLS) / 2);
-      L.oy = Math.round(R.y + R.h - pad * 0.5 - L.cell * (ROWS + 1));
-      L.rx = Math.round(R.x + (R.w - L.rc * COLS) / 2);
+      const totalHeight=L.cell*(ROWS+1)+L.rc*RR+L.cell*.3;L.oy=Math.round(R.y+(R.h-totalHeight)/2+L.rc*RR+L.cell*.3);
+      L.rx = L.ox;
       L.ry = Math.round(L.oy - L.cell * 0.3 - L.rc * RR);
     };
     st.onResize = (w, h) => { layout(w, h); relayout(); };
     layout(st.w, st.h);
     const setSpinWin = (v) => { hooks.onSpinWin?.(v); };
     const pos = (c, r) => ({ x: L.ox + c * L.cell + L.cell / 2, y: L.oy + r * L.cell + L.cell / 2 });
-    const rpos = (c, k) => ({ x: L.rx + c * L.rc + L.rc / 2, y: L.ry + k * L.rc + L.rc / 2 });
+    const rpos = (c, k) => ({ x: L.rx + c * L.cell + L.cell / 2, y: L.ry + k * L.rc + L.rc / 2 });
     // 色つきのスプライト（つるはしの段階・宝箱の倍率）
     const tintCache = new Map();
     function tinted(id, size, color, amt) {
@@ -342,15 +343,15 @@
       const p = pos(c, r);
       const n = st.add({ id: b, hp: HP[b], c, r, x: p.x, y: p.y, z: 5, seed: (Math.random() * 1000) | 0 });
       n.draw = (ctx, nd) => {
-        const s = L.cell * .96;
+        const s = L.cell * .92;
         const sp = ZG.art.sprite('mine', nd.id, s); const full = s + sp.pad * 2; ctx.drawImage(sp, -full / 2, -full / 2, full, full);
         const max = HP[nd.id], dmg = max - nd.hp;
-        if(dmg){const next=cols[nd.c]?.[nd.r+1];const preview=ZG.art.sprite('mine',next?.id||('chest-'+chestTier(chests[nd.c]?.m??1.1)),s);if(preview){ctx.save();ctx.beginPath();ctx.moveTo(-s*.15,s*.24);ctx.lineTo(s*.17,s*.11);ctx.lineTo(s*.05,s*.24);ctx.lineTo(-s*.17,s*.32);ctx.clip();ctx.drawImage(preview,-s/2,-s/2,s,s);ctx.restore();}}
+        if(dmg){const next=cols[nd.c]?.[nd.r+1];const preview=ZG.art.sprite('mine',next?.id||('chest-'+chestTier(chests[nd.c]?.m??2)),s);if(preview){ctx.save();ctx.beginPath();ctx.moveTo(-s*.15,s*.24);ctx.lineTo(s*.17,s*.11);ctx.lineTo(s*.05,s*.24);ctx.lineTo(-s*.17,s*.32);ctx.clip();ctx.drawImage(preview,-s/2,-s/2,s,s);ctx.restore();}}
         if (dmg > 0) {
           const lvl = Math.min(3, Math.ceil((dmg / max) * 3));
           const cr = ZG.art.sprite('mine', 'crack' + lvl, s, (nd.seed % 5) + 1); const f2 = s + cr.pad * 2; ctx.drawImage(cr, -f2 / 2, -f2 / 2, f2, f2);
         }
-        ctx.save();ctx.font='800 '+Math.max(10,s*.24)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#201811db';ZG.rr(ctx,-s*.36,s*.22,s*.72,s*.25,4);ctx.fill();ctx.fillStyle='#fff';ctx.fillText(nd.hp+'/'+max,0,s*.35,s*.66);ctx.restore();
+        ctx.save();const price=opt.minePay?.[nd.id],rate=opt.getRate?.()||0;ctx.font='700 '+Math.max(9,s*.20)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#120d09ed';ZG.rr(ctx,-s*.46,s*.20,s*.92,s*.29,4);ctx.fill();ctx.fillStyle='#fff0cf';ctx.fillText(nd.id==='Q'?'? C':hooks.fmt(Math.round((price||0)*rate*100)/100)+' C',0,s*.345,s*.84);ctx.fillStyle='#160d09';ZG.rr(ctx,-s*.42,-s*.43,s*.84,s*.12,3);ctx.fill();ctx.fillStyle=nd.hp/max>.5?'#bfe4a3':'#ffbd68';ZG.rr(ctx,-s*.42,-s*.43,s*.84*nd.hp/max,s*.12,3);ctx.fill();ctx.font='800 '+Math.max(8,s*.16)+'px system-ui';ctx.fillStyle='#fff';ctx.strokeStyle='#1a120a';ctx.lineWidth=2;ctx.strokeText(nd.hp+'/'+max,0,-s*.26);ctx.fillText(nd.hp+'/'+max,0,-s*.26);ctx.restore();
       };
       return n;
     }
@@ -431,7 +432,7 @@
           ctx.font = `${br * 1.35}px ${ZG.FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#1a0c04'; ctx.fillText(String(nd.power), bx, by + 1);
         } else {
           const id = ITEM[nd.v]; if (!id) return; const sz = nd.v === 'n' ? s * 0.9 : s;
-          const sp = nd.v==='g'?tinted(id,sz,'#ffd14d',.38):nd.v==='l'?tinted(id,sz,'#5dc8ff',.42):nd.v==='m'?tinted(id,sz,'#54ffae',.40):ZG.art.sprite('mine', id, sz); const full = sz + sp.pad * 2; ctx.drawImage(sp, -full / 2, -full / 2, full, full);
+          if(itemArt){const i=artIndex[nd.v],sw=itemArt.width/7;ctx.drawImage(itemArt,i*sw,0,sw,itemArt.height,-sz*.48,-sz*.60,sz*.96,sz*.96);}else{const sp = nd.v==='g'?tinted(id,sz,'#ffd14d',.38):ZG.art.sprite('mine', id, sz);const full=sz+sp.pad*2;ctx.drawImage(sp,-full/2,-full/2,full,full);}
           const label=ITEM_LABEL[nd.v];if(label){ctx.save();ctx.font='800 '+Math.max(9,s*.19)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#17100be8';ZG.rr(ctx,-s*.48,s*.28,s*.96,s*.26,4);ctx.fill();ctx.fillStyle=ITEM_COLOR[nd.v];ctx.fillText(label,0,s*.41,s*.90);ctx.restore();}
         }
       };
@@ -467,6 +468,7 @@
     let curPick = null;
     async function onUpgrade(ev) {
       const book = reel.find((n) => n.c === ev.c && n.v === ev.item);
+      await st.featureCue(ev.power===7?'超強化の書':'強化の書','同じ列のピッケル → '+ev.power+' 回',{color:ITEM_COLOR[ev.item],hold:260,sound:'mult'});
       S('mult'); st.flash(ev.power === 7 ? '#ffe9a0' : '#c8a0ff', 0.3);
       if (book) { st.sparkle(book.x, book.y, L.rc * 0.5, 10); await st.tween(book, { sx: 1.4, sy: 1.4 }, 160); st.tween(book, { sx: 1, sy: 1, alpha: 0.35 }, 200); }
       const picks = reel.filter((n) => n.c === ev.c && n.isPick);
@@ -528,15 +530,16 @@
     async function onMineItem(ev){
       const n=reelAt(ev.c,ev.k),label=({n:'ダイナマイト',d:'巨大ドリル',l:'連鎖爆弾',m:'宝箱強化結晶'})[ev.item],color=ITEM_COLOR[ev.item];
       if(n){n.moving=true;await st.tween(n,{sx:1.35,sy:1.35},180);st.sparkle(n.x,n.y,L.rc*.55,12);await st.tween(n,{alpha:0,sx:1.6,sy:1.6},180);st.remove(n);reel=reel.filter(x=>x!==n);}
-      await st.featureCue(label,({n:'全ブロックに2ダメージ',d:'この列を掘り切る',l:'3マスに2ダメージ',m:'全宝箱の倍率 +0.1'})[ev.item],{color,hold:380,sound:'crystal'});
-      if(ev.item==='n'||ev.item==='d'){st.flash(color,.32);st.shake(ev.item==='n'?7:4,300);for(let c=0;c<COLS;c++){if(ev.item==='d'&&ev.c!==c)continue;for(let r=0;r<ROWS;r++)if(cols[c][r]){const q=pos(c,r);st.impact(q.x,q.y,L.cell*.64,color,.55);}}}
+      await st.featureCue(label,({n:'全ブロックに2ダメージ',d:'この列を掘り切る',l:'3マスに2ダメージ',m:'全宝箱の倍率 +1'})[ev.item],{color,hold:380,sound:'crystal'});
+      if(ev.item==='n'||ev.item==='d'){st.flash(color,.26);st.shake(ev.item==='n'?5:3,260);for(let c=0;c<COLS;c++){if(ev.item==='d'&&ev.c!==c)continue;for(let r=0;r<ROWS;r++)if(cols[c][r]){const q=pos(c,r);st.impact(q.x,q.y,L.cell*.64,color,.55);}}}
     }
     async function onChestBoost(ev,state,cap){
       const before=mult;mult=ev.total;for(let c=0;c<COLS;c++){const n=chests[c];n.m=ev.chests[c];st.sparkle(n.x,n.y,L.cell*.7,13);st.impact(n.x,n.y,L.cell*.65,'#8dffcf',1);}
-      await Promise.all(chests.map(async n=>{await st.tween(n,{sx:1.16,sy:1.16},200);await st.tween(n,{sx:1,sy:1},180);}));hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(mult));hooks.onScore(Math.min(cap,Math.floor(state.base*mult)));if(before!==mult)await st.featureCue('宝箱倍率UP','×'+hooks.fmt(before)+' → ×'+hooks.fmt(mult),{color:'#99ffcc',hold:350,sound:'mult'});
+      await Promise.all(chests.map(async n=>{await st.tween(n,{sx:1.16,sy:1.16},200);await st.tween(n,{sx:1,sy:1},180);}));hooks.onFeatureMetric?.('宝箱の累積倍率','×'+hooks.fmt(mult));hooks.onScore(Math.min(cap,Math.floor(state.base*mult)));if(before!==mult)await st.featureCue('宝箱倍率UP','×'+hooks.fmt(before)+' → ×'+hooks.fmt(mult),{color:'#99ffcc',hold:350,sound:'mult'});
     }
     async function onBoom(ev) {
       const p = pos(ev.c, ev.r);
+      if(ev.kind==='chain'){st.beam(p.x,p.y-L.cell*.8,p.x,p.y,'#9ce3ff');st.impact(p.x,p.y,L.cell*.7,'#9ce3ff',1);await st.wait(90);}
       S('boom'); st.flash('#ffb02e', ev.kind === 'tnt' ? 0.28 : 0.18); st.shake(ev.kind === 'tnt' ? 6 : 3, 320);st.impact(p.x,p.y,L.cell*1.45,'#ffab42',2);
       st.burst(p.x, p.y, { n: 40, colors: ['#ffe14a', '#ff8a00', '#ff3b1a', '#3a2a1a'], speed: 7, size: 6, life: 900 });
       await st.wait(160);
@@ -559,7 +562,7 @@
       st.tween(n, { ray: 0 }, 550);
       const total=Math.min(cap,Math.floor(state.base*ev.total));
       await st.carry(n,st.anchor('#rScore',{x:st.w/2,y:st.h*.85}),'+'+hooks.fmt(Math.max(0,total-Math.min(cap,Math.floor(state.base*mult))))+' C',chestColor(ev.mult),24);
-      hooks.onScore(total);hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(ev.total));
+      hooks.onScore(total);hooks.onFeatureMetric?.('宝箱の累積倍率','×'+hooks.fmt(ev.total));
       mult = ev.total;
       await st.wait(100);
     }
@@ -591,12 +594,13 @@
     return {
       st,
       async warm(cb) {
+        itemArt=await new Promise(resolve=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>resolve(null);img.src='./assets/anime/mine/items146.svg';});
         await ZG.art.preload('mine', ['D', 'T', 'C', 'I', 'G', 'X', 'R', 'E', 'Q'], L.cell * 1.08, (k) => cb && cb(k * 0.6));
         await ZG.art.preload('mine', ['H'], L.cell * 0.96, (k) => cb && cb(0.6 + k * 0.1));
         await ZG.art.preload('mine', ['pick', 'book', 'goldbook', 'N', 'dyn', 'H'], L.rc * 0.86, (k) => cb && cb(0.7 + k * 0.3));
       },
       idle() {
-        build(Array.from({ length: COLS }, () => IDLE_ROWS.map((ids) => pick(ids))), [1.1, 1.2, 1.1, 1.2, 1.1]);
+        build(Array.from({ length: COLS }, () => IDLE_ROWS.map((ids) => pick(ids))), [2, 3, 2, 3, 2]);
         setSpinWin(0);
       },
       async play(r) {
@@ -604,7 +608,7 @@
         const hp = r.board.map((col) => col.map((b) => HP[b]));
         const state = { base: 0 };
         setSpinWin(0);
-        hooks.onMode?.('ENTRY');hooks.onSpin(0,5);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{hold:400});await hooks.onBonusIntro?.({spins:5});hooks.onMode?.('BONUS');
+        hooks.onMode?.('ENTRY');hooks.onFeatureMetric?.('宝箱の累積倍率','×1');hooks.onSpin(0,5);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{hold:400});await hooks.onBonusIntro?.({spins:5});hooks.onMode?.('BONUS');
         let k=0;for await (const sp of r.spinStream()) {
           const previousBase=state.base,previousValue=Math.min(r.cap,Math.floor(state.base*mult));
           setSpinWin(0);
@@ -629,7 +633,7 @@
             S('free');
             for(const n of stars){st.sparkle(n.x,n.y,L.rc*.5,8);await st.popText(n.x,n.y,'+1 SPIN',{size:Math.max(12,L.rc*.32),color:'#ffe9a0',stroke:'#6a1000',hold:200});await st.tween(n,{sx:1.35,sy:1.35},180);await st.tween(n,{sx:1,sy:1},160);}
           }
-          state.base = sp.base; const roundWin=Math.max(0,sp.base-previousBase);setSpinWin(roundWin);hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(sp.mult));await hooks.onRoundWin?.(roundWin);hooks.onScore(Math.min(r.cap,Math.floor(sp.base*sp.mult)));await st.celebrateWin(Math.max(0,Math.min(r.cap,Math.floor(sp.base*sp.mult))-previousValue),r.rate||opt.getRate?.(),hooks.fmt);
+          state.base = sp.base; const roundWin=Math.max(0,sp.base-previousBase);setSpinWin(roundWin);hooks.onFeatureMetric?.('宝箱の累積倍率','×'+hooks.fmt(sp.mult));await hooks.onRoundWin?.(roundWin);hooks.onScore(Math.min(r.cap,Math.floor(sp.base*sp.mult)));await st.celebrateWin(Math.max(0,Math.min(r.cap,Math.floor(sp.base*sp.mult))-previousValue),r.rate||opt.getRate?.(),hooks.fmt);
           hooks.onSpin(k + 1, sp.total);
           await Promise.all([st.roundPause(),...reel.map((n) => st.tween(n, { alpha: 0 }, 160))]);k++;
         }
