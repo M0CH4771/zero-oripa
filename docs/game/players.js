@@ -285,7 +285,11 @@
     const HP = { D: 1, T: 2, C: 4, I: 4, G: 5, X: 6, R: 7, E: 2, Q: 4 };
     const TIER = { 1: '#c8803e', 2: '#e8edf4', 3: '#ffc21a', 5: '#4ee8ff', 7: '#9a5aff' };
     const CHEST = { 2: '#1f4fe0', 3: '#2a86ea', 4: '#19b8cf', 5: '#18c27c', 6: '#46d23a', 7: '#b4dc26', 8: '#f0b41c', 9: '#f07a1a', 10: '#e8283a' };
-    const ITEM = { b: 'book', g: 'goldbook', n: 'N', s: 'dyn' };
+    const ITEM = { b:'book',g:'book',n:'N',s:'dyn',d:'goldbook',l:'N',m:'H' };
+    const ITEM_LABEL={b:'強化5',g:'強化7',n:'全体2',d:'全列破壊',l:'連鎖3',m:'全宝箱+0.1',s:'+1G'};
+    const ITEM_COLOR={b:'#c7b1ff',g:'#ffe18e',n:'#ff9b65',d:'#ffc862',l:'#9ce3ff',m:'#99ffcc',s:'#f8df80'};
+    const chestTier=m=>Math.max(2,Math.min(10,2+Math.round((m-1.1)*10)));
+    const chestColor=m=>CHEST[chestTier(m)]||'#ffe1a0';
     const L = { cell: 40, ox: 0, oy: 0, rc: 34, rx: 0, ry: 0 };
     let dug = [], mult = 1, chestM = [];
     const st = makeStage(canvas, 'mine', { ...opt, aspect: 5 / 10.9 }, (ctx, w, h, t) => {
@@ -341,7 +345,7 @@
         const s = L.cell * .96;
         const sp = ZG.art.sprite('mine', nd.id, s); const full = s + sp.pad * 2; ctx.drawImage(sp, -full / 2, -full / 2, full, full);
         const max = HP[nd.id], dmg = max - nd.hp;
-        if(dmg){const next=cols[nd.c]?.[nd.r+1];const preview=ZG.art.sprite('mine',next?.id||('chest-'+chests[nd.c]?.m),s);if(preview){ctx.save();ctx.beginPath();ctx.moveTo(-s*.15,s*.24);ctx.lineTo(s*.17,s*.11);ctx.lineTo(s*.05,s*.24);ctx.lineTo(-s*.17,s*.32);ctx.clip();ctx.drawImage(preview,-s/2,-s/2,s,s);ctx.restore();}}
+        if(dmg){const next=cols[nd.c]?.[nd.r+1];const preview=ZG.art.sprite('mine',next?.id||('chest-'+chestTier(chests[nd.c]?.m??1.1)),s);if(preview){ctx.save();ctx.beginPath();ctx.moveTo(-s*.15,s*.24);ctx.lineTo(s*.17,s*.11);ctx.lineTo(s*.05,s*.24);ctx.lineTo(-s*.17,s*.32);ctx.clip();ctx.drawImage(preview,-s/2,-s/2,s,s);ctx.restore();}}
         if (dmg > 0) {
           const lvl = Math.min(3, Math.ceil((dmg / max) * 3));
           const cr = ZG.art.sprite('mine', 'crack' + lvl, s, (nd.seed % 5) + 1); const f2 = s + cr.pad * 2; ctx.drawImage(cr, -f2 / 2, -f2 / 2, f2, f2);
@@ -387,14 +391,14 @@
       const n = st.add({ c, m, x: p.x, y: p.y, z: 6, open: 0, ray: 0, t0: Math.random() * 6 });
       n.draw = (ctx, nd, t) => {
         const s = L.cell * 0.96;
-        const col = CHEST[nd.m] || '#888';
+        const col = chestColor(nd.m);
         if (nd.ray > 0) {
           ctx.save(); ctx.globalAlpha = nd.ray; ctx.rotate(((t || 0) / 1400) % (Math.PI * 2));
           for (let k = 0; k < 10; k++) { ctx.rotate(Math.PI / 5); ctx.fillStyle = k % 2 ? col : 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-s * 0.16, -s * 0.95); ctx.lineTo(s * 0.16, -s * 0.95); ctx.closePath(); ctx.fill(); }
           ctx.restore();
         }
         const chestSize=L.cell*.96;
-        const sp=ZG.art.sprite('mine',(nd.open?'chest-open-':nd.half?'chest-half-':'chest-')+nd.m,chestSize);
+        const sp=ZG.art.sprite('mine',(nd.open?'chest-open-':nd.half?'chest-half-':'chest-')+chestTier(nd.m),chestSize);
         const full=chestSize+sp.pad*2;
         // The multiplier emblem itself depicts a closed chest. Never layer it
         // over the state-specific chest artwork (especially after opening).
@@ -427,7 +431,8 @@
           ctx.font = `${br * 1.35}px ${ZG.FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#1a0c04'; ctx.fillText(String(nd.power), bx, by + 1);
         } else {
           const id = ITEM[nd.v]; if (!id) return; const sz = nd.v === 'n' ? s * 0.9 : s;
-          const sp = ZG.art.sprite('mine', id, sz); const full = sz + sp.pad * 2; ctx.drawImage(sp, -full / 2, -full / 2, full, full);
+          const sp = nd.v==='g'?tinted(id,sz,'#ffd14d',.38):nd.v==='l'?tinted(id,sz,'#5dc8ff',.42):nd.v==='m'?tinted(id,sz,'#54ffae',.40):ZG.art.sprite('mine', id, sz); const full = sz + sp.pad * 2; ctx.drawImage(sp, -full / 2, -full / 2, full, full);
+          const label=ITEM_LABEL[nd.v];if(label){ctx.save();ctx.font='800 '+Math.max(9,s*.19)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#17100be8';ZG.rr(ctx,-s*.48,s*.28,s*.96,s*.26,4);ctx.fill();ctx.fillStyle=ITEM_COLOR[nd.v];ctx.fillText(label,0,s*.41,s*.90);ctx.restore();}
         }
       };
       return n;
@@ -520,6 +525,16 @@
       await st.tween(n, { x: p.x, y: p.y - L.cell * 0.2 }, 260 + ev.r * 30, E().inCubic);
       st.remove(n); reel = reel.filter((x) => x !== n);
     }
+    async function onMineItem(ev){
+      const n=reelAt(ev.c,ev.k),label=({n:'ダイナマイト',d:'巨大ドリル',l:'連鎖爆弾',m:'宝箱強化結晶'})[ev.item],color=ITEM_COLOR[ev.item];
+      if(n){n.moving=true;await st.tween(n,{sx:1.35,sy:1.35},180);st.sparkle(n.x,n.y,L.rc*.55,12);await st.tween(n,{alpha:0,sx:1.6,sy:1.6},180);st.remove(n);reel=reel.filter(x=>x!==n);}
+      await st.featureCue(label,({n:'全ブロックに2ダメージ',d:'この列を掘り切る',l:'3マスに2ダメージ',m:'全宝箱の倍率 +0.1'})[ev.item],{color,hold:380,sound:'crystal'});
+      if(ev.item==='n'||ev.item==='d'){st.flash(color,.32);st.shake(ev.item==='n'?7:4,300);for(let c=0;c<COLS;c++){if(ev.item==='d'&&ev.c!==c)continue;for(let r=0;r<ROWS;r++)if(cols[c][r]){const q=pos(c,r);st.impact(q.x,q.y,L.cell*.64,color,.55);}}}
+    }
+    async function onChestBoost(ev,state,cap){
+      const before=mult;mult=ev.total;for(let c=0;c<COLS;c++){const n=chests[c];n.m=ev.chests[c];st.sparkle(n.x,n.y,L.cell*.7,13);st.impact(n.x,n.y,L.cell*.65,'#8dffcf',1);}
+      await Promise.all(chests.map(async n=>{await st.tween(n,{sx:1.16,sy:1.16},200);await st.tween(n,{sx:1,sy:1},180);}));hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(mult));hooks.onScore(Math.min(cap,Math.floor(state.base*mult)));if(before!==mult)await st.featureCue('宝箱倍率UP','×'+hooks.fmt(before)+' → ×'+hooks.fmt(mult),{color:'#99ffcc',hold:350,sound:'mult'});
+    }
     async function onBoom(ev) {
       const p = pos(ev.c, ev.r);
       S('boom'); st.flash('#ffb02e', ev.kind === 'tnt' ? 0.28 : 0.18); st.shake(ev.kind === 'tnt' ? 6 : 3, 320);st.impact(p.x,p.y,L.cell*1.45,'#ffab42',2);
@@ -533,17 +548,17 @@
       await st.carry({x:x0-L.cell*.15,y:n.y-L.cell*.9},{x:x0,y:n.y-L.cell*.3},'◆','#b69a83',12,140);
       for(const dx of [-.045,.045,0])await st.tween(n,{x:x0+L.cell*dx},55,E().outCubic);
       await st.tween(n,{sx:.94,sy:.94},130,E().outCubic);n.half=true;n.ray=.3;await st.wait(165);await st.tween(n,{sx:1.04,sy:1.04},100,E().outCubic);
-      n.x = x0; n.open = 1; n.sx = n.sy = .97;st.impact(n.x,n.y,L.cell*.82,CHEST[ev.mult]||'#fff4bd',1.5);
-      st.emblemLand('mine',ev.mult,n.x,n.y,L.cell);
+      n.x = x0; n.open = 1; n.sx = n.sy = .97;st.impact(n.x,n.y,L.cell*.82,chestColor(ev.mult)||'#fff4bd',1.5);
+      // Chest art uses integer artwork tiers; the actual factor is rendered on the chest itself.
       st.tween(n, { ray: 1 }, 300);
       st.sparkle(n.x, n.y, L.cell * 0.7, 14);
-      st.burst(n.x, n.y, { n: 26, colors: [CHEST[ev.mult], '#fff', '#ffe14a'], speed: 5.5, size: 4, life: 900, up: 2 });
+      st.burst(n.x, n.y, { n: 26, colors: [chestColor(ev.mult), '#fff', '#ffe14a'], speed: 5.5, size: 4, life: 900, up: 2 });
       S('chest');
       await st.tween(n, { sx: 1, sy: 1 }, 380, E().outCubic);
-      await st.featureCue('TREASURE ×'+ev.mult,'累積倍率 ×'+mult+' → ×'+ev.total,{color:CHEST[ev.mult]||'#ffe1a0',hold:650,sound:'crystal'});
+      await st.featureCue('TREASURE ×'+ev.mult,'累積倍率 ×'+hooks.fmt(mult)+' → ×'+hooks.fmt(ev.total),{color:chestColor(ev.mult)||'#ffe1a0',hold:650,sound:'crystal'});
       st.tween(n, { ray: 0 }, 550);
       const total=Math.min(cap,Math.floor(state.base*ev.total));
-      await st.carry(n,st.anchor('#rScore',{x:st.w/2,y:st.h*.85}),'+'+hooks.fmt(Math.max(0,total-Math.min(cap,Math.floor(state.base*mult))))+' C',CHEST[ev.mult],24);
+      await st.carry(n,st.anchor('#rScore',{x:st.w/2,y:st.h*.85}),'+'+hooks.fmt(Math.max(0,total-Math.min(cap,Math.floor(state.base*mult))))+' C',chestColor(ev.mult),24);
       hooks.onScore(total);hooks.onFeatureMetric?.('累積倍率','×'+hooks.fmt(ev.total));
       mult = ev.total;
       await st.wait(100);
@@ -563,7 +578,7 @@
       await st.tween(shade, { a: 0.55 }, 200);
       line.sub = '鉱石の合計'; line.txt = hooks.fmt(base);
       await st.tween(line, { a: 1 }, 220); await st.wait(300);
-      line.sub = '宝箱の倍率'; line.txt = `${hooks.fmt(base)} × ${m}`; S('mult');
+      line.sub = '宝箱の倍率'; line.txt = `${hooks.fmt(base)} × ${hooks.fmt(m)}`; S('mult');
       await st.wait(460);
       line.sub = f && f.capped ? 'MAX 50倍' : 'TOTAL'; line.txt = hooks.fmt(score); line.sx = line.sy = 1.4; S('coin'); st.coinRain(18);
       setSpinWin(score);
@@ -578,10 +593,10 @@
       async warm(cb) {
         await ZG.art.preload('mine', ['D', 'T', 'C', 'I', 'G', 'X', 'R', 'E', 'Q'], L.cell * 1.08, (k) => cb && cb(k * 0.6));
         await ZG.art.preload('mine', ['H'], L.cell * 0.96, (k) => cb && cb(0.6 + k * 0.1));
-        await ZG.art.preload('mine', ['pick', 'book', 'goldbook', 'N', 'dyn'], L.rc * 0.86, (k) => cb && cb(0.7 + k * 0.3));
+        await ZG.art.preload('mine', ['pick', 'book', 'goldbook', 'N', 'dyn', 'H'], L.rc * 0.86, (k) => cb && cb(0.7 + k * 0.3));
       },
       idle() {
-        build(Array.from({ length: COLS }, () => IDLE_ROWS.map((ids) => pick(ids))), [2, 3, 5, 3, 2]);
+        build(Array.from({ length: COLS }, () => IDLE_ROWS.map((ids) => pick(ids))), [1.1, 1.2, 1.1, 1.2, 1.1]);
         setSpinWin(0);
       },
       async play(r) {
@@ -602,6 +617,8 @@
             else if (ev.t === 'break') { await onBreak(ev, hp[ev.c][ev.r], state); hp[ev.c][ev.r] = 0; }
             else if (ev.t === 'pickEnd') await onPickEnd();
             else if (ev.t === 'tnt') await onTnt(ev);
+            else if (ev.t === 'mineItem') await onMineItem(ev);
+            else if (ev.t === 'chestBoost') await onChestBoost(ev,state,r.cap);
             else if (ev.t === 'boom') await onBoom(ev);
             else if (ev.t === 'open') await onOpen(ev,state,r.cap);
           }

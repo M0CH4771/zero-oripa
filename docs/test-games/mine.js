@@ -1,10 +1,13 @@
 // DIG（採掘）
-// 盤面：5列×6段のブロック。いちばん下に宝箱が5つ（倍率 ×2〜×10。開ける前から色で倍率がわかる）。
+// 盤面：5列×6段のブロック。いちばん下に宝箱が5つ（倍率は抽選設定に従う。開ける前から色で倍率がわかる）。
 // 上に 5列×3段 のスロット枠があり、スピンごとにアイテムが止まる。
 //   つるはし（1・2・3・5・7回）… 同じ列の真下のブロックを、数字の回数ぶん上から削る（壊れたら次のブロックへ）
 //   強化の書 … 同じ列のつるはしを全部 5回 に
-//   黄金ドリル … めったに出ない。同じ列のつるはしを全部 7回 に
-//   火薬だる … つるはしの後に列へ落ち、着地したブロックを中心に 3×3 へ 2ダメージ
+//   超強化の書 … めったに出ない。同じ列のつるはしを全部 7回 に
+//   ダイナマイト … 全ブロックへ2ダメージ
+//   巨大ドリル … 同列の残存ブロックを破壊
+//   連鎖爆弾 … ランダムな残存3ブロックに2ダメージ
+//   宝箱強化結晶 … 全宝箱の倍率を+0.1（開封済みも含む）
 //   スタークリスタル … 1個につきスピンが1回増える
 // ブロックを壊すと配当（賭けに対する倍率）。爆発鉱石は壊れると周り8マスに2ダメージ（連鎖する）。
 // 1列を下まで掘り切るとその列の宝箱が開き、開いた宝箱の倍率は掛け算（×2 と ×4 なら ×8）で、最後に配当の合計に掛かる。
@@ -41,12 +44,12 @@ const ROW_ORES = [
 ];
 
 // スロット枠に止まるもの（1マスごと）
-//   0=空き p1..p7=つるはし b=強化の書 g=黄金ドリル n=火薬だる s=スタークリスタル
+//   0=空き p1..p7=つるはし b/g=強化の書 n=ダイナマイト s=スター d=巨大ドリル l=連鎖爆弾 m=宝箱強化
 export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
-    cells: { 0: 20, p1: 25, p2: 33, p3: 18, p5: 3, p7: 0.15, b: 0.25, g: 0.02, n: 0.3, s: 0.1 },
-    chests: { 2: 99.95, 3: .05 }, scale: .06564,
+    cells: { 0: 60, p1: 13, p2: 11, p3: 6, p5: 1, p7: .15, b: 4, g: 1, n: .35, s: .6, d: .4, l: 2, m: .5 },
+    chests: { 1.1: 75, 1.2: 25 }, scale: 1.752,
   },
   normal: {
     label: '通常', bolt: 3,
@@ -71,7 +74,7 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
   const board = Array.from({ length: COLS }, () => ROW_ORES.map((w) => picker(w, rand)()));
   const hp = board.map((col) => col.map((b) => BLOCKS[b].hp));
   const alive = board.map((col) => col.map(() => true));
-  const chests = Array.from({ length: COLS }, () => parseInt(pickChest(), 10));
+  const chests = Array.from({ length: COLS }, () => Number(pickChest()));
   const opened = new Array(COLS).fill(false);
   let base = 0, mult = 1;
   const r2 = (x) => Math.round(x * 10000) / 10000;
@@ -101,7 +104,7 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
 
   const spins = [];
   let total = FIRST_SPINS;
-  yield {board,chests,unit,cap:rate*Math.min(50,maxMult)};
+  yield {board,chests:[...chests],unit,cap:rate*Math.min(50,maxMult)};
   for (let s = 0; s < total; s++) {
     // スロット枠：reel[c][段]
     const reel = Array.from({ length: COLS }, () => Array.from({ length: REEL_ROWS }, () => pickCell()));
@@ -126,12 +129,23 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
         ev.push({ t: 'pickEnd', c, k });
       }
       for (let k = 0; k < REEL_ROWS; k++) {
-        if (col[k] !== 'n') continue;
+        if (!['n','d','l','m'].includes(col[k])) continue;
         const r = topOf(c);
         const at = r < 0 ? ROWS - 1 : r;
-        ev.push({ t: 'tnt', c, k, r: at });
-        ev.push({ t: 'boom', c, r: at, kind: 'tnt' });
-        for (let dc = -1; dc <= 1; dc++) for (let dr = -1; dr <= 1; dr++) damage(c + dc, at + dr, 2, ev);
+        const item=col[k];
+        ev.push({t:'mineItem',c,k,r:at,item});
+        if(item==='m'){
+          for(let j=0;j<COLS;j++)chests[j]=Math.min(10,Math.round((chests[j]+.1)*10)/10);
+          mult=chests.reduce((p,x,j)=>opened[j]?p*x:p,1);
+          ev.push({t:'chestBoost',chests:[...chests],total:mult});
+        }else if(item==='d'){
+          for(let j=0;j<ROWS;j++)if(alive[c][j])damage(c,j,hp[c][j],ev);
+        }else if(item==='n'){
+          for(let j=0;j<COLS;j++)for(let r=0;r<ROWS;r++)damage(j,r,2,ev);
+        }else{
+          const targets=[];for(let j=0;j<COLS;j++)for(let r=0;r<ROWS;r++)if(alive[j][r])targets.push([j,r]);
+          for(let j=0;j<3&&targets.length;j++){const [x,y]=targets.splice(Math.floor(rand()*targets.length),1)[0];ev.push({t:'boom',c:x,r:y,kind:'chain'});damage(x,y,2,ev);}
+        }
       }
     }
     if (base*mult>=rate*Math.min(50,maxMult)) {total=s+1;add=0;}
