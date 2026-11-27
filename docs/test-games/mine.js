@@ -31,8 +31,8 @@ export const BLOCKS = {
   Q: { name: 'ハテナ', hp: 4, v: 0 },
 };
 // ハテナの中身（賭けに対する倍率）
-export const MILD_PAY = {D:0,T:.001,C:.0015,I:.003,G:.0045,X:.007,R:.015,E:.0015,Q:0};
-export const MILD_Q_PAY={.004:35,.007:30,.01:20,.015:12,.025:3};
+export const MILD_PAY = {D:0,T:.0035,C:.0055,I:.01,G:.016,X:.0275,R:.055,E:.005,Q:0};
+export const MILD_Q_PAY={.01:35,.02:30,.03:20,.05:12,.08:3};
 const Q_PAY = { 0.02: 35, 0.04: 30, 0.06: 20, 0.1: 12, 0.16: 3 };
 
 // 段ごとの出やすさ（上 → 下）
@@ -50,7 +50,7 @@ const ROW_ORES = [
 export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
-    cells: { 0: 75, p1: 8, p2: 5, p3: 2, p5: 1, p7: .15, b: 4, g: 1, n: .35, s: .6, d: .4, l: 2, m: .5 },
+    cells: { 0: 78.3, p1: 6, p2: 4, p3: 2, p5: 1, p7: .15, b: 4, g: 1, n: .05, s: .6, d: 1, l: 1.4, m: .5 },
     chests: { 2: 99.2, 3: .4, 4: .15, 5: .1, 6: .06, 7: .04, 8: .025, 9: .015, 10: .01 }, scale: 1,
   },
   normal: {
