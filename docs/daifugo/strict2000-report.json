@@ -1,0 +1,45 @@
+{
+  "qualificationSeed": 48871,
+  "independentSeed": 90213,
+  "runsPerHand": 100,
+  "deviation": 0.25,
+  "report": [
+    {
+      "rank": 1,
+      "count": 2000,
+      "patterns": 645,
+      "qualification": 200000,
+      "independent": 198809,
+      "perfect": 1245,
+      "nodes": 0
+    },
+    {
+      "rank": 2,
+      "count": 2000,
+      "patterns": 145,
+      "qualification": 200000,
+      "independent": 199937,
+      "perfect": 1962,
+      "nodes": 240879055
+    },
+    {
+      "rank": 3,
+      "count": 2000,
+      "patterns": 289,
+      "qualification": 200000,
+      "independent": 199884,
+      "perfect": 1910,
+      "nodes": 204973930
+    },
+    {
+      "rank": 4,
+      "count": 2000,
+      "patterns": 456,
+      "qualification": 200000,
+      "independent": 200000,
+      "perfect": 2000,
+      "nodes": 49360777
+    }
+  ],
+  "nodes": 495213762
+}
