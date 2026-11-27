@@ -31,6 +31,8 @@ export const BLOCKS = {
   Q: { name: 'ハテナ', hp: 4, v: 0 },
 };
 // ハテナの中身（賭けに対する倍率）
+export const MILD_PAY = {D:0,T:.003,C:.02,I:.05,G:.135,X:.27,R:.55,E:.02,Q:0};
+export const MILD_Q_PAY={.07:35,.14:30,.2:20,.34:12,.55:3};
 const Q_PAY = { 0.02: 35, 0.04: 30, 0.06: 20, 0.1: 12, 0.16: 3 };
 
 // 段ごとの出やすさ（上 → 下）
@@ -49,7 +51,7 @@ export const VOLATILITY = {
   mild: {
     label: 'マイルド', bolt: 2,
     cells: { 0: 75, p1: 8, p2: 5, p3: 2, p5: 1, p7: .15, b: 4, g: 1, n: .35, s: .6, d: .4, l: 2, m: .5 },
-    chests: { 1.1: 75, 1.2: 25 }, scale: 3.4224,
+    chests: { 1.1: 75, 1.2: 25 }, scale: 1,
   },
   normal: {
     label: '通常', bolt: 3,
@@ -66,10 +68,11 @@ const POWER = { p1: 1, p2: 2, p3: 3, p5: 5, p7: 7 };
 
 export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secureRandom, withScript = true }) {
   const v = VOLATILITY[volatility] || VOLATILITY.normal;
-  const unit = rate * v.scale * .994;
+  const mild=v===VOLATILITY.mild;
+  const unit = mild?rate:rate * v.scale * .994;
   const pickCell = picker(v.cells, rand);
   const pickChest = picker(v.chests, rand);
-  const pickQ = picker(Q_PAY, rand);
+  const pickQ = picker(mild?MILD_Q_PAY:Q_PAY, rand);
   // board[c][r]（r=0 がいちばん上）
   const board = Array.from({ length: COLS }, () => ROW_ORES.map((w) => picker(w, rand)()));
   const hp = board.map((col) => col.map((b) => BLOCKS[b].hp));
@@ -92,7 +95,7 @@ export function* stream({ rate, volatility = 'normal', maxMult = 50, rand = secu
     if (hp[c][r] > 0) { ev.push(by ? { t: 'hit', c, r, hp: hp[c][r], by } : { t: 'hit', c, r, hp: hp[c][r] }); return; }
     alive[c][r] = false;
     const b = board[c][r];
-    const pay = (b === 'Q' ? parseFloat(pickQ()) : BLOCKS[b].v) * unit;
+    const pay = (b === 'Q' ? parseFloat(pickQ()) : (mild?MILD_PAY[b]:BLOCKS[b].v)) * unit;
     base += pay;
     ev.push(by ? { t: 'break', c, r, b, pay: r2(pay), by } : { t: 'break', c, r, b, pay: r2(pay) });
     checkChest(c, ev);
