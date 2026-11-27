@@ -1,7 +1,7 @@
 import {PAYS as tropicalPays,SYMBOLS as tropicalSymbols,UNIT as tropicalUnit,TIER_PAY_FACTORS as tropicalFactors} from './tropical.mjs?v=cap119';
 import {PAYS as rushPays,PAY_UNIT_FACTOR as rushUnit} from './test-games/rush.js?v=cap119';
 import {PAYS as fruitPays,PAY_UNIT_FACTOR as fruitUnit} from './test-games/fruit.js?v=live113';
-import {BLOCKS,MILD_PAY,MILD_Q_PAY,VOLATILITY as mineVolatility} from './test-games/mine.js?v=mine148';
+import {BLOCKS,MILD_PAY,MILD_Q_PAY,VOLATILITY as mineVolatility} from './test-games/mine.js?v=mine149';
 import {FEATURE_CONFIG,GODS_PAYS,DOGS_PAYS,DOGS_STICKY_PAYS,DWARF_CHEST_WEIGHTS,DWARF_ITEMS} from './test-games/features.js?v=adventure131';
 const fmt=n=>Number(n).toLocaleString('ja-JP',{maximumFractionDigits:4});
 const coin=n=>fmt(n)+' C';
@@ -14,7 +14,7 @@ const rules={
  tropical:['青7・赤7は8スピン','3リール5ラインで同じ絵柄が3個揃うと配当。花が点灯すると最終スピンの7揃いが確定。金7は3×1の専用リール。'],
  rush:['10フリースピン','同じ宝石が盤面のどこでも8個以上で配当。消えた後に落ちてくる宝石でも連鎖します。'],
  fruit:['10〜30フリースピン','同じお菓子が縦・横に5個以上つながると配当。消えたマスの倍率が育ちます。'],
- mine:['5回の採掘から開始','つるはしで真下の鉱石を削り、壊した鉱石の配当を獲得。列を掘り切ると宝箱が開きます。'],
+ mine:['4回の採掘から開始','つるはしで真下の鉱石を削り、壊した鉱石の配当を獲得。列を掘り切ると宝箱が開きます。'],
  plinko:['1〜1,000球','12段固定。リスク、球数、1球の消費Cを設定します。ボールが落ちた枠の表示Cが配当です。'],
  gods:['15フリースピン','同じ宝石が8個以上で配当・連鎖。倍率オーブを当たりスピンで集めると累積倍率が上昇します。'],
  dogs:['2種類のボーナス','左端から隣接する3リール以上で同じ絵柄がそろうと配当。リールの高さは毎回変わります。'],
@@ -26,7 +26,7 @@ export function gameInfoHtml(game,rate,volatility='normal'){const [start,intro]=
  if(['rush','fruit','gods','dogs'].includes(game)){const pays=({rush:rushPays,fruit:fruitPays,gods:GODS_PAYS,dogs:DOGS_PAYS})[game],theme=game==='rush'?'gems':game;const heads=game==='fruit'?Array.from({length:11},(_,i)=>i===10?'15+':i+5):game==='dogs'?[3,4,5,6]:['8〜9','10〜11','12+'];const renderPay=(u,tablePays=pays)=>table(['絵柄 / 成立数',...heads.map(n=>game==='dogs'?n+'リール':n+'個')],Object.entries(tablePays).reverse().map(([id,v])=>[icon(theme,id),...v.map(x=>coin(x*u))]));out+=section('シンボル配当表',`<p>現在のBET（${coin(rate)}）での${game==='dogs'?'1 WAYSあたりの':'倍率適用前の'}配当。最終獲得Cはゲーム内で集計・整数化します。</p>${game==='dogs'?'<h4>STICKY WILDS</h4>'+renderPay(unit,DOGS_STICKY_PAYS)+'<h4>RAINING WILDS</h4>'+renderPay(rate*FEATURE_CONFIG.dogs.rainingScale):renderPay(unit)}`);}
  if(game==='rush')out+=section('特殊シンボル',card('魔法のオーブ ×2〜100','配当が成立したスピンで出たオーブの倍率を合計して、そのスピンの連鎖配当に掛けます。配当がない場合は適用されません。')+card('スキャッター（魔法の杖）','3個以上で＋5回。4／5／6個以上は配当計算単位の3／5／100倍。最大120回。')+card('計算例',`連鎖 ${coin(unit*5)} × オーブ合計10 = ${coin(unit*50)}。`));
  if(game==='fruit')out+=section('倍率スポット',card('同じマスで繰り返し配当','初回は印がつき、以降×2・×4・×8…最大×128へ。成立グループに含まれる倍率を合計して適用します。')+card('金のりんご','3／4／5／6／7個で10／12／15／20／30回。追加時も同じ回数。最大120回。')+card('計算例',`${coin(unit*2)} のグループに×2と×4があると、合計×6で ${coin(unit*12)}。`));
- if(game==='mine')out+=section('鉱石配当表',table(['鉱石','HP','破壊時'],Object.entries(BLOCKS).map(([id,x])=>[icon('mine',id)+' '+x.name,x.hp,id==='Q'?Object.keys(MILD_Q_PAY).map(v=>coin(rate*Number(v))).join('／'):coin(rate*MILD_PAY[id])])))+section('アイテムと宝箱',card('つるはし','数字1／2／3／5／7の回数だけ削ります。HPが0になると破壊。')+card('強化の書／超強化の書','同じ列のつるはしを5／7回に強化。')+card('ダイナマイト','残っている全ブロックに2ダメージ。')+card('巨大ドリル','同じ列の残りのブロックをすべて破壊。')+card('連鎖爆弾','ランダムに選ばれた残存3マスに2ダメージ。')+card('宝箱強化結晶','開封済みを含む全宝箱の倍率＋1（最大×10）。')+card('スタークリスタル','＋1スピン、最大20回。')+card('宝箱倍率','開いた宝箱は掛け算。例：×2と×3を開けば採掘合計に×6。'));
+ if(game==='mine')out+=section('鉱石配当表',table(['鉱石','HP','破壊時'],Object.entries(BLOCKS).map(([id,x])=>[icon('mine',id)+' '+x.name,x.hp,id==='Q'?Object.keys(MILD_Q_PAY).map(v=>coin(rate*Number(v))).join('／'):coin(rate*MILD_PAY[id])])))+section('アイテムと宝箱',card('つるはし','数字1／2／3／5／7の回数だけ削ります。HPが0になると破壊。')+card('強化の書／超強化の書','同じ列のつるはしを5／7回に強化。')+card('ダイナマイト','残っている全ブロックに2ダメージ。')+card('巨大ドリル','同じ列の残りのブロックをすべて破壊。')+card('連鎖爆弾','ランダムに選ばれた残存3マスに2ダメージ。')+card('宝箱強化結晶','開封済みを含む全宝箱の倍率＋1（最大×10）。')+card('スタークリスタル','＋1スピン、最大20回。')+card('爆発鉱石','破壊すると周囲8マスに2ダメージ。連鎖あり。')+card('宝箱倍率','開いた宝箱は掛け算。例：×2と×3を開けば採掘合計に×6。'));
  if(game==='gods')out+=section('特殊シンボル',card('倍率オーブ ×2〜500','当たりスピンに出たオーブが累積倍率に加算されます。配当がない場合は不発です。')+card('スキャッター','開始時4個で15回。フリースピン中3個以上で＋5回。4／5／6個は配当計算単位の3／5／100倍。')+card('計算例',`累積倍率×10なら、連鎖 ${coin(unit*5)} は ${coin(unit*50)}。`));
  if(game==='dogs')out+=section('WILDとボーナス',card('STICKY WILDS','7／12／15／20回。出現したワイルドが固定されます。')+card('RAINING WILDS','15／18／25／30回。各スピンでワイルドを追加。')+card('WAYS配当','WILDは2〜5リールに出現し、通常絵柄を代用。組み合わせに含まれる倍率付きWILDは掛け算。再トリガーなし。'));
  if(game==='train')out+=section('上段トロッコの強化', [['COIN','コイン値を1〜100にする'],['MULTI','新しいコインを2〜25倍にする'],['BOMB','岩を1段開け、6段開いた列では回収宝箱を開ける'],['BAG','列のコインを新しいコインの位置にまとめる'],['CHEST','列のコインを回収し、マスを空ける'],['DWARF','登場後は毎スピン、盤面の値を回収する']].map(([a,b])=>card(a,b)).join('')+card('最下段の宝箱','開封後は同じ列のコインを毎スピン回収。終了時にさらに3回分を追加。残り0回または盤面が満杯で終了。'));

@@ -608,7 +608,7 @@
         const hp = r.board.map((col) => col.map((b) => HP[b]));
         const state = { base: 0 };
         setSpinWin(0);
-        hooks.onMode?.('ENTRY');hooks.onFeatureMetric?.('宝箱の累積倍率','×1');hooks.onSpin(0,5);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{hold:400});await hooks.onBonusIntro?.({spins:5});hooks.onMode?.('BONUS');
+        hooks.onMode?.('ENTRY');hooks.onFeatureMetric?.('宝箱の累積倍率','×1');hooks.onSpin(0,4);await st.banner(['MINING EXPEDITION','採掘チャレンジ開始'],{hold:400});await hooks.onBonusIntro?.({spins:4});hooks.onMode?.('BONUS');
         let k=0;for await (const sp of r.spinStream()) {
           const previousBase=state.base,previousValue=Math.min(r.cap,Math.floor(state.base*mult));
           setSpinWin(0);
