@@ -12,3 +12,5 @@ assert.throws(()=>step(start(h),[0,20]));
 let nodes=0,edges=0;
 for(const x of bank){let v=verify(x.hands,x.starter);assert(v.complete);assert.equal(v.version,VERSION);assert.equal(v.cpu,CPU_VERSION);assert.deepEqual(v,x.proof);const p=verifyPlayability(x.hands,x.starter);assert(p.reachable);assert.deepEqual(p,x.playability);nodes+=v.nodes;edges+=v.edges;}
 console.log({scenarios:bank.length,nodes,edges,byRank:[1,2,3,4].map(r=>bank.filter(x=>x.proof.best===r).length)});
+
+const groups=new Map();for(const x of bank){assert.equal(x.family,x.hands[0].join(','));if(!groups.has(x.family))groups.set(x.family,[]);groups.get(x.family).push(x.proof.best);}for(const ranks of groups.values())assert.deepEqual([...ranks].sort(),[1,2,3,4]);assert.equal(groups.size,20);console.log({matchedHands:groups.size});
